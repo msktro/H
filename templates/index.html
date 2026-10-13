@@ -3,75 +3,91 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TabiNote | 旅の計画を、もっと気軽に。</title>
+  <title>TabiNote | 旅の計画をつくる</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="TabiNote ホーム"><span class="brand-mark">T</span><span>TabiNote</span></a>
-    <nav aria-label="メインメニュー">
-      <a class="nav-link active" href="#planner">旅プランを作る</a>
-      <a class="nav-link" href="#about">このサービスについて</a>
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">T</span><span>TabiNote</span></a>
+    <nav class="main-nav" aria-label="メインメニュー">
+      <a class="nav-link {% if active_tab == 'create' %}active{% endif %}" href="#create">プランを作る</a>
+      <a class="nav-link {% if active_tab == 'result' %}active{% endif %}" href="#result">プランを見る・変更する</a>
     </nav>
-    <span class="demo-pill"><i></i> AIプランナー</span>
+    <span class="provider-pill"><i></i>{{ provider|upper }} · {{ model }}</span>
   </header>
 
   <main>
-    <section class="hero" id="about">
+    <section class="hero">
       <div class="hero-copy">
-        <div class="eyebrow"><span>✦</span> YOUR NEXT JOURNEY STARTS HERE</div>
-        <h1>行きたい気持ちから、<br><em>旅のかたち</em>をつくろう。</h1>
-        <p>行き先や予算、好きなことを教えてください。<br>AIがあなたに合った旅のプランを提案します。</p>
-        <a class="hero-cta" href="#planner">プランを考えてみる <span>↓</span></a>
+        <span class="eyebrow">YOUR JOURNEY, YOUR WAY</span>
+        <h1>日本のどこへでも。<br><em>旅のプラン</em>を一緒につくろう。</h1>
+        <p>行き先や日程、好きなことを入力すると、AIが旅のたたき台を提案します。<br>できあがったプランも、希望に合わせて何度でも変更できます。</p>
+        <a class="hero-cta" href="#create">旅の条件を入力 <span>↓</span></a>
       </div>
       <div class="hero-art" aria-hidden="true">
         <div class="sun"></div><div class="hill hill-back"></div><div class="hill hill-front"></div>
-        <div class="route-line"></div><div class="pin pin-one">✦</div><div class="pin pin-two">●</div>
-        <div class="art-note">KANTO<br><strong>旅のしおり</strong></div>
-        <div class="art-stamp">週末の<br>小さな冒険</div>
+        <div class="route-line"></div><span class="map-dot dot-one">✦</span><span class="map-dot dot-two">●</span>
+        <div class="art-note">JAPAN<br><strong>旅のしおり</strong></div>
+        <div class="art-stamp">行きたい場所が<br>次の目的地</div>
       </div>
     </section>
 
-    <section class="planner-wrap" id="planner">
+    <section class="workspace" id="create">
       <div class="section-heading">
         <div><span class="step-label">01 — PLAN YOUR TRIP</span><h2>どんな旅にする？</h2></div>
-        <span class="region-tag">✦ 関東エリア</span>
+        <span class="nationwide-tag">✦ 日本全国に対応</span>
       </div>
+
+      {% if error %}<div class="notice" role="alert"><strong>処理できませんでした</strong><span>{{ error }}</span></div>{% endif %}
+
       <div class="planner-grid">
         <form class="form-card" action="{{ url_for('generate') }}" method="post">
-          <label class="field-label" for="destination">行き先 <span>必須</span></label>
-          <div class="input-wrap"><span class="input-icon">⌖</span><input id="destination" name="destination" placeholder="例：鎌倉、箱根、日光" value="{{ values.destination if values else '' }}" required></div>
+          <div class="card-heading"><span class="number-badge">1</span><div><h3>旅の条件</h3><p>決まっているところだけで大丈夫です</p></div></div>
+          <label class="field-label" for="destination">行き先・地域 <span class="required">必須</span></label>
+          <div class="input-wrap"><span class="input-icon">⌖</span><input id="destination" name="destination" placeholder="例：北海道、金沢、沖縄、まだ未定" value="{{ values.destination }}" required></div>
           <div class="two-fields">
-            <div><label class="field-label" for="days">日数</label><div class="select-wrap"><select id="days" name="days">{% for n in range(1, 6) %}<option value="{{ n }}" {% if values and values.days == n|string %}selected{% endif %}>{{ n }}日</option>{% endfor %}</select><span>⌄</span></div></div>
-            <div><label class="field-label" for="people">人数</label><div class="select-wrap"><select id="people" name="people">{% for n in range(1, 9) %}<option value="{{ n }}" {% if values and values.people == n|string %}selected{% endif %}>{{ n }}人</option>{% endfor %}</select><span>⌄</span></div></div>
+            <div><label class="field-label" for="days">日数</label><div class="select-wrap"><select id="days" name="days">{% for n in range(1, 15) %}<option value="{{ n }}" {% if values.days == n|string %}selected{% endif %}>{{ n }}日</option>{% endfor %}</select><span>⌄</span></div></div>
+            <div><label class="field-label" for="people">人数</label><div class="select-wrap"><select id="people" name="people">{% for n in range(1, 21) %}<option value="{{ n }}" {% if values.people == n|string %}selected{% endif %}>{{ n }}人</option>{% endfor %}</select><span>⌄</span></div></div>
           </div>
-          <label class="field-label" for="budget">予算（1人あたり）</label>
-          <div class="input-wrap"><span class="input-icon yen">¥</span><input id="budget" name="budget" inputmode="numeric" placeholder="例：20,000円" value="{{ values.budget if values else '' }}"></div>
-          <label class="field-label" for="theme">旅のテーマ</label>
+          <label class="field-label" for="budget">予算（1人あたり） <small>任意</small></label>
+          <div class="input-wrap"><span class="input-icon yen">¥</span><input id="budget" name="budget" inputmode="numeric" placeholder="例：50,000円" value="{{ values.budget }}"></div>
+          <label class="field-label">旅のテーマ <small>任意</small></label>
           <div class="chip-row">
-            {% for item in ['自然を満喫','グルメ','温泉','歴史・文化','のんびり'] %}
-            <label class="chip"><input type="radio" name="theme" value="{{ item }}" {% if values and values.theme == item %}checked{% endif %}><span>{{ item }}</span></label>
+            {% for item in ['自然・絶景','グルメ','温泉','歴史・文化','街歩き','のんびり'] %}
+            <label class="chip"><input type="radio" name="theme" value="{{ item }}" {% if values.theme == item %}checked{% endif %}><span>{{ item }}</span></label>
             {% endfor %}
           </div>
           <label class="field-label" for="preferences">好きなこと・希望 <small>任意</small></label>
-          <textarea id="preferences" name="preferences" rows="3" placeholder="例：混雑を避けたい、カフェ巡りが好き">{{ values.preferences if values else '' }}</textarea>
-          <button class="generate-btn" type="submit"><span>✦</span> AIで旅プランを生成 <b>→</b></button>
-          <p class="model-note">Ollama · {{ model }} を使用</p>
+          <textarea id="preferences" name="preferences" rows="3" placeholder="例：混雑を避けたい、子ども連れ、カフェ巡りが好き">{{ values.preferences }}</textarea>
+          <button class="primary-button" type="submit"><span>✦</span> AIで旅プランを作る <b>→</b></button>
+          <p class="helper-note">生成したプランはこの画面上で変更できます。保存機能はまだありません。</p>
         </form>
 
-        <section class="result-card" aria-live="polite">
-          {% if result %}
+        <section class="result-card" id="result" aria-live="polite">
+          {% if plan %}
           <div class="result-top"><div><span class="step-label">YOUR TRIP PLAN</span><h3>{{ values.destination }}の旅</h3></div><span class="result-spark">✦</span></div>
-          <div class="result-content">{{ result }}</div>
-          {% elif error %}
-          <div class="empty-state error-state"><div class="empty-icon">!</div><h3>接続を確認してください</h3><p>{{ error }}</p><div class="hint-box">Ollamaを起動し、設定したモデルをダウンロードしているか確認してください。</div></div>
+          <div class="result-content">{{ plan }}</div>
+          <form class="revision-form" action="{{ url_for('revise') }}" method="post">
+            <input type="hidden" name="destination" value="{{ values.destination }}">
+            <input type="hidden" name="days" value="{{ values.days }}">
+            <input type="hidden" name="budget" value="{{ values.budget }}">
+            <input type="hidden" name="people" value="{{ values.people }}">
+            <input type="hidden" name="theme" value="{{ values.theme }}">
+            <input type="hidden" name="preferences" value="{{ values.preferences }}">
+            <input type="hidden" name="current_plan" value="{{ plan }}">
+            <label class="field-label" for="changes">このプランを変更する</label>
+            <textarea id="changes" name="changes" rows="2" placeholder="例：2日目に温泉を追加して、移動を少なくして"></textarea>
+            <button class="secondary-button" type="submit">希望を伝えてプランを変更 <span>↗</span></button>
+          </form>
           {% else %}
-          <div class="empty-state"><div class="empty-illustration"><span class="spark s1">✦</span><span class="spark s2">✧</span><div class="mini-map"><div class="map-road road-a"></div><div class="map-road road-b"></div><div class="map-pin">⌖</div></div></div><span class="step-label">YOUR CANVAS</span><h3>ここに旅のプランが届きます</h3><p>行き先や好みを入力して、<br>AIプランナーに相談してみましょう。</p><div class="example-query">“鎌倉で、海とカフェを楽しむ日帰り旅”</div></div>
+          <div class="empty-state"><div class="empty-illustration"><span class="spark s1">✦</span><span class="spark s2">✧</span><div class="mini-map"><div class="map-road road-a"></div><div class="map-road road-b"></div><div class="map-pin">⌖</div></div></div><span class="step-label">YOUR CANVAS</span><h3>ここに旅のプランが届きます</h3><p>行き先や希望を入力して<br>旅のアイデアをつくりましょう。</p><div class="example-query">“金沢で、工芸と海鮮を楽しむ2日間”</div></div>
           {% endif %}
         </section>
       </div>
     </section>
-    <footer><span class="brand-mark small">T</span><span>旅の計画を、もっと気軽に。</span><span class="footer-right">Powered by Ollama</span></footer>
+
+    <section class="foundation-note"><span class="note-icon">✳</span><div><strong>まずはプラン作成の基礎機能から</strong><p>ログイン、保存、地図、予約などは含めず、AIとのやりとりを試せる構成です。</p></div></section>
+    <footer><span class="brand-mark small">T</span><span>日本全国の旅を、もっと気軽に。</span><span class="footer-right">AI provider: {{ provider }}</span></footer>
   </main>
 </body>
 </html>
