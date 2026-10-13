@@ -2,6 +2,8 @@ import os
 
 #112
 
+#変更しました２
+
 import requests
 from flask import Flask, render_template, request
 
