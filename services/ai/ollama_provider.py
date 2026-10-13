@@ -7,7 +7,7 @@ import requests
 from . import AIServiceError
 
 
-def generate_with_ollama(system_prompt, user_prompt):
+def generate_with_ollama(system_prompt, user_prompt, temperature=0.7):
     base_url = os.getenv("OLLAMA_URL", "http://localhost:11434").rstrip("/")
     model = os.getenv("OLLAMA_MODEL", "llava:7b")
     try:
@@ -20,6 +20,7 @@ def generate_with_ollama(system_prompt, user_prompt):
                     {"role": "user", "content": user_prompt},
                 ],
                 "stream": False,
+                "options": {"temperature": temperature},
             },
             timeout=600,
         )

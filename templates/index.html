@@ -13,7 +13,7 @@
       <a class="nav-link {% if active_tab == 'create' %}active{% endif %}" href="#create">プランを作る</a>
       <a class="nav-link {% if active_tab == 'result' %}active{% endif %}" href="#result">プランを見る・変更する</a>
     </nav>
-    <span class="provider-pill"><i></i>{{ provider|upper }} · {{ model }}</span>
+    <div class="account-menu"><span class="account-name">{{ logged_in_user }} さん</span><form action="{{ url_for('auth.logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit">ログアウト</button></form></div>
   </header>
 
   <main>
@@ -42,6 +42,7 @@
 
       <div class="planner-grid">
         <form class="form-card" action="{{ url_for('generate') }}" method="post">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
           <div class="card-heading"><span class="number-badge">1</span><div><h3>旅の条件</h3><p>決まっているところだけで大丈夫です</p></div></div>
           <label class="field-label" for="destination">行き先・地域 <span class="required">必須</span></label>
           <div class="input-wrap"><span class="input-icon">⌖</span><input id="destination" name="destination" placeholder="例：北海道、金沢、沖縄、まだ未定" value="{{ values.destination }}" required></div>
@@ -66,8 +67,10 @@
         <section class="result-card" id="result" aria-live="polite">
           {% if plan %}
           <div class="result-top"><div><span class="step-label">YOUR TRIP PLAN</span><h3>{{ values.destination }}の旅</h3></div><span class="result-spark">✦</span></div>
+          {% if revision_note %}<div class="revision-note"><strong>今回の変更希望</strong><span>{{ revision_note }}</span></div>{% endif %}
           <div class="result-content">{{ plan }}</div>
           <form class="revision-form" action="{{ url_for('revise') }}" method="post">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="destination" value="{{ values.destination }}">
             <input type="hidden" name="days" value="{{ values.days }}">
             <input type="hidden" name="budget" value="{{ values.budget }}">
