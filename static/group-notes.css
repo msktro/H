@@ -1,0 +1,13 @@
+.group-note-form{margin-top:12px}
+.group-note-form .field textarea{min-height:84px}
+.group-notes-list{display:grid;gap:14px;margin-top:18px}
+.group-note-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.group-note-heading h3{margin:0}
+.group-note-meta{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;margin-top:13px;color:var(--muted);font-size:13px}
+.group-note-meta a{color:var(--green);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.group-note-details{margin:14px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.group-note-card>.hint{margin-bottom:0}
+.group-note-edit{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.group-note-edit>summary{color:var(--green);font-size:13px;font-weight:700;cursor:pointer}
+.group-note-edit>form:last-child{margin-top:12px}
+@media(max-width:560px){.group-note-meta{align-items:flex-start;flex-direction:column;gap:7px}}

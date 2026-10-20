@@ -1,0 +1,10 @@
+.ai-loading{display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;padding:22px;background:rgba(16,39,33,.68);backdrop-filter:blur(5px)}
+.ai-loading.is-visible{display:flex}
+.ai-loading-card{width:min(100%,460px);padding:38px 32px;text-align:center;background:#fff;border:1px solid #e4eae5;border-radius:24px;box-shadow:0 24px 80px #061a1540;animation:ai-loading-enter .25s ease-out}
+.ai-loading-card h2{margin:16px 0 8px;font-size:24px;color:#18352f}
+.ai-loading-card p{margin:0;color:#6e807b;line-height:1.7}
+.ai-loading-card .ai-loading-note{margin-top:18px;padding:12px;border-radius:12px;background:#f4f8f5;font-size:13px}
+.ai-loading-spinner{width:54px;height:54px;margin:0 auto 22px;border:5px solid #dcefe7;border-top-color:#126c5b;border-radius:50%;animation:ai-loading-spin .85s linear infinite}
+@keyframes ai-loading-spin{to{transform:rotate(360deg)}}
+@keyframes ai-loading-enter{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.ai-loading-spinner{animation-duration:2s}.ai-loading-card{animation:none}}
