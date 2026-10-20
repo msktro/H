@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db
 from models import BusinessDetail, BusinessListing, Favorite, GroupAlbumPhoto, GroupBudget, GroupExpense, GroupExpenseShare, GroupMessage, GroupTravelNote, PackingItem, Review, TravelerProfile, TravelPlan, TripGroup, TripGroupMember, User
-from services.ai import AIError, generate_text
+from services.ai import AIServiceError, generate_text
 from services.prompts import plan_prompts, change_prompts
 
 login_manager = LoginManager()
@@ -260,7 +260,7 @@ def create_app():
         )
         try:
             answer = generate_text(system, prompt)
-        except AIError as exc:
+        except AIServiceError as exc:
             return jsonify(error=str(exc)), 503
         return jsonify(answer=answer)
 
@@ -645,7 +645,7 @@ def create_app():
             system, prompt = plan_prompts(prompt_values, current_user.profile)
             try:
                 answer = generate_text(system, prompt)
-            except AIError as exc:
+            except AIServiceError as exc:
                 flash(str(exc), "error")
                 return page("new_plan", values=values, profile=profile, profile_ready=profile_ready), 502
             plan = TravelPlan(
@@ -864,7 +864,7 @@ def create_app():
             plan.ai_response = generate_text(system, prompt)
             db.session.commit()
             flash("希望を反映してプランを更新しました。", "success")
-        except AIError as exc:
+        except AIServiceError as exc:
             flash(str(exc), "error")
         return redirect(url_for("plan_detail", plan_id=plan.id))
 
