@@ -189,6 +189,15 @@ class BusinessListing(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     user = db.relationship("User", backref=db.backref("listings", cascade="all, delete-orphan"))
     reviews = db.relationship("Review", back_populates="listing", cascade="all, delete-orphan", order_by="Review.created_at.desc()")
+    photos = db.relationship("BusinessListingPhoto", back_populates="listing", cascade="all, delete-orphan", order_by="BusinessListingPhoto.id")
+
+class BusinessListingPhoto(db.Model):
+    __tablename__ = "business_listing_photos"
+    id = db.Column(db.Integer, primary_key=True)
+    listing_id = db.Column(db.Integer, db.ForeignKey("business_listings.id", ondelete="CASCADE"), nullable=False, index=True)
+    filename = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    listing = db.relationship("BusinessListing", back_populates="photos")
 
 class Favorite(db.Model):
     __tablename__ = "favorites"
@@ -212,3 +221,13 @@ class Review(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     listing = db.relationship("BusinessListing", back_populates="reviews")
     user = db.relationship("User")
+
+class ContactInquiry(db.Model):
+    __tablename__ = "contact_inquiries"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(255), nullable=False, index=True)
+    category = db.Column(db.String(40), nullable=False)
+    subject = db.Column(db.String(160), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)

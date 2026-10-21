@@ -1,0 +1,14 @@
+.business-photo-grid,.business-photo-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:16px 0}
+.business-photo-grid{max-width:900px}
+.business-photo-card{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff}
+.business-photo-card img,.business-photo-gallery img,.business-photo-strip img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#eef3ef}
+.business-photo-card form{padding:9px}
+.business-photo-card button{width:100%;padding:8px 10px;font-size:12px}
+.business-photo-gallery{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin:14px 0 18px}
+.business-photo-gallery a{overflow:hidden;border-radius:13px;background:#eef3ef}
+.business-photo-gallery img{transition:transform .2s}
+.business-photo-gallery a:hover img{transform:scale(1.035)}
+.business-photo-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:14px 0;overflow:hidden;border-radius:13px}
+.business-photo-strip img{border-radius:9px}
+.demo-photo-label{display:inline-block;margin:8px 0 0;padding:5px 9px;border-radius:999px;background:#fff2d9;color:#72501c;font-size:11px;font-weight:700;letter-spacing:.02em}
+@media(max-width:560px){.business-photo-grid,.business-photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.business-photo-strip{gap:4px}}

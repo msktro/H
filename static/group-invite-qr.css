@@ -1,0 +1,6 @@
+.group-invite-qr-card{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fbf8}
+.group-invite-qr-card h3{margin:0 0 6px;color:var(--ink)}
+.group-invite-qr-card p{margin:0 0 12px;font-size:13px}
+.group-invite-qr{display:grid;place-items:center;width:208px;min-height:208px;margin:0 0 14px;padding:8px;border-radius:12px;background:#fff}
+.group-invite-qr img,.group-invite-qr canvas{display:block;max-width:100%;height:auto}
+.group-invite-qr:empty{display:none}

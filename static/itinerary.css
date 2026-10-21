@@ -1,0 +1,40 @@
+.itinerary-card{padding:0;overflow:hidden;background:#fffdf7;border-color:#e7e0cf}
+.itinerary-cover{position:relative;overflow:hidden;padding:30px clamp(22px,4vw,38px);background:linear-gradient(125deg,#155f52,#267c67 62%,#73a989);color:#fff}
+.itinerary-cover:after{content:"✦";position:absolute;right:28px;top:15px;font-size:78px;color:#ffffff24;transform:rotate(12deg)}
+.itinerary-kicker{font-size:10px;font-weight:900;letter-spacing:2px;color:#d5f0df}
+.itinerary-cover h2{font-family:Georgia,"Yu Mincho",serif;font-size:clamp(25px,3vw,34px);letter-spacing:.08em;margin:9px 0 4px}
+.itinerary-cover p{max-width:540px;margin:0;color:#e7f5ed;line-height:1.8;font-size:14px}
+.itinerary-stamps{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.itinerary-stamps span{display:inline-flex;padding:6px 11px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff17;font-size:12px;font-weight:700}
+.itinerary-body{padding:22px clamp(16px,3vw,30px) 28px;background:radial-gradient(#e9dfc9 0.8px,transparent .8px);background-size:17px 17px}
+.itinerary-intro,.itinerary-note{padding:16px 18px;margin:0 0 15px;background:#fff;border:1px solid #eee7d9;border-radius:14px;line-height:1.9;color:#465c53}
+.itinerary-intro h3,.itinerary-note h3,.itinerary-note h4{font-size:15px;color:#176957;margin:0 0 9px}
+.itinerary-intro p,.itinerary-note p{margin:6px 0;line-height:1.9}
+.itinerary-intro ul,.itinerary-note ul{margin:0;padding-left:1.25em}
+.itinerary-day{position:relative;margin:18px 0;padding:19px 18px 18px 24px;border:1px solid #e8e4d8;border-radius:18px;background:#fffef9;box-shadow:0 6px 18px #385b4610}
+.itinerary-day:nth-of-type(odd){background:#fff}
+.itinerary-day-head{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px dashed #d9dfd6}
+.itinerary-day-number{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:15px;background:#e3f1e7;color:#176957;font-size:11px;font-weight:900;line-height:1.1;text-align:center;letter-spacing:.04em;white-space:pre-line}
+.itinerary-day:nth-of-type(even) .itinerary-day-number{background:#fff0d9;color:#916324}
+.itinerary-day-head h3{margin:0;color:#183b32;font-family:"Yu Mincho",serif;font-size:20px;line-height:1.45}
+.itinerary-sections{display:grid;gap:10px;margin-top:14px}
+.itinerary-period{padding:13px 14px;border-radius:13px;background:#f6f8f2}
+.itinerary-period h4{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:14px;color:#176957}
+.itinerary-period h4:before{content:"";width:7px;height:7px;border-radius:50%;background:#e9a85e}
+.itinerary-stops{display:grid;gap:8px}
+.itinerary-stop{position:relative;padding:10px 12px 10px 14px;border-left:2px solid #c9dfd0;background:#fff;border-radius:0 10px 10px 0;line-height:1.75}
+.itinerary-stop-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px;color:#25473d;font-weight:800}
+.itinerary-time{color:#16715f;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.itinerary-stop-link{color:inherit;text-decoration:underline;text-decoration-color:#8ab5a2;text-decoration-thickness:1px;text-underline-offset:3px}
+.itinerary-stop-link:hover{color:#16715f;text-decoration-color:currentColor}
+.itinerary-stop-recommended{border-left-color:#d59b42;background:linear-gradient(110deg,#fffaf0,#fff 72%)}
+.itinerary-recommended-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:#fff0cf;color:#80551a;font-size:10px;font-weight:800;line-height:1.6;white-space:nowrap}
+.itinerary-stop p,.itinerary-copy{margin:4px 0 0;color:#61736b;font-size:14px;line-height:1.85}
+.itinerary-loose-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.itinerary-loose-list li{padding-left:20px;position:relative;line-height:1.85}
+.itinerary-loose-list li:before{content:"✦";position:absolute;left:0;color:#d49a4e;font-size:12px;top:3px}
+.itinerary-source{display:none}
+.itinerary-card>.notice{margin:0 18px 18px}
+@media(min-width:760px){.itinerary-sections{grid-template-columns:repeat(2,minmax(0,1fr))}.itinerary-day{padding:21px 22px 20px 28px}.itinerary-day-head h3{font-size:22px}}
+@media(max-width:520px){.itinerary-cover{padding:24px 20px}.itinerary-cover:after{right:12px;top:10px;font-size:60px}.itinerary-stamps{gap:6px}.itinerary-stamps span{font-size:11px;padding:5px 9px}.itinerary-body{padding:15px 12px 20px}.itinerary-day{padding:15px 12px}.itinerary-day-head h3{font-size:17px}.itinerary-period{padding:11px 10px}}
+@media print{.topbar,.nav,.top-actions,.map-controls,#trip-map,#change-plan{display:none!important}.itinerary-card{box-shadow:none;border:0}.itinerary-body{background:none;padding:12px 0}.itinerary-day{break-inside:avoid;box-shadow:none}.itinerary-cover{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
