@@ -8,7 +8,7 @@
       "YOUR TRAVEL STYLE":"YOUR TRAVEL STYLE","あなたの好みを登録すると、AIプラン生成の条件に反映されます。":"Your preferences will be used when generating trip plans.","この端末に保存":"Saved on this device","好きな旅を教えてください":"Tell us what kind of trips you like","複数選択できます。あとからいつでも変更できます。":"Choose multiple options. You can change them anytime.","興味のあるテーマ":"Interests","プラン生成には1つ以上選択してください。":"Select at least one for plan generation.","自然・絶景":"Nature & scenery","温泉":"Hot springs","食べ歩き":"Food tours","歴史・文化":"History & culture","買い物":"Shopping","アート":"Art","テーマパーク":"Theme parks","写真":"Photography","旅行のペース":"Travel pace","ゆっくり過ごしたい":"Take it slow","標準的に回りたい":"Balanced pace","できるだけ多く回りたい":"See as much as possible","1回の旅行の予算目安":"Budget per trip","選択してください":"Please select","3万円以内":"Up to ¥30,000","5万円以内":"Up to ¥50,000","10万円以内":"Up to ¥100,000","予算より体験を重視":"Experiences over budget","よく使いたい移動手段":"Preferred transport","公共交通機関":"Public transit","徒歩中心":"Mostly walking","レンタカー":"Rental car","こだわらない":"No preference","食事の希望":"Food preferences","ご当地グルメを楽しみたい":"Enjoy local food","カフェ・スイーツが好き":"Cafes and desserts","食事は手短にしたい":"Quick meals","特にこだわらない":"No preference","生年月日":"Date of birth","任意":"Optional","年齢に合わせたプラン提案に使います。AIには年齢・年代だけを伝えます。":"Used to tailor suggestions by age. Only your age group is sent to AI.","苦手なこと・避けたい条件":"Things to avoid","例：長時間歩くのは苦手、混雑を避けたい":"e.g. Avoid long walks and crowds","入力は任意です。AIがプランを作るときの参考にします。":"Optional. Used as a reference when creating your plan.","プロフィールを保存":"Save profile","AIプランへの反映":"How your profile is used","保存した興味や年代、旅行のペース、予算、移動手段、食事の希望、避けたい条件を、プラン生成の条件に加えます。":"Your interests, age group, pace, budget, transport, food preferences, and things to avoid are used in plan generation.","生年月日から算出した年齢・年代を使い、楽しみ方や移動・休憩を調整します。生年月日自体はAIへ送信しません。":"Your age group is used to tailor activities, travel pace, and breaks. Your birth date itself is not sent to AI.","AIプラン生成へ":"Go to AI planner","旅行プロフィールの好みをAIへの条件に反映します。":"Your profile preferences will be included in the AI prompt.",
       "AI TRIP PLANNER":"AI TRIP PLANNER","旅のプランを作る":"Create a trip plan","条件を入力すると、AIが日本全国から旅程を提案します。生成後の変更もできます。":"Enter your preferences and AI will suggest a trip anywhere in Japan. You can revise it later.","全国対応":"Nationwide","旅の条件":"Trip details","まだ決まっていない項目は、おおよそで大丈夫です。":"Approximate answers are fine for undecided items.","プランを生成するには、先に旅行プロフィールの必須項目を設定してください。":"Complete the required travel profile before generating a plan.","旅行プロフィールを編集 →":"Edit travel profile →","行き先・エリア":"Destination / area","行き先を選択":"Select a destination","日程":"Duration","日帰り":"Day trip","2泊3日":"3 days / 2 nights","3泊4日":"4 days / 3 nights","5泊6日":"6 days / 5 nights","予算（1人あたり）":"Budget per person","人数":"Travellers","人":"people","旅の希望":"Trip preferences","例：歴史ある街を歩きたい、地元の食事を楽しみたい":"e.g. Explore historic streets and enjoy local food","年代・同行者など":"Age group / companions","例：20代の友人同士、家族旅行":"e.g. Friends in their 20s, family trip","✦ AIでプランを生成":"✦ Generate with AI","設定したプロフィールの好みをAIへの条件に反映します。":"Your saved profile will be included in the AI prompt.","生成した後も変更できます":"You can revise your plan later","「移動を少なくしたい」「雨の日向けにしたい」など、希望を伝えてプランを調整できます。":"Tell us what to change, such as reducing travel or planning for rain.","保存した旅行プロフィールも生成条件に含めます。AIの提案は最新情報を保証しないため、営業時間・料金・交通は公式情報をご確認ください。":"Your profile is included. AI suggestions may be out of date; verify hours, prices, and transport with official sources.","プランを作る":"Create a plan","プランに使える機能":"Plan tools","プランを確認":"View plan","行程・ルートを見る":"View itinerary","旅行条件と予算を確認":"Review trip details and budget","保存済み":"Saved","プランを見る":"View plan","削除":"Delete","MY TRIPS":"MY TRIPS","作成した旅行プランをまとめて確認できます。":"View all your saved travel plans.","＋ 新しいプラン":"＋ New plan","プランはアカウントに紐づけて、このPC内のデータベースに保存されます。":"Plans are saved in this PC's database and linked to your account.","保存したプランはありません":"No saved plans","AIでプランを作成すると、ここに表示されます。":"Plans you create with AI will appear here.","AIプランを作る":"Create an AI plan","生成した旅程を確認":"Review your generated itinerary","予算を確認":"Review budget","仲間と共有する":"Share with your group","プラン共有機能は今後追加します":"Plan sharing is coming soon",
       "YOUR ITINERARY":"YOUR ITINERARY","日数・人数":"Duration / travellers","予算目安":"Estimated budget","AIが作成した旅行プラン":"AI-generated trip plan","生成済み":"Generated","AIの提案です。訪問先、営業時間、料金、交通は事前に公式情報をご確認ください。":"AI suggestions may be inaccurate. Verify destinations, opening hours, prices, and transport with official sources.","地図・ルート":"Map and route","地図・経路の表示は今後追加します。移動方法や所要時間は実際の情報をご確認ください。":"Map and route display are coming soon. Check actual transport and travel times.","予算の目安":"Budget estimate","入力した1人あたりの予算":"Your budget per person","旅行予算":"Trip budget","実際の交通費、宿泊費、施設料金は予約前に確認してください。":"Check actual transport, accommodation, and attraction prices before booking.","生成後も変更できます":"Revise your plan","「歩く距離を短くしたい」「雨の日向けにしたい」など、希望を入力してください。":"Tell us what to change, such as shorter walks or rainy-day options.","変更したい内容":"What would you like to change?","希望を反映して変更":"Apply changes","プラン一覧へ":"Back to plans","文 翻訳":"Translate",
-      "LANGUAGE":"LANGUAGE","多言語表示・翻訳":"Language and translation","保存した旅行プランを、選択した言語に翻訳します。":"Translate a saved travel plan into your selected language.","表示言語":"Display language","翻訳する旅行プラン":"Plan to translate","プランを選択":"Select a plan","翻訳先の言語":"Target language","選択した言語に翻訳":"Translate","翻訳には設定中のAI（OllamaまたはGemini）を使います。Ollamaの場合はこのPC上で翻訳します。":"Translation uses your configured AI provider. With Ollama, it runs on this PC.","先に旅行プランを作成する →":"Create a trip plan first →","PREVIEW":"PREVIEW","翻訳結果":"Translation","旅行プランの表示":"Trip plan preview","翻訳する旅行プランを選択してください。":"Select a trip plan to translate.","日本語の原文を見る":"View Japanese original",
+      "LANGUAGE":"LANGUAGE","多言語表示・翻訳":"Language and translation","保存した旅行プランを、選択した言語に翻訳します。":"Translate a saved travel plan into your selected language.","表示言語":"Display language","翻訳する旅行プラン":"Plan to translate","プランを選択":"Select a plan","翻訳先の言語":"Target language","選択した言語に翻訳":"Translate","翻訳にはGeminiを使います。":"Translation uses Gemini.","先に旅行プランを作成する →":"Create a trip plan first →","PREVIEW":"PREVIEW","翻訳結果":"Translation","旅行プランの表示":"Trip plan preview","翻訳する旅行プランを選択してください。":"Select a trip plan to translate.","日本語の原文を見る":"View Japanese original",
       "FOR TRAVEL BUSINESSES":"FOR TRAVEL BUSINESSES","事業者向け":"For businesses","旅行者に紹介する観光施設・店舗の情報を登録、編集できます。":"Add and edit places to introduce to travellers.","掲載情報を登録":"Add a listing","登録した情報は、旅行プランへの掲載候補として使う想定です。":"Saved information can be considered for inclusion in travel plans.","施設・店舗名":"Place / business name","例：○○温泉旅館":"e.g. Example Onsen Inn","カテゴリ":"Category","宿泊":"Accommodation","飲食":"Dining","観光・体験":"Sightseeing / activities","交通":"Transport","その他":"Other","所在地（都道府県）":"Prefecture","住所・エリア":"Address / area","市区町村・住所":"City, town, or address","料金の目安":"Price range","例：大人 1,500円":"e.g. ¥1,500 per adult","公式サイト":"Official website","紹介文・おすすめポイント":"Description / highlights","旅行者に伝えたい魅力、営業時間、予約の注意など":"Highlights, opening hours, booking notes, etc.","掲載情報を保存":"Save listing","LISTING STATUS":"LISTING STATUS","掲載情報の扱い":"Manage your listing","公開状態を切り替え、情報の編集や取り下げができます。":"Change visibility, edit details, or withdraw your listing.","この画面では登録内容をこのPC内のデータベースに保存します。旅行者向けの掲載検索は今後追加する機能です。":"Listings are saved in this PC's database. Traveller search is coming soon.","登録済みの掲載情報":"Your listings","公開中":"Published","非公開":"Hidden","編集":"Edit","非公開にする":"Unpublish","公開する":"Publish","掲載情報はまだありません。左のフォームから登録できます。":"No listings yet. Add one using the form.","掲載情報を編集":"Edit listing","変更内容を保存すると掲載情報に反映されます。":"Your changes will be saved to this listing.","変更を保存":"Save changes","戻る":"Back",
       "WELCOME TO TABIDEA":"WELCOME TO TABIDEA","旅の準備をはじめよう":"Let's get ready to travel","Tabideaで、次の旅を計画しましょう。":"Plan your next trip with Tabidea.","新規登録":"Create account","アカウント種別":"Account type","ユーザー名":"Username","例：たび好き":"e.g. Travel lover","メールアドレス":"Email address","パスワード":"Password","8文字以上":"At least 8 characters","パスワード（確認）":"Confirm password","もう一度入力してください":"Enter it again","アカウントを作成":"Create account","アカウントをお持ちでない方は":"New to Tabidea?","すでにアカウントをお持ちの方は":"Already have an account?",
       "旅行のプランを作成しました。":"Your trip plan was created.","プロフィールを保存しました。次のAI生成に反映します。":"Profile saved. It will be used for your next AI plan.","AIプランを作る前に、プロフィールの必須項目を設定してください。":"Complete the required profile fields before creating an AI plan.","メールアドレスまたはパスワードが違います。":"The email or password is incorrect.","パスワードが一致しません。":"Passwords do not match.","旅行予算または生年月日を確認してください。":"Check your budget or date of birth.","生年月日は今日以前の日付を入力してください。":"Enter a date of birth that is today or earlier.","Tabidea · AIの旅行案は参考情報です。施設、交通、営業時間、料金は公式情報をご確認ください。":"Tabidea · AI trip suggestions are for reference. Verify places, transport, hours, and prices with official sources."
@@ -105,6 +105,15 @@
     }
   };
   for (const locale of Object.keys(extra)) Object.assign(dictionaries[locale], extra[locale]);
+
+  const contactText = {
+    en: {"お問い合わせ":"Contact","ご質問や不具合の報告、機能のご要望はこちらからお送りください。":"Send us questions, bug reports, or feature requests.","お問い合わせ内容":"Your message","お名前":"Name","メールアドレス":"Email address","お問い合わせ種別":"Topic","サービスについて":"About the service","不具合の報告":"Report a problem","機能の要望":"Feature request","件名":"Subject","お問い合わせ内容を入力してください":"Enter your message","10〜5,000文字で入力してください。":"Enter 10 to 5,000 characters.","お問い合わせを送信":"Send message","送信後について":"After you send","お問い合わせ内容はアプリ内に保存されます。メール通知の設定がある場合は、担当者にも通知されます。":"Your message is saved in the app. The team is also notified if email notifications are configured.","返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。":"Enter an email address where you can receive replies. Do not include passwords or other secrets."},
+    ko: {"お問い合わせ":"문의하기","ご質問や不具合の報告、機能のご要望はこちらからお送りください。":"질문, 오류 신고, 기능 요청을 보내 주세요.","お問い合わせ内容":"문의 내용","お名前":"이름","メールアドレス":"이메일 주소","お問い合わせ種別":"문의 유형","サービスについて":"서비스 문의","不具合の報告":"오류 신고","機能の要望":"기능 요청","件名":"제목","お問い合わせ内容を入力してください":"문의 내용을 입력해 주세요","10〜5,000文字で入力してください。":"10~5,000자로 입력해 주세요.","お問い合わせを送信":"문의 보내기","送信後について":"전송 후 안내","お問い合わせ内容はアプリ内に保存されます。メール通知の設定がある場合は、担当者にも通知されます。":"문의 내용은 앱에 저장됩니다. 이메일 알림이 설정되어 있으면 담당자에게도 알립니다.","返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。":"답변을 받을 수 있는 이메일 주소를 입력해 주세요. 비밀번호 등 비밀 정보는 적지 마세요."},
+    "zh-CN": {"お問い合わせ":"联系我们","ご質問や不具合の報告、機能のご要望はこちらからお送りください。":"请在此发送问题、故障报告或功能建议。","お問い合わせ内容":"咨询内容","お名前":"姓名","メールアドレス":"电子邮件地址","お問い合わせ種別":"咨询类型","サービスについて":"服务咨询","不具合の報告":"故障报告","機能の要望":"功能建议","件名":"主题","お問い合わせ内容を入力してください":"请输入咨询内容","10〜5,000文字で入力してください。":"请输入 10 至 5,000 个字符。","お問い合わせを送信":"发送咨询","送信後について":"发送后","お問い合わせ内容はアプリ内に保存されます。メール通知の設定がある場合は、担当者にも通知されます。":"咨询内容会保存在应用中。如果已配置邮件通知，也会通知负责人。","返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。":"如需回复，请填写可接收邮件的地址。请勿填写密码等机密信息。"},
+    "zh-TW": {"お問い合わせ":"聯絡我們","ご質問や不具合の報告、機能のご要望はこちらからお送りください。":"請在此傳送問題、錯誤回報或功能建議。","お問い合わせ内容":"聯絡內容","お名前":"姓名","メールアドレス":"電子郵件地址","お問い合わせ種別":"聯絡類型","サービスについて":"服務諮詢","不具合の報告":"錯誤回報","機能の要望":"功能建議","件名":"主旨","お問い合わせ内容を入力してください":"請輸入聯絡內容","10〜5,000文字で入力してください。":"請輸入 10 至 5,000 個字元。","お問い合わせを送信":"送出訊息","送信後について":"送出後","お問い合わせ内容はアプリ内に保存されます。メール通知の設定がある場合は、担当者にも通知されます。":"聯絡內容會儲存在應用程式中。若已設定電子郵件通知，也會通知負責人。","返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。":"如需回覆，請填寫可收信的電子郵件地址。請勿填寫密碼等機密資訊。"},
+    th: {"お問い合わせ":"ติดต่อเรา","ご質問や不具合の報告、機能のご要望はこちらからお送りください。":"ส่งคำถาม รายงานปัญหา หรือข้อเสนอแนะเกี่ยวกับฟีเจอร์ได้ที่นี่","お問い合わせ内容":"ข้อความของคุณ","お名前":"ชื่อ","メールアドレス":"อีเมล","お問い合わせ種別":"หัวข้อ","サービスについて":"สอบถามบริการ","不具合の報告":"รายงานปัญหา","機能の要望":"ขอฟีเจอร์","件名":"เรื่อง","お問い合わせ内容を入力してください":"กรอกข้อความของคุณ","10〜5,000文字で入力してください。":"กรอก 10 ถึง 5,000 ตัวอักษร","お問い合わせを送信":"ส่งข้อความ","送信後について":"หลังส่ง","お問い合わせ内容はアプリ内に保存されます。メール通知の設定がある場合は、担当者にも通知されます。":"ข้อความจะบันทึกไว้ในแอป และจะแจ้งผู้ดูแลทางอีเมลหากตั้งค่าไว้","返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。":"กรอกอีเมลที่รับคำตอบได้ และอย่าระบุรหัสผ่านหรือข้อมูลลับ"}
+  };
+  for (const [locale, entries] of Object.entries(contactText)) Object.assign(dictionaries[locale], entries);
 
   const groupText = {
     "旅程・予約": ["Itinerary & bookings", "일정·예약", "行程与预订", "行程與預訂", "กำหนดการและการจอง"],
@@ -284,15 +293,158 @@
     groupLocales.forEach((locale, index) => { dictionaries[locale][source] = translations[index]; });
   }
 
+  // The hamburger menu labels include icon glyphs in the same text node,
+  // so translations for the bare Japanese labels do not match them.
+  const menuText = {
+    en: {
+      "メニュー":"Menu", "メニューを開く":"Open menu", "メインメニュー":"Main menu",
+      "⌂ ホーム":"⌂ Home", "▤ プラン":"▤ Plans", "✦ AI生成":"✦ AI planner",
+      "✧ AIサポート":"✧ AI support", "♧ 仲間と共有":"♧ Travel group",
+      "☆ 口コミ":"☆ Reviews", "♡ お気に入り":"♡ Favorites",
+      "☺ 旅行プロフィール":"☺ Travel profile", "文 翻訳":"文 Translation",
+      "▣ 事業者情報管理":"▣ Business listings", "ログアウト":"Log out",
+      "プロフィールを編集":"Edit profile"
+    },
+    ko: {
+      "メニュー":"메뉴", "メニューを開く":"메뉴 열기", "メインメニュー":"주 메뉴",
+      "⌂ ホーム":"⌂ 홈", "▤ プラン":"▤ 여행 계획", "✦ AI生成":"✦ AI 계획 생성",
+      "✧ AIサポート":"✧ AI 지원", "♧ 仲間と共有":"♧ 그룹 공유",
+      "☆ 口コミ":"☆ 리뷰", "♡ お気に入り":"♡ 즐겨찾기",
+      "☺ 旅行プロフィール":"☺ 여행 프로필", "文 翻訳":"文 번역",
+      "▣ 事業者情報管理":"▣ 사업자 정보 관리", "ログアウト":"로그아웃",
+      "プロフィールを編集":"프로필 수정"
+    },
+    "zh-CN": {
+      "メニュー":"菜单", "メニューを開く":"打开菜单", "メインメニュー":"主菜单",
+      "⌂ ホーム":"⌂ 首页", "▤ プラン":"▤ 行程", "✦ AI生成":"✦ AI 生成行程",
+      "✧ AIサポート":"✧ AI 旅行助手", "♧ 仲間と共有":"♧ 旅行小组",
+      "☆ 口コミ":"☆ 评价", "♡ お気に入り":"♡ 收藏",
+      "☺ 旅行プロフィール":"☺ 旅行资料", "文 翻訳":"文 翻译",
+      "▣ 事業者情報管理":"▣ 商家信息管理", "ログアウト":"退出登录",
+      "プロフィールを編集":"编辑个人资料"
+    },
+    "zh-TW": {
+      "メニュー":"選單", "メニューを開く":"開啟選單", "メインメニュー":"主選單",
+      "⌂ ホーム":"⌂ 首頁", "▤ プラン":"▤ 行程", "✦ AI生成":"✦ AI 生成行程",
+      "✧ AIサポート":"✧ AI 旅遊助手", "♧ 仲間と共有":"♧ 旅遊群組",
+      "☆ 口コミ":"☆ 評價", "♡ お気に入り":"♡ 收藏",
+      "☺ 旅行プロフィール":"☺ 旅遊資料", "文 翻訳":"文 翻譯",
+      "▣ 事業者情報管理":"▣ 商家資訊管理", "ログアウト":"登出",
+      "プロフィールを編集":"編輯個人資料"
+    },
+    th: {
+      "メニュー":"เมนู", "メニューを開く":"เปิดเมนู", "メインメニュー":"เมนูหลัก",
+      "⌂ ホーム":"⌂ หน้าแรก", "▤ プラン":"▤ แผนการเดินทาง", "✦ AI生成":"✦ สร้างแผนด้วย AI",
+      "✧ AIサポート":"✧ ผู้ช่วย AI", "♧ 仲間と共有":"♧ กลุ่มเดินทาง",
+      "☆ 口コミ":"☆ รีวิว", "♡ お気に入り":"♡ รายการโปรด",
+      "☺ 旅行プロフィール":"☺ โปรไฟล์นักเดินทาง", "文 翻訳":"文 แปลภาษา",
+      "▣ 事業者情報管理":"▣ จัดการข้อมูลธุรกิจ", "ログアウト":"ออกจากระบบ",
+      "プロフィールを編集":"แก้ไขโปรไฟล์"
+    }
+  };
+  for (const [locale, entries] of Object.entries(menuText)) Object.assign(dictionaries[locale], entries);
+
+  const planUiText = {
+    "旅のしおり": ["Your Travel Guide", "여행 안내서", "旅行指南", "旅遊指南", "คู่มือการเดินทาง"],
+    "ページをめくるたび、旅の楽しみがふくらむ。あなたのための小さな旅ガイドです。": [
+      "Turn each page and let the excitement grow. This little travel guide was made for you.",
+      "페이지를 넘길수록 여행의 설렘이 커집니다. 당신을 위한 작은 여행 안내서입니다.",
+      "每翻开一页，旅途的期待就多一分。这是为您准备的小小旅行指南。",
+      "每翻開一頁，旅途的期待就多一分。這是為您準備的小小旅遊指南。",
+      "เปิดอ่านแต่ละหน้า แล้วเพิ่มความตื่นเต้นให้ทริป คู่มือเล่มเล็กนี้จัดทำเพื่อคุณโดยเฉพาะ"
+    ],
+    "目的地": ["Destination", "목적지", "目的地", "目的地", "จุดหมาย"],
+    "日間": ["days", "일", "天", "天", "วัน"],
+    "名の旅": ["travellers", "명의 여행", "人同行", "人同行", "ผู้เดินทาง"],
+    "DAY": ["DAY", "일차", "第", "第", "วันที่"],
+    "旅の予定": ["Trip plan", "여행 일정", "旅行安排", "旅遊安排", "แผนการเดินทาง"],
+    "旅の流れ": ["Itinerary", "여행 순서", "行程", "行程", "กำหนดการ"],
+    "旅のハイライト": ["Trip highlights", "여행 하이라이트", "旅行亮点", "旅遊亮點", "ไฮไลต์การเดินทาง"],
+    "場所を検索": ["Search places", "장소 검색", "搜索地点", "搜尋地點", "ค้นหาสถานที่"],
+    "場所・施設名を検索（日本国内）": ["Search for a place or attraction in Japan", "일본 내 장소·시설 검색", "搜索日本境内的地点或设施", "搜尋日本境內的地點或設施", "ค้นหาสถานที่หรือสิ่งอำนวยความสะดวกในญี่ปุ่น"],
+    "検索": ["Search", "검색", "搜索", "搜尋", "ค้นหา"],
+    "検索結果": ["Search results", "검색 결과", "搜索结果", "搜尋結果", "ผลการค้นหา"],
+    "選択地点の周辺スポットを探す": ["Find places near selected stops", "선택한 장소 주변 찾기", "查找所选地点附近的景点", "尋找所選地點附近的景點", "ค้นหาสถานที่ใกล้จุดที่เลือก"],
+    "移動方法": ["Transport", "이동 방법", "交通方式", "交通方式", "วิธีเดินทาง"],
+    "徒歩": ["Walk", "도보", "步行", "步行", "เดิน"],
+    "車": ["Car", "자동차", "汽车", "汽車", "รถยนต์"],
+    "自転車": ["Bicycle", "자전거", "自行车", "自行車", "จักรยาน"],
+    "公共交通": ["Public transport", "대중교통", "公共交通", "大眾運輸", "ขนส่งสาธารณะ"],
+    "ルート地点": ["Route stops", "경유지", "路线地点", "路線地點", "จุดแวะตามเส้นทาง"],
+    "ルートを計算": ["Calculate route", "경로 계산", "计算路线", "計算路線", "คำนวณเส้นทาง"],
+    "地点をクリア": ["Clear stops", "경유지 지우기", "清除地点", "清除地點", "ล้างจุดแวะ"],
+    "場所を検索して2か所以上追加すると、ルートを表示できます。": [
+      "Search for and add at least two places to display a route.",
+      "장소를 검색해 2곳 이상 추가하면 경로가 표시됩니다.",
+      "搜索并添加至少两个地点后即可显示路线。",
+      "搜尋並新增至少兩個地點後即可顯示路線。",
+      "ค้นหาและเพิ่มสถานที่อย่างน้อย 2 แห่งเพื่อแสดงเส้นทาง"
+    ],
+    "地図データ © OpenStreetMap contributors · ルート・場所検索 Geoapify": [
+      "Map data © OpenStreetMap contributors · Routes and place search by Geoapify",
+      "지도 데이터 © OpenStreetMap contributors · 경로·장소 검색 Geoapify",
+      "地图数据 © OpenStreetMap contributors · 路线与地点搜索 Geoapify",
+      "地圖資料 © OpenStreetMap contributors · 路線與地點搜尋 Geoapify",
+      "ข้อมูลแผนที่ © OpenStreetMap contributors · เส้นทางและการค้นหาสถานที่โดย Geoapify"
+    ],
+    "共有プラン": ["Shared plan", "공유된 계획", "共享计划", "分享的計畫", "แผนที่แชร์ไว้"],
+    "このプランは閲覧専用です。自分のプランを共有すると、グループ内で提案を共有できます。": [
+      "This plan is read-only. Share one of your own plans to suggest it to your group.",
+      "이 계획은 보기 전용입니다. 내 계획을 공유하면 그룹에 제안할 수 있습니다.",
+      "此计划为只读。分享自己的计划即可向小组成员推荐。",
+      "此計畫為唯讀。分享自己的計畫即可向群組成員推薦。",
+      "แผนนี้ดูได้อย่างเดียว แชร์แผนของคุณเพื่อเสนอให้กลุ่มได้"
+    ],
+    "グループを開く": ["Open group", "그룹 열기", "打开小组", "開啟群組", "เปิดกลุ่ม"],
+    "✧ AIに相談": ["✧ Ask AI", "✧ AI에게 질문", "✧ 咨询 AI", "✧ 詢問 AI", "✧ ถาม AI"],
+    "□ 持ち物リスト": ["□ Packing list", "□ 준비물 목록", "□ 行李清单", "□ 行李清單", "□ รายการสัมภาระ"],
+    "プランを変更": ["Edit plan", "계획 수정", "修改计划", "修改計畫", "แก้ไขแผน"],
+    "さんがグループに共有したプランです（閲覧のみ）。": [
+      " shared this plan with the group (view only).", "님이 그룹에 공유한 계획입니다(보기 전용).",
+      "已在小组中共享此计划（仅供查看）。", "已在群組中分享此計畫（僅供檢視）。", "แชร์แผนนี้กับกลุ่มแล้ว (ดูได้อย่างเดียว)"
+    ],
+    "「歩く距離を短くしたい」「雨の日向けにしたい」など、希望を入力してください。": [
+      "Tell us what you would like to change, such as shorter walks or a plan for rainy weather.",
+      "걷는 거리를 줄이거나 비 오는 날에 맞게 바꾸는 등 원하는 내용을 입력하세요.",
+      "请输入您希望调整的内容，例如缩短步行距离或改成适合雨天的安排。",
+      "請輸入您希望調整的內容，例如縮短步行距離或改成適合雨天的安排。",
+      "ระบุสิ่งที่ต้องการเปลี่ยน เช่น ลดระยะทางเดินหรือปรับแผนสำหรับวันที่ฝนตก"
+    ],
+    "表示言語を切り替えると、選択中のプラン本文もAIで翻訳されます。翻訳には時間がかかる場合があります。": [
+      "Changing the display language also translates the selected plan with AI. Translation may take a little while.",
+      "표시 언어를 바꾸면 선택한 여행 계획도 AI가 번역합니다. 번역에 시간이 걸릴 수 있습니다.",
+      "切换显示语言时，AI 也会翻译当前选择的计划。翻译可能需要一些时间。",
+      "切換顯示語言時，AI 也會翻譯目前選取的計畫。翻譯可能需要一些時間。",
+      "เมื่อเปลี่ยนภาษาที่แสดง AI จะแปลแผนที่เลือกด้วย การแปลอาจใช้เวลาสักครู่"
+    ]
+  };
+  const planUiLocales = ["en", "ko", "zh-CN", "zh-TW", "th"];
+  for (const [source, translations] of Object.entries(planUiText)) {
+    planUiLocales.forEach((locale, index) => { dictionaries[locale][source] = translations[index]; });
+  }
+
   const prefectures = {
     "北海道":"Hokkaido","青森県":"Aomori","岩手県":"Iwate","宮城県":"Miyagi","秋田県":"Akita","山形県":"Yamagata","福島県":"Fukushima","茨城県":"Ibaraki","栃木県":"Tochigi","群馬県":"Gunma","埼玉県":"Saitama","千葉県":"Chiba","東京都":"Tokyo","神奈川県":"Kanagawa","新潟県":"Niigata","富山県":"Toyama","石川県":"Ishikawa","福井県":"Fukui","山梨県":"Yamanashi","長野県":"Nagano","岐阜県":"Gifu","静岡県":"Shizuoka","愛知県":"Aichi","三重県":"Mie","滋賀県":"Shiga","京都府":"Kyoto","大阪府":"Osaka","兵庫県":"Hyogo","奈良県":"Nara","和歌山県":"Wakayama","鳥取県":"Tottori","島根県":"Shimane","岡山県":"Okayama","広島県":"Hiroshima","山口県":"Yamaguchi","徳島県":"Tokushima","香川県":"Kagawa","愛媛県":"Ehime","高知県":"Kochi","福岡県":"Fukuoka","佐賀県":"Saga","長崎県":"Nagasaki","熊本県":"Kumamoto","大分県":"Oita","宮崎県":"Miyazaki","鹿児島県":"Kagoshima","沖縄県":"Okinawa"
   };
   const originals = new WeakMap();
   const attributeOriginals = new WeakMap();
+  const dictionaryParts = Object.fromEntries(Object.entries(dictionaries).map(([locale, dict]) => [
+    locale,
+    Object.keys(dict)
+      .filter((source) => source.length >= 2 && /[\u3040-\u30ff\u3400-\u9fff]/.test(source))
+      .sort((a, b) => b.length - a.length),
+  ]));
 
   function translated(text, locale) {
     const dict = dictionaries[locale] || {};
     if (dict[text] !== undefined) return dict[text];
+    // Japanese is the source language; never apply the English fallback map to it.
+    if (locale === "ja") return text;
+    const planTitle = text.match(/^(.+?)の旅行プラン$/);
+    if (planTitle) {
+      const suffix = { en: " travel plan", ko: " 여행 계획", "zh-CN": "的旅行计划", "zh-TW": "的旅遊計畫", th: " แผนการเดินทาง" }[locale] || " travel plan";
+      return translated(planTitle[1], locale) + suffix;
+    }
     if (prefectures[text]) return prefectures[text];
     const count = text.match(/^(\d+)件$/);
     if (count) return locale === "ja" ? text : `${count[1]} ${locale === "ko" ? "개" : locale.startsWith("zh") ? "项" : locale === "th" ? "รายการ" : "items"}`;
@@ -311,32 +463,21 @@
       if (locale === "zh-TW") return `${days[1]}天 · ${days[2]}人 · 預算 ¥${days[3]}`;
       if (locale === "th") return `${days[1]} วัน · ${days[2]} คน · งบ ¥${days[3]}`;
     }
-    return text;
+    // Text nodes often combine a fixed label with a dynamic value (for example,
+    // a destination and a trip title). Translate known phrases inside the node too.
+    let result = text;
+    for (const source of dictionaryParts[locale] || []) {
+      if (result.includes(source)) result = result.replaceAll(source, dict[source]);
+    }
+    for (const [source, destination] of Object.entries(prefectures)) {
+      if (result.includes(source)) result = result.replaceAll(source, destination);
+    }
+    return result;
   }
 
   function applyLanguage(locale) {
     const selected = dictionaries[locale] ? locale : "ja";
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    let node;
-    while ((node = walker.nextNode())) {
-      const parent = node.parentElement;
-      if (!parent || parent.closest("script,style,textarea,[data-no-translate],.prose")) continue;
-      if (!originals.has(node)) originals.set(node, node.nodeValue);
-      const original = originals.get(node);
-      const leading = original.match(/^\s*/)?.[0] || "";
-      const trailing = original.match(/\s*$/)?.[0] || "";
-      const text = original.trim();
-      node.nodeValue = leading + translated(text, selected) + trailing;
-    }
-    document.querySelectorAll("input[placeholder],textarea[placeholder], [aria-label], [title], [data-prompt]").forEach((element) => {
-      for (const attr of ["placeholder", "aria-label", "title", "data-prompt"]) {
-        if (!element.hasAttribute(attr)) continue;
-        let saved = attributeOriginals.get(element);
-        if (!saved) { saved = {}; attributeOriginals.set(element, saved); }
-        if (saved[attr] === undefined) saved[attr] = element.getAttribute(attr);
-        element.setAttribute(attr, translated(saved[attr], selected));
-      }
-    });
+    translateSubtree(document.body, selected);
     document.documentElement.lang = selected;
     const title = document.querySelector("title");
     if (title) {
@@ -352,6 +493,33 @@
     document.dispatchEvent(new CustomEvent("tabidea:language-changed", { detail: { locale: selected } }));
   }
 
+  function translateSubtree(root, locale) {
+    if (!root) return;
+    const rootElement = root.nodeType === Node.ELEMENT_NODE ? root : root.parentElement;
+    if (rootElement?.closest("script,style,textarea,[data-no-translate],[aria-hidden='true'],.avatar,.prose")) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const parent = node.parentElement;
+      if (!parent || parent.closest("script,style,textarea,[data-no-translate],[aria-hidden='true'],.avatar,.prose")) continue;
+      if (!originals.has(node)) originals.set(node, node.nodeValue);
+      const original = originals.get(node);
+      const leading = original.match(/^\s*/)?.[0] || "";
+      const trailing = original.match(/\s*$/)?.[0] || "";
+      node.nodeValue = leading + translated(original.trim(), locale) + trailing;
+    }
+    const elements = root.nodeType === Node.ELEMENT_NODE ? [root, ...root.querySelectorAll("input[placeholder],textarea[placeholder],[aria-label],[title],[data-prompt]")] : [];
+    elements.forEach((element) => {
+      for (const attr of ["placeholder", "aria-label", "title", "data-prompt"]) {
+        if (!element.hasAttribute(attr)) continue;
+        let saved = attributeOriginals.get(element);
+        if (!saved) { saved = {}; attributeOriginals.set(element, saved); }
+        if (saved[attr] === undefined) saved[attr] = element.getAttribute(attr);
+        element.setAttribute(attr, translated(saved[attr], locale));
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const selector = document.getElementById("language-selector");
     const initial = localStorage.getItem("tabidea-language") || "ja";
@@ -360,5 +528,15 @@
       selector.addEventListener("change", () => applyLanguage(selector.value));
     }
     if (initial !== "ja") applyLanguage(initial);
+
+    // Translate controls and labels inserted by page scripts after initial load.
+    const observer = new MutationObserver((records) => {
+      const locale = document.documentElement.lang || "ja";
+      records.forEach((record) => record.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) translateSubtree(node.parentElement, locale);
+        else if (node.nodeType === Node.ELEMENT_NODE) translateSubtree(node, locale);
+      }));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();

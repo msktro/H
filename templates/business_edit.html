@@ -2,13 +2,15 @@
 {% block title %}掲載情報の編集 | Tabidea{% endblock %}
 {% block content %}
 <div class="page-head"><div><span class="eyebrow">FOR TRAVEL BUSINESSES</span><h1>掲載情報を編集</h1><p class="sub">変更内容を保存すると掲載情報に反映されます。</p></div><span class="pill">事業者向け</span></div>
-<form method="post" class="card"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="form-grid">
+<form method="post" class="card" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="form-grid">
 <div class="field"><label for="biz-name">施設・店舗名</label><input id="biz-name" name="name" maxlength="120" value="{{ item.name }}" required></div>
 <div class="field"><label for="biz-category">カテゴリ</label><select id="biz-category" name="category">{% for c in categories %}<option value="{{ c }}" {% if item.category==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
 <div class="field"><label for="biz-prefecture">所在地（都道府県）</label><select id="biz-prefecture" name="prefecture">{% for p in prefectures %}<option value="{{ p }}" {% if item.prefecture==p %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
 <div class="field"><label for="biz-address">住所・エリア</label><input id="biz-address" name="address" maxlength="255" value="{{ item.address or '' }}"></div>
 <div class="field"><label for="biz-price">料金の目安</label><input id="biz-price" name="price_range" maxlength="100" value="{{ item.price_range or '' }}"></div>
 <div class="field"><label for="biz-url">公式サイト</label><input id="biz-url" name="website_url" type="url" value="{{ item.website_url or '' }}"></div>
-<div class="field full"><label for="biz-description">紹介文・おすすめポイント</label><textarea id="biz-description" name="description" maxlength="5000" rows="5" required>{{ item.description }}</textarea></div></div>
+<div class="field full"><label for="biz-description">紹介文・おすすめポイント</label><textarea id="biz-description" name="description" maxlength="5000" rows="5" required>{{ item.description }}</textarea></div>
+<div class="field full"><label for="biz-photos">店の写真を追加（あと{{ max_photos - item.photos|length }}枚）</label><input id="biz-photos" type="file" name="photos" accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp" multiple {% if item.photos|length >= max_photos %}disabled{% endif %}><span class="hint">JPG、PNG、GIF、WebP／1枚5MBまで・合計{{ max_photos }}枚まで</span></div></div>
 <div class="form-actions"><button type="submit">変更を保存</button><a class="button secondary" href="{{ url_for('business') }}">戻る</a></div></form>
+{% if item.photos %}<div class="section-title"><h2>登録済みの写真</h2><span class="muted">{{ item.photos|length }} / {{ max_photos }}枚</span></div><section class="business-photo-grid">{% for photo in item.photos %}<article class="business-photo-card"><img src="{{ url_for('business_listing_photo',item_id=item.id,photo_id=photo.id) }}" alt="{{ item.name }}{{ 'のデモ用サンプル写真' if photo.filename.startswith('demo_') else 'の写真' }}" loading="lazy">{% if photo.filename.startswith('demo_') %}<span class="demo-photo-label">デモ用サンプル写真</span>{% endif %}<form method="post" action="{{ url_for('delete_business_listing_photo',item_id=item.id,photo_id=photo.id) }}" onsubmit="return confirm('この写真を削除しますか？')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="danger">写真を削除</button></form></article>{% endfor %}</section>{% endif %}
 {% endblock %}

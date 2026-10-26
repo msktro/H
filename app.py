@@ -1,6 +1,8 @@
 import os
 import secrets
+import smtplib
 from datetime import date, datetime, timezone
+from email.message import EmailMessage
 from pathlib import Path
 import requests
 from urllib.parse import urlparse
@@ -9,16 +11,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask import Flask, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy import inspect, or_, text
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from sqlalchemy import func, inspect, or_, text
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db
-from models import BusinessDetail, BusinessListing, Favorite, GroupAlbumPhoto, GroupBudget, GroupExpense, GroupExpenseShare, GroupMessage, GroupTravelNote, PackingItem, Review, TravelerProfile, TravelPlan, TripGroup, TripGroupMember, User
+from models import BusinessDetail, BusinessListing, BusinessListingPhoto, ContactInquiry, Favorite, GroupAlbumPhoto, GroupBudget, GroupExpense, GroupExpenseShare, GroupMessage, GroupTravelNote, PackingItem, Review, TravelerProfile, TravelPlan, TripGroup, TripGroupMember, User
 from services.ai import AIServiceError, generate_text
-from services.prompts import plan_prompts, change_prompts
+from services.prompts import plan_prompts, change_prompts, translation_prompts
 
 login_manager = LoginManager()
 csrf = CSRFProtect()
@@ -36,6 +39,117 @@ AVATARS = ["🧳", "🧭", "🌸", "🐈", "🐕", "🌿", "🏔️", "🍜", "�
 ALBUM_IMAGE_TYPES = {".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".gif": "gif", ".webp": "webp"}
 ALBUM_MAX_IMAGE_BYTES = 5 * 1024 * 1024
 ALBUM_MAX_FILES_PER_UPLOAD = 5
+BUSINESS_MAX_PHOTOS = 5
+BUSINESS_MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+
+def _published_business_candidates(destination, limit=12):
+    """Return public listings relevant to the destination, ranked by review score."""
+    destination_key = "".join(destination.lower().split())
+    if not destination_key:
+        return []
+
+    listings = BusinessListing.query.filter_by(is_published=True).all()
+    relevant = []
+    for listing in listings:
+        location_text = "".join(f"{listing.prefecture or ''} {listing.address or ''}".lower().split())
+        if destination_key in location_text or location_text and location_text in destination_key:
+            relevant.append(listing)
+
+    if not relevant:
+        return []
+
+    listing_ids = [item.id for item in relevant]
+    stats = db.session.query(
+        Review.listing_id, func.avg(Review.rating), func.count(Review.id)
+    ).filter(Review.listing_id.in_(listing_ids)).group_by(Review.listing_id).all()
+    review_stats = {listing_id: (float(avg), int(count)) for listing_id, avg, count in stats}
+
+    # Keep lower-rated places eligible, but rank them behind better-reviewed listings.
+    relevant.sort(key=lambda item: (
+        review_stats.get(item.id, (0.0, 0))[0],
+        review_stats.get(item.id, (0.0, 0))[1],
+    ), reverse=True)
+    candidates = []
+    for item in relevant[:limit]:
+        average, count = review_stats.get(item.id, (0.0, 0))
+        candidates.append({
+            "id": item.id,
+            "name": item.name[:120],
+            "category": item.category[:50],
+            "prefecture": item.prefecture[:20],
+            "address": (item.address or "")[:255],
+            "price_range": (item.price_range or "")[:100],
+            "description": (item.description or "")[:500],
+            "average": round(average, 1) if count else None,
+            "review_count": count,
+        })
+    return candidates
+
+
+def _send_password_reset_link(email, reset_url):
+    mail_server = current_app.config["MAIL_SERVER"]
+    sender = current_app.config["MAIL_DEFAULT_SENDER"] or current_app.config["MAIL_USERNAME"]
+    if mail_server and sender:
+        message = EmailMessage()
+        message["Subject"] = "Tabidea パスワード再設定"
+        message["From"] = sender
+        message["To"] = email
+        message.set_content(
+            "パスワード再設定の依頼を受け付けました。\n"
+            "次のリンクを30分以内に開いて、新しいパスワードを設定してください。\n\n"
+            f"{reset_url}\n\n"
+            "心当たりがない場合、このメールは破棄してください。"
+        )
+        try:
+            with smtplib.SMTP(mail_server, current_app.config["MAIL_PORT"], timeout=15) as smtp:
+                if current_app.config["MAIL_USE_TLS"]:
+                    smtp.starttls()
+                username = current_app.config["MAIL_USERNAME"]
+                if username:
+                    smtp.login(username, current_app.config["MAIL_PASSWORD"])
+                smtp.send_message(message)
+            return True
+        except (OSError, smtplib.SMTPException, ValueError):
+            current_app.logger.exception("Password reset email could not be sent.")
+
+    if current_app.config["PASSWORD_RESET_DEV_MODE"]:
+        current_app.logger.warning("LOCAL DEVELOPMENT ONLY — password reset link: %s", reset_url)
+    else:
+        current_app.logger.error("Password reset email is unavailable; configure SMTP or enable dev mode locally.")
+    return False
+
+
+def _send_contact_notification(inquiry):
+    recipient = current_app.config["CONTACT_EMAIL"]
+    mail_server = current_app.config["MAIL_SERVER"]
+    sender = current_app.config["MAIL_DEFAULT_SENDER"] or current_app.config["MAIL_USERNAME"]
+    if not (recipient and mail_server and sender):
+        return False
+    message = EmailMessage()
+    message["Subject"] = f"Tabideaお問い合わせ: {inquiry.subject}"
+    message["From"] = sender
+    message["To"] = recipient
+    message["Reply-To"] = inquiry.email
+    message.set_content(
+        f"お問い合わせ種別: {inquiry.category}\n"
+        f"お名前: {inquiry.name}\n"
+        f"メールアドレス: {inquiry.email}\n"
+        f"受信日時: {inquiry.created_at}\n\n"
+        f"{inquiry.message}"
+    )
+    try:
+        with smtplib.SMTP(mail_server, current_app.config["MAIL_PORT"], timeout=15) as smtp:
+            if current_app.config["MAIL_USE_TLS"]:
+                smtp.starttls()
+            username = current_app.config["MAIL_USERNAME"]
+            if username:
+                smtp.login(username, current_app.config["MAIL_PASSWORD"])
+            smtp.send_message(message)
+        return True
+    except (OSError, smtplib.SMTPException, ValueError):
+        current_app.logger.exception("Contact notification email could not be sent.")
+        return False
 
 
 def create_app():
@@ -46,8 +160,15 @@ def create_app():
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         WTF_CSRF_TIME_LIMIT=None,
         MAX_CONTENT_LENGTH=27 * 1024 * 1024,
-        AI_PROVIDER=os.getenv("AI_PROVIDER", "ollama"),
         GEOAPIFY_API_KEY=os.getenv("GEOAPIFY_API_KEY", "").strip(),
+        PASSWORD_RESET_DEV_MODE=os.getenv("PASSWORD_RESET_DEV_MODE", os.getenv("FLASK_DEBUG", "0")).strip().lower() in ("1", "true", "yes"),
+        MAIL_SERVER=os.getenv("MAIL_SERVER", "").strip(),
+        MAIL_PORT=int(os.getenv("MAIL_PORT", "587")),
+        MAIL_USERNAME=os.getenv("MAIL_USERNAME", "").strip(),
+        MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", ""),
+        MAIL_DEFAULT_SENDER=os.getenv("MAIL_DEFAULT_SENDER", "").strip(),
+        MAIL_USE_TLS=os.getenv("MAIL_USE_TLS", "1").strip().lower() in ("1", "true", "yes"),
+        CONTACT_EMAIL=os.getenv("CONTACT_EMAIL", "").strip(),
     )
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     db.init_app(app)
@@ -77,6 +198,35 @@ def create_app():
         if current_user.user_type == "traveler":
             recent = TravelPlan.query.filter_by(user_id=current_user.id).order_by(TravelPlan.updated_at.desc()).limit(3).all()
         return page("menu", recent=recent)
+
+    @app.route("/contact", methods=["GET", "POST"])
+    def contact():
+        contact_categories = ["サービスについて", "不具合の報告", "機能の要望", "その他"]
+        values = {
+            "name": current_user.username if current_user.is_authenticated else "",
+            "email": current_user.email if current_user.is_authenticated else "",
+            "category": contact_categories[0], "subject": "", "message": "",
+        }
+        if request.method == "POST":
+            values.update({key: request.form.get(key, "").strip() for key in ("name", "email", "category", "subject", "message")})
+            if (not 2 <= len(values["name"]) <= 80
+                    or len(values["email"]) > 255
+                    or "@" not in values["email"]
+                    or "." not in values["email"].rsplit("@", 1)[-1]
+                    or values["category"] not in contact_categories
+                    or not 1 <= len(values["subject"]) <= 160
+                    or not 10 <= len(values["message"]) <= 5000):
+                flash("入力内容を確認してください。お問い合わせ本文は10〜5,000文字で入力してください。", "error")
+                return page("contact", contact_categories=contact_categories, values=values), 400
+            inquiry = ContactInquiry(**values)
+            db.session.add(inquiry)
+            db.session.commit()
+            notified = _send_contact_notification(inquiry)
+            notice = "お問い合わせを受け付け、アプリ内に保存しました。"
+            notice += "担当者にメール通知しました。" if notified else "メール通知は未設定です。"
+            flash(notice, "success")
+            return redirect(url_for("contact"))
+        return page("contact", contact_categories=contact_categories, values=values)
 
     @app.route("/auth/<mode>", methods=["GET", "POST"])
     def auth(mode):
@@ -125,6 +275,57 @@ def create_app():
     @app.get("/login")
     def login_page():
         return redirect(url_for("auth", mode="login"))
+
+    @app.route("/password-reset", methods=["GET", "POST"])
+    def password_reset_request():
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            user = User.query.filter_by(email=email).first() if email else None
+            if user:
+                serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"], salt="tabidea-password-reset-v1")
+                token = serializer.dumps({"user_id": user.id, "email": user.email, "password_hash": user.password_hash})
+                reset_url = url_for("password_reset", token=token, _external=True)
+                _send_password_reset_link(user.email, reset_url)
+            flash("登録済みのメールアドレスの場合、パスワード再設定用リンクを送信しました。画面の案内をご確認ください。", "success")
+            return redirect(url_for("password_reset_request"))
+        return render_template("password_reset_request.html")
+
+    @app.route("/password-reset/<token>", methods=["GET", "POST"])
+    def password_reset(token):
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
+        serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"], salt="tabidea-password-reset-v1")
+        user = None
+        expired = False
+        try:
+            payload = serializer.loads(token, max_age=30 * 60)
+            candidate = db.session.get(User, payload.get("user_id"))
+            if (candidate and candidate.email == payload.get("email")
+                    and candidate.password_hash == payload.get("password_hash")):
+                user = candidate
+        except SignatureExpired:
+            expired = True
+        except BadSignature:
+            pass
+
+        if not user:
+            return render_template("password_reset.html", token_valid=False, expired=expired)
+
+        if request.method == "POST":
+            password = request.form.get("password", "")
+            password_confirm = request.form.get("password_confirm", "")
+            if len(password) < 8:
+                flash("パスワードは8文字以上で入力してください。", "error")
+            elif password != password_confirm:
+                flash("パスワードが一致しません。", "error")
+            else:
+                user.password_hash = generate_password_hash(password)
+                db.session.commit()
+                flash("パスワードを再設定しました。新しいパスワードでログインしてください。", "success")
+                return redirect(url_for("auth", mode="login"))
+        return render_template("password_reset.html", token_valid=True, expired=False, token=token)
 
     @app.post("/logout")
     @login_required
@@ -642,7 +843,8 @@ def create_app():
             prompt_values = dict(values)
             if values["companions"]:
                 prompt_values["preferences"] = f"{values['preferences']}\n年代・同行者など: {values['companions']}".strip()
-            system, prompt = plan_prompts(prompt_values, current_user.profile)
+            business_candidates = _published_business_candidates(values["destination"])
+            system, prompt = plan_prompts(prompt_values, current_user.profile, business_candidates)
             try:
                 answer = generate_text(system, prompt)
             except AIServiceError as exc:
@@ -851,6 +1053,25 @@ def create_app():
             "translate", plans=plans, selected_plan=selected_plan,
         )
 
+    @app.post("/api/plans/<int:plan_id>/translate")
+    @login_required
+    def translate_plan_api(plan_id):
+        plan = _visible_plan(plan_id)
+        payload = request.get_json(silent=True) or {}
+        locale = payload.get("locale", "")
+        languages = {
+            "en": "英語", "ko": "韓国語", "zh-CN": "簡体字中国語",
+            "zh-TW": "繁体字中国語", "th": "タイ語",
+        }
+        if locale not in languages:
+            return jsonify(error="翻訳先の言語を選択してください。"), 400
+        system, prompt = translation_prompts(plan.ai_response[:16000], languages[locale])
+        try:
+            translated = generate_text(system, prompt, temperature=0.2)
+        except AIServiceError as exc:
+            return jsonify(error=str(exc)), 502
+        return jsonify(text=translated)
+
     @app.post("/plans/<int:plan_id>/change")
     @login_required
     def change_plan(plan_id):
@@ -859,7 +1080,8 @@ def create_app():
         if not instruction:
             flash("変更したい内容を入力してください。", "error")
             return redirect(url_for("plan_detail", plan_id=plan.id))
-        system, prompt = change_prompts(plan, instruction)
+        business_candidates = _published_business_candidates(plan.destination)
+        system, prompt = change_prompts(plan, instruction, business_candidates)
         try:
             plan.ai_response = generate_text(system, prompt)
             db.session.commit()
@@ -971,10 +1193,18 @@ def create_app():
             if not data["name"] or data["category"] not in CATEGORIES or data["prefecture"] not in PREFECTURES or not data["description"]:
                 flash("施設名、カテゴリ、都道府県、紹介文を入力してください。", "error")
             else:
-                db.session.add(BusinessListing(user_id=current_user.id, **data))
-                db.session.commit()
-                flash("情報を保存しました。初期状態は非公開です。", "success")
-                return redirect(url_for("business"))
+                try:
+                    prepared_photos = _prepare_business_photos(request.files.getlist("photos"))
+                except ValueError as exc:
+                    flash(str(exc), "error")
+                else:
+                    listing = BusinessListing(user_id=current_user.id, **data)
+                    db.session.add(listing)
+                    db.session.flush()
+                    _store_business_photos(listing, prepared_photos)
+                    db.session.commit()
+                    flash("掲載情報と写真を保存しました。初期状態は非公開です。", "success")
+                    return redirect(url_for("business"))
         items = BusinessListing.query.filter_by(user_id=current_user.id).order_by(BusinessListing.updated_at.desc()).all()
         return page("business", listings=items)
 
@@ -988,12 +1218,50 @@ def create_app():
             if not data["name"] or data["category"] not in CATEGORIES or data["prefecture"] not in PREFECTURES or not data["description"]:
                 flash("施設名、カテゴリ、都道府県、紹介文を入力してください。", "error")
             else:
-                for key, value in data.items():
-                    setattr(item, key, value)
-                db.session.commit()
-                flash("掲載情報を更新しました。", "success")
-                return redirect(url_for("business"))
-        return render_template("business_edit.html", page="business", item=item, categories=CATEGORIES, prefectures=PREFECTURES)
+                try:
+                    prepared_photos = _prepare_business_photos(request.files.getlist("photos"))
+                    if len(item.photos) + len(prepared_photos) > BUSINESS_MAX_PHOTOS:
+                        raise ValueError(f"写真は1施設あたり{BUSINESS_MAX_PHOTOS}枚まで登録できます。")
+                except ValueError as exc:
+                    flash(str(exc), "error")
+                else:
+                    for key, value in data.items():
+                        setattr(item, key, value)
+                    _store_business_photos(item, prepared_photos)
+                    db.session.commit()
+                    flash("掲載情報を更新しました。", "success")
+                    return redirect(url_for("edit_listing", item_id=item.id))
+        return render_template("business_edit.html", page="business", item=item, categories=CATEGORIES, prefectures=PREFECTURES, max_photos=BUSINESS_MAX_PHOTOS)
+
+    @app.get("/business/<int:item_id>/photos/<int:photo_id>")
+    @login_required
+    def business_listing_photo(item_id, photo_id):
+        listing = BusinessListing.query.filter_by(id=item_id).first_or_404()
+        photo = BusinessListingPhoto.query.filter_by(id=photo_id, listing_id=listing.id).first_or_404()
+        if not listing.is_published and listing.user_id != current_user.id:
+            abort(404)
+        response = send_from_directory(
+            Path(app.instance_path) / "business_photos" / str(listing.id),
+            photo.filename,
+            as_attachment=False,
+            conditional=True,
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Cache-Control"] = "private, max-age=3600"
+        return response
+
+    @app.post("/business/<int:item_id>/photos/<int:photo_id>/delete")
+    @login_required
+    def delete_business_listing_photo(item_id, photo_id):
+        _business_only()
+        listing = _owned_listing(item_id)
+        photo = BusinessListingPhoto.query.filter_by(id=photo_id, listing_id=listing.id).first_or_404()
+        photo_path = Path(app.instance_path) / "business_photos" / str(listing.id) / photo.filename
+        db.session.delete(photo)
+        db.session.commit()
+        photo_path.unlink(missing_ok=True)
+        flash("写真を削除しました。", "success")
+        return redirect(url_for("edit_listing", item_id=listing.id))
 
     @app.post("/business/<int:item_id>/toggle")
     @login_required
@@ -1006,8 +1274,17 @@ def create_app():
     @app.post("/business/<int:item_id>/delete")
     @login_required
     def delete_listing(item_id):
-        db.session.delete(_owned_listing(item_id))
+        listing = _owned_listing(item_id)
+        photo_dir = Path(app.instance_path) / "business_photos" / str(listing.id)
+        for photo in listing.photos:
+            (photo_dir / photo.filename).unlink(missing_ok=True)
+        db.session.delete(listing)
         db.session.commit()
+        if photo_dir.exists():
+            try:
+                photo_dir.rmdir()
+            except OSError:
+                pass
         return redirect(url_for("business"))
 
     return app
@@ -1142,6 +1419,45 @@ def _owned_listing(item_id):
     if not item or item.user_id != current_user.id or current_user.user_type != "business":
         abort(404)
     return item
+
+
+def _prepare_business_photos(files):
+    photos = [photo for photo in files if photo and photo.filename]
+    if len(photos) > BUSINESS_MAX_PHOTOS:
+        raise ValueError(f"写真は一度に{BUSINESS_MAX_PHOTOS}枚まで選択できます。")
+
+    prepared = []
+    for photo in photos:
+        extension = Path(photo.filename).suffix.lower()
+        image_type = ALBUM_IMAGE_TYPES.get(extension)
+        if not image_type:
+            raise ValueError("JPG、PNG、GIF、WebP形式の写真を選んでください。")
+        photo.stream.seek(0, os.SEEK_END)
+        size = photo.stream.tell()
+        photo.stream.seek(0)
+        header = photo.stream.read(12)
+        photo.stream.seek(0)
+        valid_signature = (
+            (image_type == "jpeg" and header.startswith(b"\xff\xd8\xff"))
+            or (image_type == "png" and header.startswith(b"\x89PNG\r\n\x1a\n"))
+            or (image_type == "gif" and header[:6] in (b"GIF87a", b"GIF89a"))
+            or (image_type == "webp" and header[:4] == b"RIFF" and header[8:12] == b"WEBP")
+        )
+        if size == 0 or size > BUSINESS_MAX_IMAGE_BYTES or not valid_signature:
+            raise ValueError("1枚5MBまでのJPG、PNG、GIF、WebP画像を選んでください。")
+        prepared.append((photo, extension))
+    return prepared
+
+
+def _store_business_photos(listing, prepared):
+    if not prepared:
+        return
+    photo_dir = Path(current_app.instance_path) / "business_photos" / str(listing.id)
+    photo_dir.mkdir(parents=True, exist_ok=True)
+    for photo, extension in prepared:
+        filename = f"{secrets.token_hex(16)}{extension}"
+        photo.save(photo_dir / filename)
+        db.session.add(BusinessListingPhoto(listing_id=listing.id, filename=filename))
 
 
 app = create_app()
