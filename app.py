@@ -2,6 +2,7 @@ import os
 import re
 import secrets
 import smtplib
+import shutil
 from datetime import date, datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
@@ -677,6 +678,52 @@ def create_app():
         db.session.commit()
         flash("グループを作成しました。招待コードを仲間に共有してください。", "success")
         return redirect(url_for("group_detail", group_id=group.id))
+
+    @app.get("/groups/<int:group_id>/delete")
+    @login_required
+    def confirm_delete_group(group_id):
+        _traveler_only()
+        group = db.session.get(TripGroup, group_id)
+        if not group:
+            abort(404)
+        if group.owner_id != current_user.id:
+            abort(403)
+        return page("group_delete_confirm", group=group)
+
+    @app.post("/groups/<int:group_id>/delete")
+    @login_required
+    def delete_group(group_id):
+        _traveler_only()
+        group = db.session.get(TripGroup, group_id)
+        if not group:
+            abort(404)
+        if group.owner_id != current_user.id:
+            abort(403)
+
+        confirmed_name = request.form.get("confirm_group_name", "").strip()
+        if confirmed_name != group.name:
+            flash("入力したグループ名が一致しません。削除は行われていません。", "error")
+            return redirect(url_for("confirm_delete_group", group_id=group.id))
+
+        group_name = group.name
+        group_id = group.id
+
+        # Keep travelers' plans, but remove their link to the deleted group.
+        TravelPlan.query.filter_by(group_id=group_id).update(
+            {TravelPlan.group_id: None}, synchronize_session=False
+        )
+        for expense in GroupExpense.query.filter_by(group_id=group_id).all():
+            db.session.delete(expense)
+        GroupBudget.query.filter_by(group_id=group_id).delete(synchronize_session=False)
+
+        # TripGroup relationships cascade to members, messages, notes, and photos.
+        db.session.delete(group)
+        db.session.commit()
+
+        shutil.rmtree(Path(app.instance_path) / "group_icons" / str(group_id), ignore_errors=True)
+        shutil.rmtree(Path(app.instance_path) / "group_album" / str(group_id), ignore_errors=True)
+        flash(f"「{group_name}」を削除しました。", "success")
+        return redirect(url_for("groups"))
 
     @app.post("/groups/join")
     @login_required

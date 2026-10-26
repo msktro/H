@@ -53,3 +53,5 @@ button:disabled,.button:disabled{background:#c6d3ce;color:#fff;cursor:not-allowe
 .group-icon-image{display:inline-block;object-fit:cover;overflow:hidden;border-radius:inherit}.group-icon-upload{margin:12px 0}.group-icon-upload input[type=file]{max-width:100%}
 
 .group-notification-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;margin-left:6px;border-radius:999px;background:#c75146;color:#fff;font-size:12px;font-weight:700;line-height:1}.group-notification-badge[hidden]{display:none}
+
+.group-delete-action{display:flex;justify-content:flex-end;margin-top:18px}.button.danger{background:#fff0ed;color:#b54c3e;border:1px solid #f1cbc5}.group-delete-confirm-card{max-width:680px;margin:24px auto}.group-delete-confirm-card h2{margin-top:0}
