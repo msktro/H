@@ -1,0 +1,3 @@
+.recent-plans .trip-card>div:last-child{flex:1;min-width:0}
+.recent-plans .trip-open-button{min-width:170px;min-height:50px;padding:14px 22px;font-size:16px}
+@media(max-width:560px){.recent-plans .trip-card{flex-wrap:wrap}.recent-plans .trip-card>div:last-child{width:100%}.recent-plans .trip-open-button{width:100%;min-height:52px}}

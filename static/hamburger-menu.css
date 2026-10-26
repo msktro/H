@@ -13,4 +13,9 @@
 .nav .logout-button{width:100%;justify-content:flex-start;padding:12px;border:0;border-radius:10px;background:#fff0ed;color:#a94337;font-size:14px;font-weight:800}
 .nav .logout-button:hover{background:#ffe4df;color:#8e352c}
 .menu-toggle:focus-visible,.topbar .nav a:focus-visible,.nav .logout-button:focus-visible{outline:3px solid #86cdb3;outline-offset:2px}
+.topbar .nav{box-sizing:border-box;gap:3px;width:min(288px,calc(100vw - 24px));padding:7px;overflow-x:hidden;white-space:normal}
+.topbar .nav>a{box-sizing:border-box;display:flex;width:100%;min-height:44px;justify-content:flex-start;text-align:left;padding:10px 12px;border-radius:9px}
+.topbar .nav form{box-sizing:border-box;width:100%;margin:5px 0 0;padding:7px 0 0}
+.topbar .nav .logout-button{box-sizing:border-box;display:flex;min-height:44px;align-items:center;justify-content:flex-start;padding:10px 12px;text-align:left}
+@media(max-width:800px){.topbar{height:72px;min-height:72px;align-items:center;flex-direction:row;padding:0 16px}.top-actions{margin-left:auto}.topbar .nav{width:min(288px,calc(100vw - 24px))}}
 @media(max-width:560px){.topbar{height:62px;min-height:62px;padding:0 12px}.top-actions{gap:7px}.menu-toggle{padding:9px 10px}.menu-toggle-text{display:none}.nav{top:calc(100% + 9px);max-height:calc(100vh - 78px)}}

@@ -116,6 +116,10 @@
   for (const [locale, entries] of Object.entries(contactText)) Object.assign(dictionaries[locale], entries);
 
   const groupText = {
+    "QRコードで招待": ["Invite with QR code", "QR 코드로 초대", "使用二维码邀请", "使用 QR 碼邀請", "เชิญด้วย QR Code"],
+    "読み取ると、ログインまたは新規登録後にグループへ参加できます。": ["Scan to join the group after logging in or creating an account.", "QR 코드를 스캔한 뒤 로그인하거나 가입하면 그룹에 참여할 수 있습니다.", "扫描后登录或注册即可加入群组。", "掃描後登入或註冊即可加入群組。", "สแกนแล้วเข้าสู่ระบบหรือสมัครสมาชิกเพื่อเข้าร่วมกลุ่ม"],
+    "招待リンクを開く": ["Open invite link", "초대 링크 열기", "打开邀请链接", "開啟邀請連結", "เปิดลิงก์คำเชิญ"],
+    "QRコードを表示できません。招待リンクを使ってください。": ["The QR code could not be displayed. Use the invite link instead.", "QR 코드를 표시할 수 없습니다. 초대 링크를 사용하세요.", "无法显示二维码，请使用邀请链接。", "無法顯示 QR 碼，請使用邀請連結。", "แสดง QR Code ไม่ได้ โปรดใช้ลิงก์คำเชิญ"],
     "旅程・予約": ["Itinerary & bookings", "일정·예약", "行程与预订", "行程與預訂", "กำหนดการและการจอง"],
     "集合": ["Meet-up", "모임", "集合", "集合", "นัดพบ"],
     "予約": ["Booking", "예약", "预订", "預訂", "การจอง"],
