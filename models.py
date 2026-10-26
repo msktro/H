@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     user_type = db.Column(db.String(20), nullable=False)
     avatar = db.Column(db.String(16), nullable=False, default="👤", server_default="👤")
+    avatar_image = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     profile = db.relationship("TravelerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -41,6 +42,8 @@ class TripGroup(db.Model):
     __tablename__ = "trip_groups"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
+    icon = db.Column(db.String(16), nullable=False, default="🧳", server_default="🧳")
+    icon_image = db.Column(db.String(255), nullable=True)
     invite_code = db.Column(db.String(16), unique=True, nullable=False, index=True)
     owner_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
@@ -68,6 +71,28 @@ class GroupMessage(db.Model):
     content = db.Column(db.String(1000), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
     group = db.relationship("TripGroup", back_populates="messages")
+    user = db.relationship("User")
+    read_receipts = db.relationship("GroupMessageRead", back_populates="message", cascade="all, delete-orphan", order_by="GroupMessageRead.read_at")
+
+class GroupMessageRead(db.Model):
+    __tablename__ = "group_message_reads"
+    __table_args__ = (UniqueConstraint("message_id", "user_id", name="uq_group_message_reader"),)
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey("group_messages.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    read_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    message = db.relationship("GroupMessage", back_populates="read_receipts")
+    user = db.relationship("User")
+
+class GroupMessageReaction(db.Model):
+    __tablename__ = "group_message_reactions"
+    __table_args__ = (UniqueConstraint("message_id", "user_id", name="uq_group_message_reaction_user"),)
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey("group_messages.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    emoji = db.Column(db.String(16), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    message = db.relationship("GroupMessage", backref=db.backref("reactions", cascade="all, delete-orphan", order_by="GroupMessageReaction.created_at"))
     user = db.relationship("User")
 
 class GroupAlbumPhoto(db.Model):
@@ -159,6 +184,46 @@ class TravelPlan(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     user = db.relationship("User", backref=db.backref("plans", cascade="all, delete-orphan"))
     packing_items = db.relationship("PackingItem", back_populates="plan", cascade="all, delete-orphan", order_by="PackingItem.id")
+    travel_story = db.relationship("TravelStory", back_populates="plan", uselist=False, cascade="all, delete-orphan")
+
+class TravelStory(db.Model):
+    __tablename__ = "travel_stories"
+    id = db.Column(db.Integer, primary_key=True)
+    plan_id = db.Column(db.Integer, db.ForeignKey("travel_plans.plan_id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    introduction = db.Column(db.String(1200), nullable=False, default="")
+    is_public = db.Column(db.Boolean, nullable=False, default=True)
+    view_count = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    comments_viewed_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    plan = db.relationship("TravelPlan", back_populates="travel_story")
+    user = db.relationship("User")
+    likes = db.relationship("TravelStoryLike", back_populates="story", cascade="all, delete-orphan")
+    comments = db.relationship("TravelStoryComment", back_populates="story", cascade="all, delete-orphan", order_by="TravelStoryComment.created_at.asc()")
+
+class TravelStoryLike(db.Model):
+    __tablename__ = "travel_story_likes"
+    __table_args__ = (UniqueConstraint("story_id", "user_id", name="uq_travel_story_like"),)
+    id = db.Column(db.Integer, primary_key=True)
+    story_id = db.Column(db.Integer, db.ForeignKey("travel_stories.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    story = db.relationship("TravelStory", back_populates="likes")
+    user = db.relationship("User")
+
+class TravelStoryComment(db.Model):
+    __tablename__ = "travel_story_comments"
+    id = db.Column(db.Integer, primary_key=True)
+    story_id = db.Column(db.Integer, db.ForeignKey("travel_stories.id", ondelete="CASCADE"), nullable=False, index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("travel_story_comments.id", ondelete="CASCADE"), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    content = db.Column(db.String(1200), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    story = db.relationship("TravelStory", back_populates="comments")
+    user = db.relationship("User")
+    parent = db.relationship("TravelStoryComment", remote_side=[id], back_populates="replies")
+    replies = db.relationship("TravelStoryComment", back_populates="parent", cascade="all, delete-orphan", order_by="TravelStoryComment.created_at.asc()")
 
 class PackingItem(db.Model):
     __tablename__ = "packing_items"
@@ -184,6 +249,15 @@ class BusinessListing(db.Model):
     price_range = db.Column(db.String(100), default="")
     website_url = db.Column(db.String(2048), default="")
     description = db.Column(db.Text, nullable=False)
+    representative_name = db.Column(db.String(100), default="", nullable=False)
+    phone = db.Column(db.String(20), default="", nullable=False)
+    phone_verified = db.Column(db.Boolean, default=False, nullable=False)
+    phone_verification_hash = db.Column(db.String(256), default="", nullable=False)
+    phone_verification_expires_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    phone_verification_sent_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    phone_verification_attempts = db.Column(db.Integer, default=0, nullable=False)
+    access = db.Column(db.Text, default="", nullable=False)
+    opening_hours = db.Column(db.String(300), default="", nullable=False)
     is_published = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
@@ -221,6 +295,15 @@ class Review(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     listing = db.relationship("BusinessListing", back_populates="reviews")
     user = db.relationship("User")
+
+class ViewHistory(db.Model):
+    __tablename__ = "view_histories"
+    __table_args__ = (UniqueConstraint("user_id", "target_type", "target_id", name="uq_view_history_target"),)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    target_type = db.Column(db.String(20), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)
+    viewed_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False, index=True)
 
 class ContactInquiry(db.Model):
     __tablename__ = "contact_inquiries"
