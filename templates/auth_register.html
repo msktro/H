@@ -21,11 +21,11 @@
         <label class="field-label" for="email">メールアドレス</label>
         <input class="auth-input" id="email" name="email" type="email" autocomplete="email" value="{{ values.email }}" required>
         <label class="field-label" for="password">パスワード <small>8文字以上</small></label>
-        <input class="auth-input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+        <div class="password-control"><input class="auth-input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" required><button class="password-toggle" type="button" aria-label="パスワードを表示" aria-pressed="false" data-password-toggle="password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
         <button class="primary-button auth-submit" type="submit">アカウントを作成 <span>→</span></button>
       </form>
       <p class="auth-switch">すでにアカウントをお持ちの方は <a href="{{ url_for('auth.login') }}">ログイン</a></p>
     </section>
   </main>
-</body>
+<script defer src="{{ url_for('static', filename='password-toggle.js', v='20261021-1') }}"></script></body>
 </html>
