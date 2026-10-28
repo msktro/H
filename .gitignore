@@ -221,3 +221,5 @@ __marimo__/
 
 # Local archive of the duplicated H checkout
 /.archive/
+
+.env
