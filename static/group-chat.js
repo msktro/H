@@ -45,6 +45,7 @@
     if (message.is_stamp) article.classList.add("stamp-message");
     article.dataset.messageId = String(id);
     article.dataset.userId = String(message.user_id);
+    article.dataset.deleted = String(Boolean(message.is_deleted));
 
     const meta = document.createElement("div");
     meta.className = "chat-message-meta";
@@ -70,28 +71,9 @@
     content.dataset.noTranslate = "";
     content.textContent = message.is_deleted ? "このメッセージは送信取り消しされました。" : (message.content || "");
     article.append(meta, content);
-    if (Number(message.user_id) === Number(root.dataset.userId) && !message.is_deleted) {
-      const unsend = document.createElement("button");
-      unsend.type = "button";
-      unsend.className = "chat-unsend-button";
-      unsend.dataset.unsendMessage = String(id);
-      unsend.textContent = "送信取り消し";
-      article.appendChild(unsend);
-    }
-    const isOwnMessage = Number(message.user_id) === Number(root.dataset.userId);
-    let reactionTrigger = null;
-    if (!isOwnMessage && !message.is_deleted) {
-      reactionTrigger = document.createElement("button");
-      reactionTrigger.type = "button";
-      reactionTrigger.className = "chat-reaction-trigger";
-      reactionTrigger.dataset.reactionTrigger = String(id);
-      reactionTrigger.setAttribute("aria-label", "リアクションを選ぶ");
-      reactionTrigger.textContent = "＋";
-    }
     const reactions = document.createElement("div");
     reactions.className = "chat-reactions";
     reactions.dataset.reactionsFor = String(id);
-    if (reactionTrigger) article.appendChild(reactionTrigger);
     article.appendChild(reactions);
     renderReactions(article, message.is_deleted ? {} : (message.reaction_counts || {}), message.my_reaction || "");
     if (Number(message.user_id) === Number(root.dataset.userId)) {
@@ -115,17 +97,27 @@
   function applyMessageDeletion(message) {
     if (!message?.is_deleted) return;
     const article = list.querySelector(`[data-message-id="${message.id}"]`);
-    if (!article) return;
-    const content = article.querySelector("p[data-no-translate]");
-    if (content) content.textContent = "このメッセージは送信取り消しされました。";
-    article.querySelector("[data-unsend-message]")?.remove();
-    article.querySelector("[data-reaction-trigger]")?.remove();
-    const reactions = article.querySelector(".chat-reactions");
-    if (reactions) {
-      reactions.replaceChildren();
-      reactions.hidden = true;
+    article?.remove();
+    if (Number(message.id) === activeReactionMessageId) {
+      reactionMenu.hidden = true;
+      unsendOption.hidden = true;
+      editOption.hidden = true;
+      activeReactionMessageId = null;
     }
-    article.classList.remove("stamp-message");
+    if (!list.querySelector(".chat-message") && !document.getElementById("group-chat-empty")) {
+      const empty = document.createElement("p");
+      empty.className = "group-chat-empty";
+      empty.id = "group-chat-empty";
+      empty.textContent = "まだメッセージはありません。最初のメッセージを送ってみましょう。";
+      list.appendChild(empty);
+    }
+  }
+
+  function applyMessageEdit(message) {
+    if (!message || message.is_deleted) return;
+    const article = list.querySelector(`[data-message-id="${message.id}"]`);
+    const content = article?.querySelector("p[data-no-translate]");
+    if (content) content.textContent = message.content || "";
   }
 
   function updateUnreadBadge(amount, direction = -1) {
@@ -196,6 +188,8 @@
   reactionMenu.className = "chat-reaction-menu";
   reactionMenu.hidden = true;
   reactionMenu.setAttribute("role", "menu");
+  const reactionRow = document.createElement("div");
+  reactionRow.className = "chat-reaction-row";
   reactionEmojis.forEach((emoji) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -205,40 +199,101 @@
       if (activeReactionMessageId) toggleReaction(activeReactionMessageId, emoji);
       reactionMenu.hidden = true;
     });
-    reactionMenu.appendChild(button);
+    reactionRow.appendChild(button);
   });
+  reactionMenu.appendChild(reactionRow);
+  const unsendOption = document.createElement("button");
+  unsendOption.type = "button";
+  unsendOption.className = "chat-unsend-option chat-own-action";
+  unsendOption.textContent = "送信取り消し";
+  unsendOption.setAttribute("aria-label", "送信取り消し");
+  unsendOption.title = "送信取り消し";
+  unsendOption.hidden = true;
+  unsendOption.addEventListener("click", () => {
+    const messageId = activeReactionMessageId;
+    reactionMenu.hidden = true;
+    if (messageId) unsendGroupMessage(messageId, unsendOption);
+  });
+  const editOption = document.createElement("button");
+  editOption.type = "button";
+  editOption.className = "chat-edit-option chat-own-action";
+  editOption.textContent = "メッセージを編集";
+  editOption.setAttribute("aria-label", "メッセージを編集");
+  editOption.hidden = true;
+  editOption.addEventListener("click", () => {
+    const messageId = activeReactionMessageId;
+    reactionMenu.hidden = true;
+    if (messageId) editGroupMessage(messageId, editOption);
+  });
+  const copyOption = document.createElement("button");
+  copyOption.type = "button";
+  copyOption.className = "chat-copy-option chat-menu-action";
+  copyOption.textContent = "テキストをコピー";
+  copyOption.setAttribute("aria-label", "テキストをコピー");
+  copyOption.addEventListener("click", async () => {
+    const article = list.querySelector(`[data-message-id="${activeReactionMessageId}"]`);
+    const text = article?.querySelector("p[data-no-translate]")?.textContent || "";
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        throw new Error("clipboard unavailable");
+      }
+    } catch (_error) {
+      const temporary = document.createElement("textarea");
+      temporary.value = text;
+      temporary.style.position = "fixed";
+      temporary.style.opacity = "0";
+      document.body.appendChild(temporary);
+      temporary.select();
+      const copied = document.execCommand("copy");
+      temporary.remove();
+      if (!copied) {
+        status.textContent = "テキストをコピーできませんでした。";
+        reactionMenu.hidden = true;
+        return;
+      }
+    }
+    status.textContent = "メッセージをコピーしました。";
+    reactionMenu.hidden = true;
+  });
+  reactionMenu.appendChild(editOption);
+  reactionMenu.appendChild(copyOption);
+  reactionMenu.appendChild(unsendOption);
   document.body.appendChild(reactionMenu);
 
-  function openReactionMenu(messageId, x, y) {
+  function openReactionMenu(messageId, x, y, isOwnMessage = false) {
     activeReactionMessageId = Number(messageId);
+    reactionRow.hidden = isOwnMessage;
+    unsendOption.hidden = !isOwnMessage;
+    editOption.hidden = !isOwnMessage;
+    copyOption.hidden = false;
+    reactionMenu.classList.toggle("is-own-menu", isOwnMessage);
     reactionMenu.hidden = false;
     const left = Math.max(8, Math.min(x, window.innerWidth - 220));
     const top = Math.max(8, Math.min(y, window.innerHeight - 64));
     reactionMenu.style.left = `${left}px`;
     reactionMenu.style.top = `${top}px`;
-    reactionMenu.querySelector("button")?.focus();
+    reactionMenu.querySelector("button:not([hidden])")?.focus();
   }
 
   list.addEventListener("contextmenu", (event) => {
     const article = event.target.closest(".chat-message");
     if (!article) return;
     event.preventDefault();
-    if (Number(article.dataset.userId) === Number(root.dataset.userId)) return;
-    openReactionMenu(article.dataset.messageId, event.clientX, event.clientY);
+    const isOwnMessage = Number(article.dataset.userId) === Number(root.dataset.userId);
+    if (article.dataset.deleted === "true") {
+      reactionMenu.hidden = true;
+      unsendOption.hidden = true;
+      editOption.hidden = true;
+      copyOption.hidden = true;
+      activeReactionMessageId = null;
+      return;
+    }
+    openReactionMenu(article.dataset.messageId, event.clientX, event.clientY, isOwnMessage);
   });
 
   list.addEventListener("click", (event) => {
-    const unsend = event.target.closest("[data-unsend-message]");
-    if (unsend) {
-      unsendGroupMessage(unsend.dataset.unsendMessage, unsend);
-      return;
-    }
-    const trigger = event.target.closest("[data-reaction-trigger]");
-    if (trigger) {
-      const rect = trigger.getBoundingClientRect();
-      openReactionMenu(trigger.dataset.reactionTrigger, rect.left, rect.bottom + 4);
-      return;
-    }
     const reaction = event.target.closest("[data-reaction-emoji]");
     if (reaction && !reaction.disabled) {
       const article = reaction.closest(".chat-message");
@@ -260,6 +315,39 @@
       status.textContent = "メッセージの送信を取り消しました。";
     } catch (error) {
       status.textContent = error.message || "送信を取り消せませんでした。";
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function editGroupMessage(messageId, button) {
+    const article = list.querySelector(`[data-message-id="${messageId}"]`);
+    const currentContent = article?.querySelector("p[data-no-translate]")?.textContent || "";
+    const content = window.prompt("メッセージを編集してください", currentContent);
+    if (content === null) return;
+    const trimmed = content.trim();
+    if (!trimmed || trimmed.length > 1000) {
+      status.textContent = "メッセージは1〜1,000文字で入力してください。";
+      return;
+    }
+    button.disabled = true;
+    try {
+      const response = await fetch(`${root.dataset.messagesUrl}/${messageId}/edit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": root.dataset.csrf,
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ content: trimmed }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "メッセージを編集できませんでした。");
+      applyMessageEdit(data.message);
+      status.textContent = "メッセージを編集しました。";
+    } catch (error) {
+      status.textContent = error.message || "メッセージを編集できませんでした。";
+    } finally {
       button.disabled = false;
     }
   }
@@ -295,7 +383,7 @@
   updateNotificationToggle();
 
   document.addEventListener("pointerdown", (event) => {
-    if (!reactionMenu.hidden && !reactionMenu.contains(event.target) && !event.target.closest("[data-reaction-trigger]")) {
+    if (!reactionMenu.hidden && !reactionMenu.contains(event.target)) {
       reactionMenu.hidden = true;
     }
     if (stampPicker && !stampPicker.hidden && !stampPicker.contains(event.target) && event.target !== stampToggle) {
@@ -391,6 +479,7 @@
         Number(message.user_id) !== Number(root.dataset.userId) && !seen.has(Number(message.id)) && !message.is_deleted
       );
       data.messages.forEach(addMessage);
+      (data.recent_messages || []).forEach(applyMessageEdit);
       (data.deleted_messages || []).forEach(applyMessageDeletion);
       if (!chatIsActive() && incoming.length) updateUnreadBadge(incoming.length, 1);
       if (document.visibilityState !== "visible" && !chatIsActive() && "Notification" in window && notificationsAreEnabled() && Notification.permission === "granted") {

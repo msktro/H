@@ -49,6 +49,56 @@ REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "👏"]
 CHAT_STAMPS = ["😀", "😆", "🥹", "🎉", "✨", "🧳", "🌸", "🍣", "🏔️", "👍"]
 APP_NOTICES = [
     {
+        "id": 18,
+        "date": "2026-10-28",
+        "category": "旅行記",
+        "title": "旅行記のいいねボタンを口コミ画面と同じデザインにしました",
+        "details": [
+            "いいねボタンの色と枠を、口コミ画面のお気に入りボタンに合わせました。",
+            "旅行記と口コミの画面で、保存・いいね操作の見た目をそろえています。",
+        ],
+    },
+    {
+        "id": 17,
+        "date": "2026-10-28",
+        "category": "グループチャット",
+        "title": "右クリックメニューを使いやすくしました",
+        "details": [
+            "メッセージを右クリックして、リアクションやテキストコピーを選べます。",
+            "自分のメッセージでは編集と送信取り消しも選べます。",
+        ],
+    },
+    {
+        "id": 16,
+        "date": "2026-10-28",
+        "category": "旅行プロフィール",
+        "title": "移動手段に自家用車を追加しました",
+        "details": [
+            "旅行プロフィールとプラン生成の両方で自家用車を選べます。",
+            "プロフィールを生成に使う場合も、移動手段の希望がAIに伝わります。",
+        ],
+    },
+    {
+        "id": 15,
+        "date": "2026-10-28",
+        "category": "旅行記",
+        "title": "自分の投稿タブにも未読コメントの印を表示します",
+        "details": [
+            "未読コメントがあると「自分の投稿」タブと該当する投稿に赤丸が付きます。",
+            "投稿を開いてコメントを確認すると、その投稿の赤丸が消えます。",
+        ],
+    },
+    {
+        "id": 14,
+        "date": "2026-10-28",
+        "category": "旅行記",
+        "title": "自分の旅行記に新しいコメントが届くと通知します",
+        "details": [
+            "未読コメントがあると、お知らせのベルと旅行記メニューに赤い印が表示されます。",
+            "旅行記を開いてコメントを確認すると、未読の印が消えます。",
+        ],
+    },
+    {
         "id": 13,
         "date": "2026-10-28",
         "category": "旅行プラン",
@@ -482,21 +532,52 @@ def create_app():
                 .group_by(GroupMessage.group_id).all())
         return {group_id: count for group_id, count in rows}
 
+    def unread_journey_comment_notifications(user_id):
+        rows = (db.session.query(TravelStoryComment, TravelStory, User.username)
+                .join(TravelStory, TravelStory.id == TravelStoryComment.story_id)
+                .join(User, User.id == TravelStoryComment.user_id)
+                .filter(
+                    TravelStory.user_id == user_id,
+                    TravelStoryComment.user_id != user_id,
+                    or_(TravelStory.comments_viewed_at.is_(None),
+                        TravelStoryComment.created_at > TravelStory.comments_viewed_at),
+                )
+                .order_by(TravelStoryComment.created_at.desc()).all())
+        notifications_by_story = {}
+        for comment, story, username in rows:
+            item = notifications_by_story.setdefault(story.id, {
+                "story": story,
+                "count": 0,
+                "username": username or "旅行者",
+                "content": comment.content[:120],
+                "created_at": comment.created_at,
+            })
+            item["count"] += 1
+        return sorted(notifications_by_story.values(),
+                      key=lambda item: item["created_at"], reverse=True)
+
     @app.context_processor
     def inject_group_notification_counts():
         latest_notice_id = max((notice["id"] for notice in APP_NOTICES), default=0)
         notice_read = (db.session.get(AppNoticeRead, current_user.id)
                        if current_user.is_authenticated else None)
-        has_unread_notices = latest_notice_id > (notice_read.latest_notice_id if notice_read else 0)
+        has_unread_release_notices = latest_notice_id > (notice_read.latest_notice_id if notice_read else 0)
+        has_unread_notices = has_unread_release_notices
+        comment_notifications = []
         if current_user.is_authenticated and current_user.user_type == "traveler":
             counts = unread_group_message_counts(current_user.id)
             cursor = db.session.query(func.max(GroupMessage.id)).scalar() or 0
+            comment_notifications = unread_journey_comment_notifications(current_user.id)
             return {"group_notification_counts": counts,
                     "group_notification_count": sum(counts.values()),
                     "group_notification_cursor": cursor,
-                    "has_unread_notices": has_unread_notices}
+                    "unread_journey_comment_count": sum(item["count"] for item in comment_notifications),
+                    "has_unread_release_notices": has_unread_release_notices,
+                    "has_unread_notices": has_unread_notices or bool(comment_notifications)}
         return {"group_notification_counts": {}, "group_notification_count": 0,
                 "group_notification_cursor": 0,
+                "unread_journey_comment_count": 0,
+                "has_unread_release_notices": has_unread_release_notices,
                 "has_unread_notices": has_unread_notices}
 
     def photo_for_destination(destination):
@@ -559,7 +640,10 @@ def create_app():
         else:
             read_marker.latest_notice_id = latest_notice_id
         db.session.commit()
-        return page("notices", notices=APP_NOTICES)
+        comment_notifications = (unread_journey_comment_notifications(current_user.id)
+                                 if current_user.user_type == "traveler" else [])
+        return page("notices", notices=APP_NOTICES,
+                    comment_notifications=comment_notifications)
 
     @app.route("/contact", methods=["GET", "POST"])
     def contact():
@@ -899,10 +983,13 @@ def create_app():
         global_cursor = db.session.query(func.max(GroupMessage.id)).scalar() or after_id
         next_cursor = messages[-1].id if len(messages) == 50 else max(after_id, global_cursor)
         unread_counts = unread_group_message_counts(current_user.id)
+        comment_notifications = unread_journey_comment_notifications(current_user.id)
         return jsonify(
             cursor=next_cursor,
             unread_total=sum(unread_counts.values()),
             unread_counts={str(group_id): count for group_id, count in unread_counts.items()},
+            unread_journey_comment_count=sum(item["count"] for item in comment_notifications),
+            unread_journey_comment_counts={str(item["story"].id): item["count"] for item in comment_notifications},
             messages=[{
                 "id": message.id,
                 "group_id": message.group_id,
@@ -1010,7 +1097,7 @@ def create_app():
         budget_amount = group_budget.amount if group_budget else 0
         budget_percent = min(100, int(spent_total * 100 / budget_amount)) if budget_amount else 0
         album_photos = GroupAlbumPhoto.query.filter_by(group_id=group.id).order_by(GroupAlbumPhoto.created_at.desc(), GroupAlbumPhoto.id.desc()).limit(100).all()
-        chat_messages = GroupMessage.query.filter_by(group_id=group.id).order_by(GroupMessage.id.desc()).limit(100).all()
+        chat_messages = GroupMessage.query.filter_by(group_id=group.id, is_deleted=False).order_by(GroupMessage.id.desc()).limit(100).all()
         chat_messages.reverse()
         settlements = _calculate_settlements(group.members, expenses)
         return page("group_detail", group=group, shareable_plans=shareable_plans, shared_plans=shared_plans,
@@ -1254,16 +1341,19 @@ def create_app():
         if request.method == "GET":
             after_id = request.args.get("after", default=0, type=int) or 0
             messages = GroupMessage.query.filter(
-                GroupMessage.group_id == group.id, GroupMessage.id > max(0, after_id)
+                GroupMessage.group_id == group.id,
+                GroupMessage.id > max(0, after_id),
+                GroupMessage.is_deleted.is_(False),
             ).order_by(GroupMessage.id.asc()).limit(50).all()
             own_messages = GroupMessage.query.filter_by(group_id=group.id, user_id=current_user.id).order_by(GroupMessage.id.desc()).limit(100).all()
             read_status = {str(message.id): len(message.read_receipts) for message in own_messages}
-            recent_messages = GroupMessage.query.filter_by(group_id=group.id).order_by(GroupMessage.id.desc()).limit(100).all()
+            recent_messages = GroupMessage.query.filter_by(group_id=group.id, is_deleted=False).order_by(GroupMessage.id.desc()).limit(100).all()
             reaction_status = {str(message.id): _serialize_message_reactions(message, current_user.id) for message in recent_messages}
             deleted_messages = GroupMessage.query.filter_by(
                 group_id=group.id, is_deleted=True
             ).order_by(GroupMessage.id.desc()).all()
             return jsonify(messages=[_serialize_group_message(message, current_user.id) for message in messages],
+                           recent_messages=[_serialize_group_message(message, current_user.id) for message in recent_messages],
                            deleted_messages=[_serialize_group_message(message, current_user.id) for message in deleted_messages],
                            read_status=read_status, reaction_status=reaction_status)
 
@@ -1289,6 +1379,24 @@ def create_app():
         message.content = ""
         message.is_deleted = True
         GroupMessageReaction.query.filter_by(message_id=message.id).delete(synchronize_session=False)
+        db.session.commit()
+        return jsonify(message=_serialize_group_message(message, current_user.id))
+
+    @app.post("/groups/<int:group_id>/messages/<int:message_id>/edit")
+    @login_required
+    def edit_group_message(group_id, message_id):
+        _traveler_only()
+        group = _member_group(group_id)
+        message = GroupMessage.query.filter_by(id=message_id, group_id=group.id).first_or_404()
+        if message.user_id != current_user.id:
+            abort(403)
+        if message.is_deleted:
+            return jsonify(error="取り消し済みのメッセージは編集できません。"), 409
+        data = request.get_json(silent=True)
+        content = data.get("content", "").strip() if isinstance(data, dict) and isinstance(data.get("content"), str) else ""
+        if not content or len(content) > 1000:
+            return jsonify(error="メッセージは1〜1,000文字で入力してください。"), 400
+        message.content = content
         db.session.commit()
         return jsonify(message=_serialize_group_message(message, current_user.id))
 
@@ -1491,7 +1599,7 @@ def create_app():
                 return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
             if not values["use_profile"]:
                 allowed_paces = {"ゆっくり過ごしたい", "標準的に回りたい", "できるだけ多く回りたい"}
-                allowed_transport = {"公共交通機関", "徒歩中心", "レンタカー", "こだわらない"}
+                allowed_transport = {"公共交通機関", "徒歩中心", "レンタカー", "自家用車", "こだわらない"}
                 allowed_food = {"ご当地グルメを楽しみたい", "カフェ・スイーツが好き", "食事は手短にしたい", "特にこだわらない"}
                 allowed_age = {"10代以下", "20代", "30代", "40代", "50代", "60代以上", "子ども連れ", "年代を指定しない"}
                 valid = (
@@ -1592,14 +1700,10 @@ def create_app():
         else:
             selected_sort = "newest"
         if tab == "mine":
+            comment_notifications = unread_journey_comment_notifications(current_user.id)
+            unread_by_story = {item["story"].id: item["count"] for item in comment_notifications}
             for story in stories:
-                unread_query = TravelStoryComment.query.filter(
-                    TravelStoryComment.story_id == story.id,
-                    TravelStoryComment.user_id != current_user.id,
-                )
-                if story.comments_viewed_at:
-                    unread_query = unread_query.filter(TravelStoryComment.created_at > story.comments_viewed_at)
-                story.unread_comment_count = unread_query.count()
+                story.unread_comment_count = unread_by_story.get(story.id, 0)
         liked_story_ids = {like.story_id for like in TravelStoryLike.query.filter_by(user_id=current_user.id).all()}
         return page("journeys", stories=stories, liked_story_ids=liked_story_ids, story_tab=tab,
                     selected_destination=selected_destination, selected_days=selected_days,

@@ -14,6 +14,31 @@
       badge.hidden = total === 0;
     });
 
+    const commentCount = Number(data.unread_journey_comment_count || 0);
+    document.querySelectorAll("[data-journey-comment-dot]").forEach((dot) => {
+      dot.hidden = commentCount === 0;
+      dot.setAttribute("aria-label", commentCount ? `新着コメント ${commentCount}件` : "");
+    });
+    document.querySelectorAll("[data-unread-notice-dot]").forEach((dot) => {
+      const releaseUnread = dot.dataset.releaseUnread === "true";
+      dot.hidden = !releaseUnread && commentCount === 0;
+    });
+    const storyCounts = data.unread_journey_comment_counts || {};
+    document.querySelectorAll("[data-my-posts-comment-dot]").forEach((dot) => {
+      dot.hidden = commentCount === 0;
+      dot.setAttribute("aria-label", commentCount ? `未読コメント ${commentCount}件` : "");
+    });
+    document.querySelectorAll("[data-story-comment-dot]").forEach((dot) => {
+      const count = Number(storyCounts[dot.dataset.storyId] || 0);
+      dot.hidden = count === 0;
+      dot.setAttribute("aria-label", count ? `未読コメント ${count}件` : "");
+    });
+    document.querySelectorAll("[data-story-comment-count]").forEach((badge) => {
+      const count = Number(storyCounts[badge.dataset.storyId] || 0);
+      badge.hidden = count === 0;
+      const number = badge.querySelector("[data-story-comment-number]");
+      if (number) number.textContent = count ? String(count) : "";
+    });
     const counts = data.unread_counts || {};
     document.querySelectorAll("[data-group-unread-badge]").forEach((badge) => {
       const count = Number(counts[badge.dataset.groupId] || 0);
@@ -77,6 +102,7 @@
       const data = await response.json();
       cursor = Math.max(cursor, Number(data.cursor || cursor));
       updateBadges(data);
+      root.dataset.commentCount = String(Number(data.unread_journey_comment_count || 0));
       (data.messages || []).forEach(showToast);
     } catch (_error) {
       // Keep the current badges and retry on the next interval.

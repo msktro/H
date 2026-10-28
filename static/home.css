@@ -21,3 +21,5 @@
 .home-plan-info .home-popular-stats{display:flex;justify-content:flex-start;gap:14px;margin-top:9px;padding-top:8px;border-top:1px solid #edf2f0;color:#69847f;font-size:11px}.home-plan-info .home-popular-stats span:first-child{color:#b54e62;font-weight:800}.home-plan-info .home-plan-open{margin-top:8px}
 
 .home-plan-photo-credit{margin:0;padding:5px 12px 0;color:#718980;font-size:9px;line-height:1.4}.home-plan-photo-credit a{color:#126c5b;text-decoration:underline;text-underline-offset:2px}
+
+.notice-menu-dot[hidden]{display:none!important}

@@ -274,6 +274,20 @@
   box-shadow: 0 5px 13px rgba(8, 117, 99, .13);
 }
 
+/* Password visibility control should show only the eye icon. */
+.app-page button.password-toggle,
+.app-page button.password-toggle:hover,
+.app-page button.password-toggle:active {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: translateY(-50%);
+}
+
 .app-page button.secondary,
 .app-page .button.secondary,
 .app-page button.ghost {
@@ -282,6 +296,15 @@
   box-shadow: none;
   color: #087563;
 }
+
+.app-page button.journey-like,
+.app-page button.journey-like.liked {
+  border: 1px solid #dcebe3;
+  background: #edf7f2;
+  box-shadow: none;
+  color: #087563;
+}
+.app-page .journey-like-count { color: #087563; }
 
 .app-page button.danger,
 .app-page .button.danger { border: 1px solid #f3d5cf; background: #fff0ed; box-shadow: none; color: #b54c3e; }
