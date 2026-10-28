@@ -23,3 +23,19 @@ License: https://unsplash.com/license
 | other_1.jpg | 1500530855697-b586d89ba3ee | https://images.unsplash.com/photo-1500530855697-b586d89ba3ee |
 | other_2.jpg | 1464822759023-fed622ff2c3b | https://images.unsplash.com/photo-1464822759023-fed622ff2c3b |
 | other_3.jpg | 1470770841072-f978cf4d019e | https://images.unsplash.com/photo-1470770841072-f978cf4d019e |
+
+## Japan destination photos used on the traveler home page
+
+Downloaded 1280px Wikimedia Commons thumbnails (displayed with CSS cropping). The photograph cards link to the corresponding prefecture's spot and review filter. The hero uses a separate Okinawa image and is not reused in the feature cards.
+
+| Local file | Place shown | Author | License | Source |
+| --- | --- | --- | --- | --- |
+| home_hero_kerama.jpg | Kerama Islands, Okinawa | SteFou! | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kerama_Island_-_6081216280.jpg) |
+| region_hokkaido_furano.jpg | Farm Tomita, Nakafurano, Hokkaido | titanium22 | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:JP_Hokkaido_Furano_lavender.jpg) |
+| region_kyoto_fushimi.jpg | Fushimi Inari Shrine, Kyoto | Pkos079 | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kyoto_Fushimi_Inari_Shrine.jpg) |
+| region_osaka_takoyaki.jpg | Takoyaki, Osaka | ZhengZhou | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Takoyaki_in_Osaka.jpg) |
+| region_okinawa_kouri.jpg | Kouri Beach, Okinawa | MaedaAkihiko | [CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kouri-Beach.jpg) |
+| region_hiroshima_dome.jpg | Atomic Bomb Dome, Hiroshima | Hirotsugu Mori | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Hiroshima_Peace_Memorial.jpg) |
+Traveler home photo licenses are also credited directly on their cards and hero banner.
+
+| region_yamanashi_fuji.jpg | Mount Fuji from Lake Kawaguchi, Yamanashi | Subramaniam K V | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Mount_Fuji_from_Lake_Kawaguchi.jpg) |

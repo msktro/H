@@ -306,6 +306,13 @@ class ViewHistory(db.Model):
     target_id = db.Column(db.Integer, nullable=False)
     viewed_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False, index=True)
 
+class AppNoticeRead(db.Model):
+    __tablename__ = "app_notice_reads"
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), primary_key=True)
+    latest_notice_id = db.Column(db.Integer, nullable=False, default=0)
+    updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    user = db.relationship("User")
+
 class ContactInquiry(db.Model):
     __tablename__ = "contact_inquiries"
     id = db.Column(db.Integer, primary_key=True)

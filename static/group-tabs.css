@@ -5,3 +5,4 @@
 .group-tab-panel[hidden]{display:none!important}
 .group-tab-panel>.section-title:first-child{margin-top:0}
 @media(max-width:600px){.group-tabs{gap:4px;padding:4px}.group-tabs [role=tab]{padding:9px 12px;font-size:.9rem}}
+.group-chat-tab-badge{margin-left:7px;vertical-align:middle}

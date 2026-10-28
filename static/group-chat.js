@@ -136,6 +136,14 @@
       badge.textContent = next ? String(next) : "";
       badge.hidden = next === 0;
     });
+    document.querySelectorAll("[data-group-chat-badge]").forEach((badge) => {
+      if (Number(badge.dataset.groupId) !== Number(root.dataset.groupId)) return;
+      const next = Math.max(0, Number(badge.dataset.count || 0) + direction * amount);
+      badge.dataset.count = String(next);
+      badge.textContent = next ? String(next) : "";
+      badge.hidden = next === 0;
+      badge.setAttribute("aria-label", `未読メッセージ ${next}件`);
+    });
     root.dataset.unreadCount = String(Math.max(0, Number(root.dataset.unreadCount || 0) + direction * amount));
   }
 
@@ -385,7 +393,7 @@
       data.messages.forEach(addMessage);
       (data.deleted_messages || []).forEach(applyMessageDeletion);
       if (!chatIsActive() && incoming.length) updateUnreadBadge(incoming.length, 1);
-      if (!chatIsActive() && "Notification" in window && notificationsAreEnabled() && Notification.permission === "granted") {
+      if (document.visibilityState !== "visible" && !chatIsActive() && "Notification" in window && notificationsAreEnabled() && Notification.permission === "granted") {
         incoming.forEach((message) => {
           const notification = new Notification(`${root.dataset.groupName}: ${message.username}`, {
             body: message.content,

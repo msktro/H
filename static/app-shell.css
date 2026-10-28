@@ -1,0 +1,445 @@
+/* Shared visual language for screens outside the custom home dashboard. */
+.app-page {
+  --ink: #173b35;
+  --muted: #72847d;
+  --paper: #f4f7f3;
+  --green: #087563;
+  --mint: #e4f4ed;
+  --line: #e4ece7;
+  --shadow: 0 12px 34px rgba(25, 67, 55, .075);
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 92% 9%, rgba(196, 235, 233, .48), transparent 32rem),
+    linear-gradient(180deg, #f8fcfb 0%, #eff8f7 44rem, #f5faf8 100%);
+  color: var(--ink);
+}
+
+.app-page .topbar {
+  height: 76px;
+  padding-inline: clamp(18px, 4vw, 64px);
+  background: rgba(255, 255, 255, .94);
+  border-bottom: 1px solid rgba(222, 235, 228, .9);
+  box-shadow: 0 5px 22px rgba(26, 69, 57, .035);
+  backdrop-filter: blur(16px);
+}
+
+.app-page .brand {
+  color: var(--green);
+  font-size: 23px;
+  letter-spacing: -.6px;
+}
+
+.app-page .brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #0c826d, #075c50);
+  box-shadow: 0 5px 12px rgba(8, 117, 99, .2);
+}
+
+.app-page .top-actions { gap: 12px; }
+.app-page .top-actions select,
+.app-page #text-size-selector {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #e5eeea;
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: #315b52;
+}
+
+.app-page .user-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 12px 5px 6px;
+  border: 1px solid #e7efea;
+  border-radius: 999px;
+  background: #fff;
+  color: #244b42;
+  font-weight: 750;
+}
+
+.app-page .site-menu > summary {
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0d806b, #086555);
+  box-shadow: 0 6px 15px rgba(8, 117, 99, .17);
+}
+
+.app-page .site-menu .nav {
+  right: clamp(12px, 3vw, 40px);
+  left: auto;
+  top: calc(100% + 9px);
+  width: min(310px, calc(100vw - 24px));
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 18px 45px rgba(22, 60, 49, .14);
+}
+
+.app-page .site-menu .nav a,
+.app-page .site-menu .nav form {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 11px;
+  color: #385d54;
+}
+
+.app-page .site-menu .nav a:hover,
+.app-page .site-menu .nav a.active { background: #edf7f2; color: var(--green); }
+
+.app-page .wrap {
+  width: min(100%, 1460px);
+  max-width: 1460px;
+  padding: clamp(25px, 4vw, 48px) clamp(16px, 4vw, 58px) 76px;
+}
+
+.app-page .page-head,
+.app-page .heading {
+  position: relative;
+  isolation: isolate;
+  min-height: 210px;
+  align-items: center;
+  margin-bottom: 25px;
+  padding: 25px clamp(22px, 3.5vw, 42px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 24px;
+  background-color: #087563;
+  background-image: linear-gradient(90deg, rgba(5, 91, 76, .98) 0%, rgba(7, 108, 90, .91) 44%, rgba(7, 108, 90, .30) 100%);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 14px 34px rgba(15, 82, 67, .13);
+}
+
+.app-page .page-head::after,
+.app-page .heading::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 310px;
+  height: 310px;
+  right: -52px;
+  top: -182px;
+  border: 1px solid rgba(255,255,255,.27);
+  border-radius: 50%;
+  box-shadow: 0 0 0 34px rgba(255,255,255,.055), 0 0 0 72px rgba(255,255,255,.04);
+}
+
+.app-page .page-head::before,
+.app-page .heading::before {
+  content: "✈";
+  position: absolute;
+  z-index: 0;
+  right: 7%;
+  top: 35%;
+  color: rgba(255,255,255,.9);
+  font-size: clamp(34px, 5vw, 58px);
+  text-shadow: 0 4px 18px rgba(0, 58, 48, .28);
+  transform: rotate(12deg);
+}
+
+.app-page .page-head > *,
+.app-page .heading > * { position: relative; z-index: 1; }
+
+.app-page-notices .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.35)),url('/static/demo_business_photos/region_hokkaido_furano.jpg'); }
+.app-page-contact .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.35)),url('/static/demo_business_photos/other_1.jpg'); }
+.app-page-account .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.35)),url('/static/demo_business_photos/transport_2.jpg'); }
+.app-page-profile .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.35)),url('/static/demo_business_photos/region_kyoto_fushimi.jpg'); }
+.app-page-new_plan .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.34)),url('/static/demo_business_photos/region_okinawa_kouri.jpg'); }
+.app-page-plans .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.34)),url('/static/demo_business_photos/region_yamanashi_fuji.jpg'); }
+.app-page-groups .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/experience_1.jpg'); }
+.app-page-group_detail .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/experience_2.jpg'); }
+.app-page-group_delete_confirm .page-head { background-image: linear-gradient(90deg,rgba(100,52,45,.98),rgba(139,71,58,.30)),url('/static/demo_business_photos/other_2.jpg'); }
+.app-page-packing_picker .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.33)),url('/static/demo_business_photos/lodging_1.jpg'); }
+.app-page-packing_list .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.33)),url('/static/demo_business_photos/lodging_2.jpg'); }
+.app-page-support .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.34)),url('/static/demo_business_photos/region_hiroshima_dome.jpg'); }
+.app-page-plan_detail .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/other_3.jpg'); }
+.app-page-translate .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/transport_3.jpg'); }
+.app-page-reviews .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/food_1.jpg'); }
+.app-page-listing_reviews .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/food_2.jpg'); }
+.app-page-favorites .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/food_3.jpg'); }
+.app-page-journeys .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/experience_3.jpg'); }
+.app-page-journey_detail .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/region_osaka_takoyaki.jpg'); }
+.app-page-history .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/transport_1.jpg'); }
+.app-page-business .page-head { background-image: linear-gradient(90deg,rgba(5,91,76,.98),rgba(7,108,90,.32)),url('/static/demo_business_photos/lodging_3.jpg'); }
+
+.app-page .page-head h1,
+.app-page .heading h1 {
+  margin: 7px 0 5px;
+  color: #fff;
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 850;
+  letter-spacing: -.8px;
+}
+
+.app-page .sub,
+.app-page .heading > p,
+.app-page .heading div > p:not(.eyebrow) {
+  max-width: 760px;
+  color: rgba(243, 252, 248, .88);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.app-page .eyebrow { letter-spacing: 1.8px; color: #c6f0df; }
+.app-page .page-head .hint,
+.app-page .heading .hint { color: rgba(243,252,248,.82); }
+.app-page .page-head .pill,
+.app-page .heading .pill { border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.92); color: #087563; }
+.app-page .page-head .button,
+.app-page .heading .button { border-color: rgba(255,255,255,.4); background: #fff; box-shadow: 0 5px 16px rgba(0,40,31,.15); color: #087563; }
+
+.app-page .card {
+  border: 1px solid rgba(224, 235, 228, .95);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 10px 30px rgba(24, 63, 51, .065);
+}
+
+.app-page .card h2 { color: #1a443b; font-size: 21px; letter-spacing: -.25px; }
+.app-page .card h3 { color: #214a41; }
+.app-page article.card {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.app-page article.card:hover {
+  transform: translateY(-3px);
+  border-color: #d2e6dc;
+  box-shadow: 0 17px 34px rgba(24, 63, 51, .11);
+}
+.app-page .grid { gap: 20px; }
+.app-page .section-title { margin: 30px 0 17px; }
+.app-page .section-title h2 { color: #1a443b; font-size: 22px; }
+.app-page .section-title > span { color: #71847d; font-size: 13px; }
+.app-page .actions { gap: 9px; flex-wrap: wrap; }
+.app-page .actions form { margin: 0; }
+.app-page .prose { color: #4f655d; line-height: 1.85; }
+.app-page .review-card,
+.app-page .history-card,
+.app-page .journey-card { min-width: 0; }
+.app-page .business-photo-strip img,
+.app-page .photo img { border-radius: 12px; }
+.app-page .business-photo-strip { gap: 8px; margin: 15px 0; }
+.app-page .business-photo-strip img { border: 1px solid #e5ede8; }
+.app-page .stat,
+.app-page .support-plan-preview,
+.app-page .support-messages { border: 1px solid #e4ece7; background: #f7faf8; }
+.app-page .route-list li,
+.app-page .expense-item,
+.app-page .review { border-color: #e8efea; }
+.app-page .map-panel { border: 1px solid #dce9df; box-shadow: inset 0 0 0 5px rgba(255,255,255,.4); }
+
+.app-page .field { gap: 8px; }
+.app-page .field label,
+.app-page .field legend { color: #294e45; font-size: 13px; font-weight: 750; }
+.app-page .field input,
+.app-page .field select,
+.app-page .field textarea,
+.app-page input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.app-page select,
+.app-page textarea {
+  border-color: #dfe9e3;
+  border-radius: 13px;
+  background-color: #fff;
+  color: #24483f;
+}
+
+.app-page .field input,
+.app-page .field select,
+.app-page input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.app-page select { min-height: 44px; }
+
+.app-page .field input:focus,
+.app-page .field select:focus,
+.app-page .field textarea:focus,
+.app-page input:focus-visible,
+.app-page select:focus-visible,
+.app-page textarea:focus-visible {
+  border-color: #52a88f;
+  box-shadow: 0 0 0 4px rgba(59, 166, 132, .12);
+  outline: 0;
+}
+
+.app-page button,
+.app-page .button {
+  min-height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #0d806b, #086555);
+  box-shadow: 0 5px 13px rgba(8, 117, 99, .13);
+}
+
+.app-page button.secondary,
+.app-page .button.secondary,
+.app-page button.ghost {
+  border: 1px solid #dcebe3;
+  background: #edf7f2;
+  box-shadow: none;
+  color: #087563;
+}
+
+.app-page button.danger,
+.app-page .button.danger { border: 1px solid #f3d5cf; background: #fff0ed; box-shadow: none; color: #b54c3e; }
+.app-page .pill { padding: 6px 11px; background: #e5f5ed; color: #087563; }
+.app-page .tab-row { gap: 8px; flex-wrap: wrap; }
+.app-page .tab { padding: 10px 16px; border-radius: 999px; background: #eaf2ed; }
+.app-page .tab.active { background: #0b765f; box-shadow: 0 5px 12px rgba(8, 117, 99, .17); }
+.app-page .journey-tabs { border: 1px solid #e1ece5; background: #edf4ef; }
+.app-page .journey-tabs a.active { color: #087563; }
+.app-page .notice { border: 1px solid #f6e7ca; background: #fff8ec; }
+.app-page .empty { border: 1px dashed #d9e7df; border-radius: 20px; background: rgba(255,255,255,.75); }
+.app-page .footer { color: #7a8c85; }
+
+.app-page .app-preferences {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 15px;
+}
+.app-page .app-preferences label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px 6px 13px;
+  border: 1px solid #e6efec;
+  border-radius: 999px;
+  background: rgba(255,255,255,.9);
+  color: #47655e;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 5px 16px rgba(24,63,51,.04);
+}
+.app-page .app-preferences select {
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: #edf7f3;
+  color: #176b5a;
+  font-size: 12px;
+}
+.app-page .app-preferences label:first-child span { color: #087563; }
+
+.app-page-auth { display: flex; flex-direction: column; }
+.app-page-auth .topbar { flex: 0 0 auto; }
+.app-page-auth .wrap { flex: 1 0 auto; }
+.app-page-auth .brand-mark { font-size: 0; }
+.app-page-auth .brand-mark::before { content: "✈"; font-size: 22px; transform: rotate(-12deg); }
+.app-page-auth .auth-wrap { width: min(100%, 500px); margin: 14px auto 34px; }
+.app-page-auth .auth-wrap > .card {
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid rgba(224,235,228,.95);
+  border-radius: 25px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 18px 44px rgba(24,63,51,.11);
+}
+.app-page-auth .auth-intro {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: -24px -24px 23px !important;
+  padding: 27px 18px 23px;
+  border-radius: 24px 24px 15px 15px;
+  background: linear-gradient(100deg,rgba(5,91,76,.96),rgba(7,108,90,.25)),url('/static/demo_business_photos/region_hokkaido_furano.jpg') center 45% / cover;
+  color: #fff;
+}
+.app-page-auth .auth-intro::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -92px;
+  right: -35px;
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 50%;
+  box-shadow: 0 0 0 25px rgba(255,255,255,.06),0 0 0 52px rgba(255,255,255,.045);
+}
+.app-page-auth .auth-intro .brand-mark {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255,255,255,.6);
+  border-radius: 17px;
+  background: rgba(255,255,255,.96);
+  color: #087563;
+  box-shadow: 0 6px 18px rgba(0,47,40,.2);
+}
+.app-page-auth .auth-intro h1 { position: relative; margin-top: 13px !important; color: #fff; font-size: 26px; letter-spacing: -.5px; }
+.app-page-auth .auth-intro p { position: relative; margin: 5px 0 0; color: rgba(244,252,248,.9); font-size: 13px; }
+.app-page-auth .auth-tabs { margin-bottom: 22px; padding: 5px; border: 1px solid #e8efeb; border-radius: 14px; background: #f0f6f2; }
+.app-page-auth .auth-tabs a { min-height: 42px; border-radius: 10px; transition: background .18s ease, color .18s ease, box-shadow .18s ease; }
+.app-page-auth .auth-tabs a.active { background: #fff; color: #087563; box-shadow: 0 4px 12px rgba(24,53,47,.09); }
+.app-page-auth .auth-wrap .form-grid { gap: 14px; }
+.app-page-auth .auth-wrap .form-actions button { min-width: 190px; }
+.app-page-auth .auth-wrap .hint a { color: #087563; font-weight: 750; text-decoration: underline; text-decoration-color: #b4dacb; text-underline-offset: 3px; }
+
+.app-page ~ footer {
+  position: relative;
+  min-height: 96px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 26px 18px 18px;
+  background: linear-gradient(180deg, #eaf9f6, #d7f1ec);
+  color: #547a72;
+}
+.app-page ~ footer::before,
+.app-page ~ footer::after {
+  content: "";
+  position: absolute;
+  bottom: -36px;
+  width: 62%;
+  height: 100px;
+  background: rgba(127, 204, 191, .32);
+  clip-path: polygon(0 100%,0 63%,12% 56%,20% 12%,28% 69%,40% 42%,50% 82%,62% 48%,72% 7%,80% 70%,91% 50%,100% 63%,100% 100%);
+}
+.app-page ~ footer::before { left: 0; }
+.app-page ~ footer::after { right: 0; transform: scaleX(-1); background: rgba(105, 190, 177, .3); }
+.app-page ~ footer > * { position: relative; z-index: 1; }
+
+@media (max-width: 800px) {
+  .app-page .topbar { height: auto; min-height: 68px; padding: 11px 16px; }
+  .app-page .top-actions { gap: 7px; }
+  .app-page .wrap { padding-top: 25px; }
+  .app-page .page-head,
+  .app-page .heading { min-height: 184px; padding: 22px; }
+}
+
+@media (max-width: 560px) {
+  .app-page .topbar { min-height: 62px; padding: 9px 12px; }
+  .app-page .brand { font-size: 20px; }
+  .app-page .top-actions { gap: 6px; }
+  .app-page .top-actions select,
+  .app-page #text-size-selector { min-height: 36px; max-width: 94px; padding: 7px 8px; font-size: 11px; }
+  .app-page .user-menu { padding-right: 7px; }
+  .app-page .user-menu-name { display: none; }
+  .app-page .wrap { padding: 21px 13px 52px; }
+  .app-page .page-head { gap: 13px; margin-bottom: 19px; }
+  .app-page .page-head,
+  .app-page .heading { min-height: 168px; padding: 19px; border-radius: 19px; background-position: center; }
+  .app-page .page-head h1,
+  .app-page .heading h1 { font-size: 29px; }
+  .app-page .card { border-radius: 18px; padding: 18px; }
+  .app-page .grid { gap: 13px; }
+  .app-page .actions > *,
+  .app-page .actions form { max-width: 100%; }
+  .app-page .page-head .top-actions,
+  .app-page .page-head .actions { flex-wrap: wrap; }
+  .app-page .app-preferences { justify-content: flex-start; gap: 6px; }
+  .app-page .app-preferences label { gap: 5px; padding: 5px 7px 5px 9px; font-size: 10px; }
+  .app-page .app-preferences select { max-width: 96px; font-size: 10px; }
+  .app-page-auth .auth-wrap { margin: 7px auto 23px; }
+  .app-page-auth .auth-wrap > .card { padding: 19px; border-radius: 20px; }
+  .app-page-auth .auth-intro { margin: -19px -19px 19px !important; padding: 22px 14px 19px; border-radius: 19px 19px 13px 13px; }
+  .app-page-auth .auth-intro h1 { font-size: 23px; }
+}
+
+.trip-card{align-items:stretch;overflow:hidden;padding:14px;gap:15px}.trip-art-photo{background-size:cover;background-position:center}.trip-card-content{flex:1;min-width:0}.trip-card-content h3{margin:9px 0 6px}.trip-card-content .actions{margin-top:12px}.trip-photo-credit{display:block;margin-top:7px;color:#718980;font-size:9px;line-height:1.4}.trip-photo-credit a{color:#126c5b;text-decoration:underline;text-underline-offset:2px}.plan-destination-cover{position:relative;margin:0 0 20px;height:clamp(170px,27vw,330px);overflow:hidden;border-radius:20px;background:#e1eee9}.plan-destination-cover img{width:100%;height:100%;object-fit:cover}.plan-destination-cover figcaption{position:absolute;left:12px;right:12px;bottom:10px;width:fit-content;max-width:calc(100% - 24px);padding:5px 9px;border-radius:8px;background:#ffffffed;color:#526a64;font-size:10px;line-height:1.4}.plan-destination-cover figcaption a{color:#126c5b;text-decoration:underline;text-underline-offset:2px}.journey-destination-cover{margin-top:0}
+@media(max-width:560px){.trip-card{gap:11px;padding:12px}.trip-art{width:78px;min-width:78px;height:86px}.plan-destination-cover{height:190px;border-radius:16px}}

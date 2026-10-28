@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import secrets
@@ -22,7 +23,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import Markup, escape
 
 from extensions import db
-from models import BusinessDetail, BusinessListing, BusinessListingPhoto, ContactInquiry, Favorite, GroupAlbumPhoto, GroupBudget, GroupExpense, GroupExpenseShare, GroupMessage, GroupMessageRead, GroupMessageReaction, GroupTravelNote, PackingItem, Review, TravelerProfile, TravelPlan, TravelStory, TravelStoryComment, TravelStoryLike, TripGroup, TripGroupMember, User, ViewHistory
+from models import AppNoticeRead, BusinessDetail, BusinessListing, BusinessListingPhoto, ContactInquiry, Favorite, GroupAlbumPhoto, GroupBudget, GroupExpense, GroupExpenseShare, GroupMessage, GroupMessageRead, GroupMessageReaction, GroupTravelNote, PackingItem, Review, TravelerProfile, TravelPlan, TravelStory, TravelStoryComment, TravelStoryLike, TripGroup, TripGroupMember, User, ViewHistory
 from services.ai import AIServiceError, generate_text
 from services.prompts import plan_prompts, change_prompts, translation_prompts
 
@@ -30,6 +31,11 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 THEMES = ["自然・絶景", "温泉", "食べ歩き", "歴史・文化", "買い物", "アート", "テーマパーク", "写真"]
 PREFECTURES = "北海道 青森県 岩手県 宮城県 秋田県 山形県 福島県 茨城県 栃木県 群馬県 埼玉県 千葉県 東京都 神奈川県 新潟県 富山県 石川県 福井県 山梨県 長野県 岐阜県 静岡県 愛知県 三重県 滋賀県 京都府 大阪府 兵庫県 奈良県 和歌山県 鳥取県 島根県 岡山県 広島県 山口県 徳島県 香川県 愛媛県 高知県 福岡県 佐賀県 長崎県 熊本県 大分県 宮崎県 鹿児島県 沖縄県".split()
+try:
+    _prefecture_photo_manifest = json.loads((Path(__file__).resolve().parent / "static" / "prefecture_photos" / "manifest.json").read_text(encoding="utf-8"))
+    PREFECTURE_PHOTOS = {row["prefecture"]: row for row in _prefecture_photo_manifest}
+except (OSError, ValueError, KeyError, TypeError):
+    PREFECTURE_PHOTOS = {}
 CATEGORIES = ["宿泊", "飲食", "観光・体験", "交通", "その他"]
 PACKING_CATEGORIES = ["必需品", "衣類", "洗面用品", "健康・薬", "雨対策", "温泉", "子ども用品", "その他"]
 PACKING_TEMPLATES = {
@@ -41,6 +47,143 @@ PACKING_TEMPLATES = {
 AVATARS = ["🧳", "🧭", "🌸", "🐈", "🐕", "🌿", "🏔️", "🍜", "🚲", "☀️", "🐻", "🦊"]
 REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "👏"]
 CHAT_STAMPS = ["😀", "😆", "🥹", "🎉", "✨", "🧳", "🌸", "🍣", "🏔️", "👍"]
+APP_NOTICES = [
+    {
+        "id": 13,
+        "date": "2026-10-28",
+        "category": "旅行プラン",
+        "title": "旅行プランの一覧と詳細に目的地の写真を追加しました",
+        "details": [
+            "保存したプランや生成後の旅程に、行き先に合う写真を表示します。",
+            "写真から出典とライセンスを確認できます。",
+        ],
+    },
+    {
+        "id": 12,
+        "date": "2026-10-28",
+        "category": "ホーム画面",
+        "title": "47都道府県の旅行写真を追加しました",
+        "details": [
+            "旅行記の行き先に合わせた写真を、人気の旅行プランに表示します。",
+            "写真の出典とライセンスを画像一覧に記録しました。",
+        ],
+    },
+    {
+        "id": 11,
+        "date": "2026-10-27",
+        "category": "ホーム画面",
+        "title": "最近のプランを人気の旅行プランに変更しました",
+        "details": [
+            "公開旅行記のいいね数を基準に、人気のプランをホームに表示します。",
+            "表示カードから旅行記の詳細を開けるようにしました。",
+        ],
+    },
+    {
+        "id": 10,
+        "date": "2026-10-27",
+        "category": "ホーム画面",
+        "title": "ホームにいいね順の人気旅行プランを表示します",
+        "details": [
+            "公開中の旅行記をいいね数で並べ、人気の旅程をホームに表示します。",
+            "カードを押すと旅行記の詳細を確認できます。",
+        ],
+    },
+    {
+        "id": 9,
+        "date": "2026-10-27",
+        "category": "旅行記",
+        "title": "サンプル旅行記にいいねと閲覧数を設定しました",
+        "details": [
+            "デモ用アカウントからのいいねと、投稿ごとの閲覧数を追加しました。",
+            "旅行記一覧で反応の違いを確認できます。",
+        ],
+    },
+    {
+        "id": 8,
+        "date": "2026-10-27",
+        "category": "旅行記",
+        "title": "サンプル旅行記を10件追加しました",
+        "details": [
+            "京都・沖縄・北海道など、全国の旅を旅行記一覧で見られます。",
+            "デモ用アカウントの投稿として追加し、各投稿に旅程と紹介文を用意しました。",
+        ],
+    },
+    {
+        "id": 7,
+        "date": "2026-10-27",
+        "category": "画面デザイン",
+        "title": "ログイン・新規登録画面をホームのデザインに合わせました",
+        "details": [
+            "写真入りの見出しと丸みのあるカードを追加し、ホームと同じ配色にしました。",
+            "入力欄やログイン・新規登録の切り替えを見やすく整えました。",
+        ],
+    },
+    {
+        "id": 6,
+        "date": "2026-10-27",
+        "category": "画面デザイン",
+        "title": "機能画面のナビゲーションをホームと統一しました",
+        "details": [
+            "ホームと同じ上部ナビゲーションを各旅行者向け画面で使えるようにしました。",
+            "翻訳と言語、文字サイズの設定を各画面から切り替えられます。",
+        ],
+    },
+    {
+        "id": 5,
+        "date": "2026-10-27",
+        "category": "画面デザイン",
+        "title": "機能ごとの画面をホームの雰囲気に合わせました",
+        "details": [
+            "各画面の見出しに、それぞれの機能に合わせた写真とカラーを追加しました。",
+            "カードやフォームの見た目と余白を整え、スマートフォンでも読みやすくしました。",
+        ],
+    },
+    {
+        "id": 4,
+        "date": "2026-10-27",
+        "category": "画面デザイン",
+        "title": "各機能画面のデザインをホームに統一しました",
+        "details": [
+            "ホーム以外の画面も、背景・ヘッダー・カード・ボタン・入力欄の色と形をそろえました。",
+            "スマートフォンでも見やすい余白と配置に調整しました。",
+        ],
+    },
+    {
+        "id": 3,
+        "date": "2026-10-27",
+        "category": "ホーム画面",
+        "title": "お知らせの未読表示とホーム画面を改善しました",
+        "details": [
+            "ホーム上部の検索欄を削除し、表示をすっきりさせました。",
+            "新しいお知らせがあるとベルに赤い丸が表示されます。",
+            "お知らせ一覧を開くと赤い丸が消え、新しい変更が追加されると再び表示されます。",
+        ],
+    },
+    {
+        "id": 2,
+        "date": "2026-10-27",
+        "category": "お知らせ",
+        "title": "お知らせ画面を追加しました",
+        "details": [
+            "ホームのベルから、お知らせ一覧を開けるようになりました。",
+            "機能や画面の改善内容を一覧にまとめ、今後の改良もここに追加します。",
+            "ホームの言語選択にある二重丸を「翻訳」の文字に変更しました。",
+        ],
+    },
+    {
+        "id": 1,
+        "date": "2026-10-27",
+        "category": "ホーム画面",
+        "title": "ホーム画面の写真と表示を改善しました",
+        "details": [
+            "北海道・京都・大阪・沖縄・山梨・広島の写真を追加し、県名と写真が一致するようにしました。",
+            "大阪のたこ焼きなど、ご当地グルメの写真も見られるようになりました。",
+            "よく使う機能カードの写真をそれぞれ別の画像にしました。",
+            "旅行先が写真と一致するときだけ、最近のプランにその地域の写真を表示します。",
+            "ホーム画面の色やカードを、ほかの画面とそろえました。",
+        ],
+    },
+]
 ALBUM_IMAGE_TYPES = {".jpg": "jpeg", ".jpeg": "jpeg", ".png": "png", ".gif": "gif", ".webp": "webp"}
 ALBUM_MAX_IMAGE_BYTES = 5 * 1024 * 1024
 ALBUM_MAX_FILES_PER_UPLOAD = 5
@@ -83,11 +226,25 @@ def _published_business_candidates(destination, limit=12):
     ).filter(Review.listing_id.in_(listing_ids)).group_by(Review.listing_id).all()
     review_stats = {listing_id: (float(avg), int(count)) for listing_id, avg, count in stats}
 
-    # Keep lower-rated places eligible, but rank them behind better-reviewed listings.
-    relevant.sort(key=lambda item: (
-        review_stats.get(item.id, (0.0, 0))[0],
-        review_stats.get(item.id, (0.0, 0))[1],
-    ), reverse=True)
+    # Use a Bayesian-style score so a high rating with very few reviews does
+    # not automatically outrank a consistently well-reviewed popular listing.
+    reviewed = [item for item in relevant if review_stats.get(item.id, (0.0, 0))[1] > 0]
+    if not reviewed:
+        return []
+    overall_average = sum(
+        review_stats[item.id][0] * review_stats[item.id][1] for item in reviewed
+    ) / sum(review_stats[item.id][1] for item in reviewed)
+    prior_weight = 5
+
+    def popularity_score(item):
+        average, count = review_stats[item.id]
+        return (count / (count + prior_weight)) * average + (prior_weight / (count + prior_weight)) * overall_average
+
+    # Only recommend places with a clearly positive average rating.
+    relevant = [item for item in reviewed if review_stats[item.id][0] >= 4.0]
+    if not relevant:
+        return []
+    relevant.sort(key=lambda item: (popularity_score(item), review_stats[item.id][1]), reverse=True)
     candidates = []
     for item in relevant[:limit]:
         average, count = review_stats.get(item.id, (0.0, 0))
@@ -103,6 +260,30 @@ def _published_business_candidates(destination, limit=12):
             "review_count": count,
         })
     return candidates
+
+
+def _append_review_popular_spots(answer, business_candidates, limit=3):
+    """Ensure the highest-rated, popular registered listings appear as clickable spots."""
+    if not business_candidates:
+        return answer
+    missing = [
+        item for item in business_candidates[:limit]
+        if f"[[TABIDEA_LISTING_ID:{item['id']}]]" not in answer
+    ]
+    if not missing:
+        return answer
+
+    lines = ["## 口コミで人気のおすすめスポット", "事業者が登録したお店から、口コミ評価の高い候補を選びました。"]
+    for item in missing:
+        lines.append(f"- {item['name']} [おすすめスポット] [[TABIDEA_LISTING_ID:{item['id']}]]")
+        details = [f"住所：{item['address'] or item['prefecture']}", f"ジャンル：{item['category']}"]
+        if item["price_range"]:
+            details.append(f"料金目安：{item['price_range']}")
+        details.append(f"口コミ評価：{item['average']:.1f}/5（{item['review_count']}件）")
+        lines.append("  " + "｜".join(details))
+        if item["description"]:
+            lines.append(f"  {item['description']}")
+    return answer.rstrip() + "\n\n" + "\n".join(lines)
 
 
 def _send_password_reset_link(email, reset_url):
@@ -303,14 +484,31 @@ def create_app():
 
     @app.context_processor
     def inject_group_notification_counts():
+        latest_notice_id = max((notice["id"] for notice in APP_NOTICES), default=0)
+        notice_read = (db.session.get(AppNoticeRead, current_user.id)
+                       if current_user.is_authenticated else None)
+        has_unread_notices = latest_notice_id > (notice_read.latest_notice_id if notice_read else 0)
         if current_user.is_authenticated and current_user.user_type == "traveler":
             counts = unread_group_message_counts(current_user.id)
+            cursor = db.session.query(func.max(GroupMessage.id)).scalar() or 0
             return {"group_notification_counts": counts,
-                    "group_notification_count": sum(counts.values())}
-        return {"group_notification_counts": {}, "group_notification_count": 0}
+                    "group_notification_count": sum(counts.values()),
+                    "group_notification_cursor": cursor,
+                    "has_unread_notices": has_unread_notices}
+        return {"group_notification_counts": {}, "group_notification_count": 0,
+                "group_notification_cursor": 0,
+                "has_unread_notices": has_unread_notices}
+
+    def photo_for_destination(destination):
+        destination = (destination or "").strip()
+        for prefecture, photo in sorted(PREFECTURE_PHOTOS.items(), key=lambda item: len(item[0]), reverse=True):
+            short_name = prefecture[:-1] if prefecture.endswith(("県", "府", "都")) else prefecture
+            if prefecture in destination or (short_name and short_name in destination):
+                return photo
+        return None
 
     def page(name, **kwargs):
-        return render_template("page.html", page=name, themes=THEMES, prefectures=PREFECTURES, categories=CATEGORIES, avatars=AVATARS, chat_stamps=CHAT_STAMPS, **kwargs)
+        return render_template("page.html", page=name, themes=THEMES, prefectures=PREFECTURES, categories=CATEGORIES, avatars=AVATARS, chat_stamps=CHAT_STAMPS, prefecture_photos=PREFECTURE_PHOTOS, photo_for_destination=photo_for_destination, **kwargs)
 
     def complete_pending_group_invite(user):
         code = session.pop("pending_group_invite", None)
@@ -335,10 +533,33 @@ def create_app():
     @app.get("/")
     @login_required
     def index():
-        recent = []
+        popular = []
         if current_user.user_type == "traveler":
-            recent = TravelPlan.query.filter_by(user_id=current_user.id).order_by(TravelPlan.updated_at.desc()).limit(3).all()
-        return page("menu", recent=recent)
+            popular_rows = (db.session.query(TravelStory, func.count(TravelStoryLike.id).label("like_count"))
+                            .outerjoin(TravelStoryLike, TravelStoryLike.story_id == TravelStory.id)
+                            .filter(TravelStory.is_public.is_(True))
+                            .group_by(TravelStory.id)
+                            .order_by(func.count(TravelStoryLike.id).desc(),
+                                      TravelStory.view_count.desc(),
+                                      TravelStory.created_at.desc())
+                            .limit(3).all())
+            for story, like_count in popular_rows:
+                story.popular_like_count = int(like_count or 0)
+                popular.append(story)
+        return page("menu", popular=popular)
+
+    @app.get("/notices")
+    @login_required
+    def notices():
+        latest_notice_id = max((notice["id"] for notice in APP_NOTICES), default=0)
+        read_marker = db.session.get(AppNoticeRead, current_user.id)
+        if read_marker is None:
+            read_marker = AppNoticeRead(user_id=current_user.id, latest_notice_id=latest_notice_id)
+            db.session.add(read_marker)
+        else:
+            read_marker.latest_notice_id = latest_notice_id
+        db.session.commit()
+        return page("notices", notices=APP_NOTICES)
 
     @app.route("/contact", methods=["GET", "POST"])
     def contact():
@@ -659,6 +880,37 @@ def create_app():
         memberships = TripGroupMember.query.filter_by(user_id=current_user.id).all()
         return page("groups", groups=[membership.group for membership in memberships],
                     group_unread_counts=unread_group_message_counts(current_user.id))
+
+    @app.get("/api/group-notifications")
+    @login_required
+    def group_notifications():
+        if current_user.user_type != "traveler":
+            return jsonify(error="旅行者アカウントが必要です。"), 403
+        after_id = max(0, request.args.get("after", default=0, type=int) or 0)
+        messages = (GroupMessage.query
+                    .join(TripGroupMember, TripGroupMember.group_id == GroupMessage.group_id)
+                    .filter(
+                        TripGroupMember.user_id == current_user.id,
+                        GroupMessage.id > after_id,
+                        GroupMessage.user_id != current_user.id,
+                        GroupMessage.is_deleted.is_(False),
+                    )
+                    .order_by(GroupMessage.id.asc()).limit(50).all())
+        global_cursor = db.session.query(func.max(GroupMessage.id)).scalar() or after_id
+        next_cursor = messages[-1].id if len(messages) == 50 else max(after_id, global_cursor)
+        unread_counts = unread_group_message_counts(current_user.id)
+        return jsonify(
+            cursor=next_cursor,
+            unread_total=sum(unread_counts.values()),
+            unread_counts={str(group_id): count for group_id, count in unread_counts.items()},
+            messages=[{
+                "id": message.id,
+                "group_id": message.group_id,
+                "group_name": message.group.name,
+                "username": message.user.username,
+                "content": message.content,
+            } for message in messages],
+        )
 
     @app.post("/groups/create")
     @login_required
@@ -1272,6 +1524,7 @@ def create_app():
             except AIServiceError as exc:
                 flash(str(exc), "error")
                 return page("new_plan", values=values, profile=profile, profile_ready=profile_ready), 502
+            answer = _append_review_popular_spots(answer, business_candidates)
             plan = TravelPlan(
                 user_id=current_user.id, title=f"{values['destination']}の旅行プラン",
                 destination=values["destination"][:100], days=values["days"],
@@ -1766,7 +2019,8 @@ def create_app():
         business_candidates = _published_business_candidates(plan.destination)
         system, prompt = change_prompts(plan, instruction, business_candidates)
         try:
-            plan.ai_response = generate_text(system, prompt)
+            answer = generate_text(system, prompt)
+            plan.ai_response = _append_review_popular_spots(answer, business_candidates)
             db.session.commit()
             flash("希望を反映してプランを更新しました。", "success")
         except AIServiceError as exc:
