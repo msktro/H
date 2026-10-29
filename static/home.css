@@ -23,3 +23,5 @@
 .home-plan-photo-credit{margin:0;padding:5px 12px 0;color:#718980;font-size:9px;line-height:1.4}.home-plan-photo-credit a{color:#126c5b;text-decoration:underline;text-underline-offset:2px}
 
 .notice-menu-dot[hidden]{display:none!important}
+
+.home-region-image-link{position:absolute;inset:0;z-index:1;display:block}.home-region-image-link img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .35s ease}.home-region-card:hover .home-region-image-link img{transform:scale(1.045)}.home-region-label{z-index:1}

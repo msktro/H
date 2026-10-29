@@ -49,6 +49,26 @@ REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "👏"]
 CHAT_STAMPS = ["😀", "😆", "🥹", "🎉", "✨", "🧳", "🌸", "🍣", "🏔️", "👍"]
 APP_NOTICES = [
     {
+        "id": 20,
+        "date": "2026-10-28",
+        "category": "プロフィール",
+        "title": "名前・アイコンと旅行プロフィールを一つにまとめました",
+        "details": [
+            "プロフィール画面で、名前やアイコンと旅行の好みをまとめて設定できます。",
+            "ヘッダーのアイコンとメニューの「プロフィール」から同じ画面を開けます。",
+        ],
+    },
+    {
+        "id": 19,
+        "date": "2026-10-28",
+        "category": "AIプラン生成",
+        "title": "ホームの県写真からプラン生成を始められます",
+        "details": [
+            "県の写真を押すと、その県を行き先に設定したプラン生成画面が開きます。",
+            "行き先は生成前に変更できます。",
+        ],
+    },
+    {
         "id": 18,
         "date": "2026-10-28",
         "category": "旅行記",
@@ -782,42 +802,7 @@ def create_app():
     @app.route("/account", methods=["GET", "POST"])
     @login_required
     def account():
-        if request.method == "POST":
-            username = request.form.get("username", "").strip()
-            avatar = request.form.get("avatar", "")
-            uploaded_avatar = request.files.get("avatar_image")
-            if not 2 <= len(username) <= 50:
-                flash("名前は2〜50文字で入力してください。", "error")
-            elif avatar not in AVATARS and not (uploaded_avatar and uploaded_avatar.filename):
-                flash("アイコンを選択してください。", "error")
-            else:
-                try:
-                    prepared_avatar = _prepare_avatar_image(uploaded_avatar) if uploaded_avatar and uploaded_avatar.filename else None
-                except ValueError as error:
-                    flash(str(error), "error")
-                else:
-                    current_user.username = username
-                    old_avatar_path = None
-                    if prepared_avatar:
-                        avatar_file, extension = prepared_avatar
-                        avatar_dir = Path(app.instance_path) / "avatars"
-                        avatar_dir.mkdir(parents=True, exist_ok=True)
-                        filename = f"{secrets.token_hex(16)}{extension}"
-                        avatar_file.save(avatar_dir / filename)
-                        if current_user.avatar_image:
-                            old_avatar_path = avatar_dir / current_user.avatar_image
-                        current_user.avatar_image = filename
-                    else:
-                        current_user.avatar = avatar
-                        if current_user.avatar_image:
-                            old_avatar_path = Path(app.instance_path) / "avatars" / current_user.avatar_image
-                            current_user.avatar_image = None
-                    db.session.commit()
-                    if old_avatar_path:
-                        old_avatar_path.unlink(missing_ok=True)
-                    flash("プロフィールを更新しました。", "success")
-                    return redirect(url_for("account"))
-        return page("account")
+        return redirect(url_for("profile"))
 
     @app.get("/users/<int:user_id>/avatar")
     @login_required
@@ -833,30 +818,73 @@ def create_app():
     @app.route("/profile", methods=["GET", "POST"])
     @login_required
     def profile():
-        if current_user.user_type != "traveler":
-            abort(403)
         p = current_user.profile
+        if current_user.user_type == "traveler" and p is None:
+            p = TravelerProfile()
+        profile_username = current_user.username
+        selected_avatar = "keep" if current_user.avatar_image else current_user.avatar
         if request.method == "POST":
-            p.interest_themes = ",".join(x for x in request.form.getlist("themes") if x in THEMES)
-            p.travel_pace = request.form.get("travel_pace", "")[:30]
-            p.transportation = request.form.get("transportation", "")[:100]
-            p.food_preference = request.form.get("food_preference", "")[:100]
-            p.avoid_conditions = request.form.get("avoid_conditions", "")[:2000]
-            try:
-                raw = request.form.get("budget_per_trip", "").strip()
-                p.budget_per_trip = max(0, int(raw)) if raw else None
-                raw_birth_date = request.form.get("birth_date", "").strip()
-                p.birth_date = date.fromisoformat(raw_birth_date) if raw_birth_date else None
-            except ValueError:
-                flash("旅行予算または生年月日を確認してください。", "error")
-                return page("profile", profile=p)
-            if p.birth_date and p.birth_date > date.today():
-                flash("生年月日は今日以前の日付を入力してください。", "error")
-                return page("profile", profile=p)
-            db.session.commit()
-            flash("プロフィールを保存しました。次のAI生成に反映します。", "success")
-            return redirect(url_for("profile"))
-        return page("profile", profile=p)
+            profile_username = request.form.get("username", "").strip()
+            selected_avatar = request.form.get("avatar", "")
+            uploaded_avatar = request.files.get("avatar_image")
+            prepared_avatar = None
+            error_message = None
+            if not 2 <= len(profile_username) <= 50:
+                error_message = "名前は2〜50文字で入力してください。"
+            elif selected_avatar not in AVATARS and not (selected_avatar == "keep" and current_user.avatar_image) and not (uploaded_avatar and uploaded_avatar.filename):
+                error_message = "アイコンを選択してください。"
+            else:
+                try:
+                    prepared_avatar = _prepare_avatar_image(uploaded_avatar) if uploaded_avatar and uploaded_avatar.filename else None
+                except ValueError as error:
+                    error_message = str(error)
+
+            if not error_message and current_user.user_type == "traveler":
+                p.interest_themes = ",".join(x for x in request.form.getlist("themes") if x in THEMES)
+                p.travel_pace = request.form.get("travel_pace", "")[:30]
+                p.transportation = request.form.get("transportation", "")[:100]
+                p.food_preference = request.form.get("food_preference", "")[:100]
+                p.avoid_conditions = request.form.get("avoid_conditions", "")[:2000]
+                try:
+                    raw_budget = request.form.get("budget_per_trip", "").strip()
+                    budget_per_trip = max(0, int(raw_budget)) if raw_budget else None
+                    raw_birth_date = request.form.get("birth_date", "").strip()
+                    birth_date = date.fromisoformat(raw_birth_date) if raw_birth_date else None
+                    if birth_date and birth_date > date.today():
+                        error_message = "生年月日は今日以前の日付を入力してください。"
+                except ValueError:
+                    error_message = "旅行予算または生年月日を確認してください。"
+
+            if error_message:
+                flash(error_message, "error")
+            else:
+                current_user.username = profile_username
+                old_avatar_path = None
+                if prepared_avatar:
+                    avatar_file, extension = prepared_avatar
+                    avatar_dir = Path(app.instance_path) / "avatars"
+                    avatar_dir.mkdir(parents=True, exist_ok=True)
+                    filename = f"{secrets.token_hex(16)}{extension}"
+                    avatar_file.save(avatar_dir / filename)
+                    if current_user.avatar_image:
+                        old_avatar_path = avatar_dir / current_user.avatar_image
+                    current_user.avatar_image = filename
+                elif selected_avatar != "keep":
+                    current_user.avatar = selected_avatar
+                    if current_user.avatar_image:
+                        old_avatar_path = Path(app.instance_path) / "avatars" / current_user.avatar_image
+                        current_user.avatar_image = None
+
+                if current_user.user_type == "traveler":
+                    p.budget_per_trip = budget_per_trip
+                    p.birth_date = birth_date
+                    current_user.profile = p
+                db.session.commit()
+                if old_avatar_path:
+                    old_avatar_path.unlink(missing_ok=True)
+                flash("プロフィールを保存しました。" + ("次のAI生成に反映します。" if current_user.user_type == "traveler" else ""), "success")
+                return redirect(url_for("profile"))
+        return page("profile", profile=p, profile_username=profile_username, selected_avatar=selected_avatar)
 
     @app.get("/plans")
     @login_required
@@ -1551,6 +1579,10 @@ def create_app():
         default_budget = (profile.budget_per_trip or "") if profile and profile.budget_per_trip is not None else ""
         values = {"destination": "未定", "days": 3, "days_mode": "3", "custom_days": "", "people": 2, "budget": default_budget, "theme": "", "preferences": "", "companions": "", "use_profile": profile_ready, "manual_themes": [], "manual_pace": "", "manual_transport": "", "manual_food": "", "manual_age_group": "", "inspiration_story_id": "", "inspiration_story_title": ""}
         inspiration_story = None
+        if request.method == "GET":
+            requested_destination = request.args.get("destination", "").strip()
+            if requested_destination in PREFECTURES:
+                values["destination"] = requested_destination
         if request.method == "GET" and request.args.get("from_story", "").isdigit():
             candidate = db.session.get(TravelStory, int(request.args["from_story"]))
             if candidate and (candidate.is_public or candidate.user_id == current_user.id):
