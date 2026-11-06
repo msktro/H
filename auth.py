@@ -11,16 +11,19 @@ auth_bp = Blueprint("auth", __name__)
 
 
 def database_path():
+    """この認証機能が使うSQLiteファイルの場所を返します。"""
     return Path(current_app.instance_path) / "travel_planner.sqlite3"
 
 
 def connect_database():
+    """SQLiteへ接続し、列名でも値を取り出せる形式にします。"""
     connection = sqlite3.connect(database_path())
     connection.row_factory = sqlite3.Row
     return connection
 
 
 def init_db(instance_path):
+    """認証用データベースとusersテーブルを準備します。"""
     Path(instance_path).mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(Path(instance_path) / "travel_planner.sqlite3") as connection:
         connection.execute(
@@ -35,6 +38,7 @@ def init_db(instance_path):
 
 
 def login_required(view):
+    """未ログイン利用者をログイン画面へ案内するデコレーターです。"""
     @wraps(view)
     def wrapped_view(*args, **kwargs):
         if not session.get("user_id"):
@@ -46,6 +50,7 @@ def login_required(view):
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
+    """入力を検証して利用者を登録し、登録後にログイン状態にします。"""
     values = {"display_name": "", "email": ""}
     error = ""
     if request.method == "POST":
@@ -80,6 +85,7 @@ def register():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    """登録済みメールアドレスとパスワードを確認してログインします。"""
     email = ""
     error = ""
     if request.method == "POST":
@@ -100,5 +106,6 @@ def login():
 
 @auth_bp.post("/logout")
 def logout():
+    """セッションを消去してログアウトします。"""
     session.clear()
     return redirect(url_for("auth.login"))

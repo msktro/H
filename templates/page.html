@@ -18,8 +18,9 @@
 <div class="field"><label for="contact-category">お問い合わせ種別</label><select id="contact-category" name="category">{% for category in contact_categories %}<option value="{{ category }}" {{ 'selected' if values.category==category else '' }}>{{ category }}</option>{% endfor %}</select></div>
 <div class="field"><label for="contact-subject">件名</label><input id="contact-subject" name="subject" value="{{ values.subject }}" maxlength="160" required></div>
 <div class="field full"><label for="contact-message">お問い合わせ内容</label><textarea id="contact-message" name="message" rows="7" minlength="10" maxlength="5000" required placeholder="お問い合わせ内容を入力してください">{{ values.message }}</textarea><span class="hint">10〜5,000文字で入力してください。</span></div>
+<div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"><label for="contact-website">この欄は入力しないでください</label><input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
 </div><div class="form-actions"><button type="submit">お問い合わせを送信</button></div></form></section>
-<aside class="card"><span class="eyebrow">HOW IT WORKS</span><h2 style="margin-top:10px">送信後について</h2><p class="muted">お問い合わせ内容はアプリ内に保存されます。メール通知の設定がある場合は、担当者にも通知されます。</p><div class="notice">返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。</div></aside></div>
+<aside class="card"><span class="eyebrow">HOW IT WORKS</span><h2 style="margin-top:10px">送信後について</h2><p class="muted">お問い合わせは受付番号を付けてアプリ内に保存し、設定があれば担当者への通知メールと送信者への受付メールを送ります。</p><div class="notice">返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。</div></aside></div>
 
 {% elif page=='notices' %}
 <div class="page-head"><div><span class="eyebrow">TABIDEA UPDATES</span><h1>お知らせ</h1><p class="sub">Tabideaに追加した機能や画面の改善内容をお知らせします。</p></div><a class="button secondary" href="{{ url_for('index') }}">ホームへ戻る</a></div>

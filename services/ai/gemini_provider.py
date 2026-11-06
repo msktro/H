@@ -1,4 +1,4 @@
-"""Gemini REST API adapter."""
+"""Gemini APIへリクエストを送り、回答をアプリで扱える形にします。"""
 
 import os
 
@@ -8,6 +8,7 @@ from . import AIServiceError
 
 
 def generate_with_gemini(system_prompt, user_prompt, temperature=0.7):
+    """APIキーを使ってGeminiを呼び出し、失敗を画面向けの例外に変換します。"""
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
     if not api_key:

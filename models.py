@@ -1,3 +1,5 @@
+"""データベースのテーブルと、テーブル間のつながりを定義します。"""
+
 from datetime import datetime, timezone
 from flask_login import UserMixin
 from extensions import db
@@ -7,6 +9,7 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 class User(UserMixin, db.Model):
+    """ログイン情報と利用者種別（旅行者・事業者）を保存します。"""
     __tablename__ = "user_auth"
     id = db.Column("user_id", db.Integer, primary_key=True)
     username = db.Column("user_name", db.String(50), nullable=False)
@@ -21,6 +24,7 @@ class User(UserMixin, db.Model):
     business_detail = db.relationship("BusinessDetail", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
 class TravelerProfile(db.Model):
+    """旅行者の好みを保存し、AIプラン作成時の参考にします。"""
     __tablename__ = "general_detail"
     id = db.Column("general_detail_id", db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), unique=True, nullable=False)
@@ -39,6 +43,7 @@ class TravelerProfile(db.Model):
         return [x for x in (self.interest_themes or "").split(",") if x]
 
 class TripGroup(db.Model):
+    """旅行仲間のグループ本体と招待コードを保存します。"""
     __tablename__ = "trip_groups"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
@@ -54,6 +59,7 @@ class TripGroup(db.Model):
     travel_notes = db.relationship("GroupTravelNote", back_populates="group", cascade="all, delete-orphan", order_by="GroupTravelNote.starts_at")
 
 class TripGroupMember(db.Model):
+    """グループに参加している利用者を結び付けます。"""
     __tablename__ = "trip_group_members"
     __table_args__ = (UniqueConstraint("group_id", "user_id", name="uq_trip_group_member"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -64,6 +70,7 @@ class TripGroupMember(db.Model):
     user = db.relationship("User", backref=db.backref("trip_group_memberships", cascade="all, delete-orphan"))
 
 class GroupMessage(db.Model):
+    """グループ内のチャット投稿を保存します。"""
     __tablename__ = "group_messages"
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -76,6 +83,7 @@ class GroupMessage(db.Model):
     read_receipts = db.relationship("GroupMessageRead", back_populates="message", cascade="all, delete-orphan", order_by="GroupMessageRead.read_at")
 
 class GroupMessageRead(db.Model):
+    """誰がどのチャットを読んだか記録します。"""
     __tablename__ = "group_message_reads"
     __table_args__ = (UniqueConstraint("message_id", "user_id", name="uq_group_message_reader"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -86,6 +94,7 @@ class GroupMessageRead(db.Model):
     user = db.relationship("User")
 
 class GroupMessageReaction(db.Model):
+    """チャット投稿へのリアクションを記録します。"""
     __tablename__ = "group_message_reactions"
     __table_args__ = (UniqueConstraint("message_id", "user_id", name="uq_group_message_reaction_user"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -97,6 +106,7 @@ class GroupMessageReaction(db.Model):
     user = db.relationship("User")
 
 class GroupAlbumPhoto(db.Model):
+    """グループ旅行のアルバム写真情報を保存します。"""
     __tablename__ = "group_album_photos"
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -108,6 +118,7 @@ class GroupAlbumPhoto(db.Model):
     user = db.relationship("User")
 
 class GroupExpense(db.Model):
+    """グループ旅行で発生した費用を保存します。"""
     __tablename__ = "group_expenses"
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -122,6 +133,7 @@ class GroupExpense(db.Model):
     shares = db.relationship("GroupExpenseShare", back_populates="expense", cascade="all, delete-orphan")
 
 class GroupExpenseShare(db.Model):
+    """費用を誰がいくら負担するか記録します。"""
     __tablename__ = "group_expense_shares"
     id = db.Column(db.Integer, primary_key=True)
     expense_id = db.Column(db.Integer, db.ForeignKey("group_expenses.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -131,6 +143,7 @@ class GroupExpenseShare(db.Model):
     user = db.relationship("User")
 
 class GroupBudget(db.Model):
+    """グループで設定した旅行予算を保存します。"""
     __tablename__ = "group_budgets"
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
@@ -139,6 +152,7 @@ class GroupBudget(db.Model):
     group = db.relationship("TripGroup")
 
 class GroupTravelNote(db.Model):
+    """旅程や予約など、グループで共有するメモを保存します。"""
     __tablename__ = "group_travel_notes"
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -155,6 +169,7 @@ class GroupTravelNote(db.Model):
     creator = db.relationship("User")
 
 class BusinessDetail(db.Model):
+    """事業者アカウントの連絡先などを保存します。"""
     __tablename__ = "business_detail"
     id = db.Column("business_detail_id", db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), unique=True, nullable=False)
@@ -167,6 +182,7 @@ class BusinessDetail(db.Model):
     user = db.relationship("User", back_populates="business_detail")
 
 class TravelPlan(db.Model):
+    """AIで作成した旅行プランと条件を保存します。"""
     __tablename__ = "travel_plans"
     id = db.Column("plan_id", db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
@@ -188,6 +204,7 @@ class TravelPlan(db.Model):
     travel_story = db.relationship("TravelStory", back_populates="plan", uselist=False, cascade="all, delete-orphan")
 
 class TravelStory(db.Model):
+    """公開・非公開の旅行記を保存します。"""
     __tablename__ = "travel_stories"
     id = db.Column(db.Integer, primary_key=True)
     plan_id = db.Column(db.Integer, db.ForeignKey("travel_plans.plan_id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
@@ -204,6 +221,7 @@ class TravelStory(db.Model):
     comments = db.relationship("TravelStoryComment", back_populates="story", cascade="all, delete-orphan", order_by="TravelStoryComment.created_at.asc()")
 
 class TravelStoryLike(db.Model):
+    """旅行記への「いいね」を記録します。"""
     __tablename__ = "travel_story_likes"
     __table_args__ = (UniqueConstraint("story_id", "user_id", name="uq_travel_story_like"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -214,6 +232,7 @@ class TravelStoryLike(db.Model):
     user = db.relationship("User")
 
 class TravelStoryComment(db.Model):
+    """旅行記に付いたコメントと返信を保存します。"""
     __tablename__ = "travel_story_comments"
     id = db.Column(db.Integer, primary_key=True)
     story_id = db.Column(db.Integer, db.ForeignKey("travel_stories.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -227,6 +246,7 @@ class TravelStoryComment(db.Model):
     replies = db.relationship("TravelStoryComment", back_populates="parent", cascade="all, delete-orphan", order_by="TravelStoryComment.created_at.asc()")
 
 class PackingItem(db.Model):
+    """旅行ごとの持ち物とチェック状態を保存します。"""
     __tablename__ = "packing_items"
     __table_args__ = (UniqueConstraint("plan_id", "user_id", "name", name="uq_packing_item_user_plan_name"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -240,6 +260,7 @@ class PackingItem(db.Model):
     user = db.relationship("User")
 
 class BusinessListing(db.Model):
+    """旅行者向けに掲載する施設・店舗情報を保存します。"""
     __tablename__ = "business_listings"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
@@ -267,6 +288,7 @@ class BusinessListing(db.Model):
     photos = db.relationship("BusinessListingPhoto", back_populates="listing", cascade="all, delete-orphan", order_by="BusinessListingPhoto.id")
 
 class BusinessListingPhoto(db.Model):
+    """施設・店舗に登録された写真を保存します。"""
     __tablename__ = "business_listing_photos"
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey("business_listings.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -275,6 +297,7 @@ class BusinessListingPhoto(db.Model):
     listing = db.relationship("BusinessListing", back_populates="photos")
 
 class Favorite(db.Model):
+    """利用者がお気に入りにした掲載情報を記録します。"""
     __tablename__ = "favorites"
     __table_args__ = (UniqueConstraint("user_id", "listing_id", name="uq_favorite_user_listing"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -285,6 +308,7 @@ class Favorite(db.Model):
     user = db.relationship("User")
 
 class Review(db.Model):
+    """掲載施設・店舗への評価と口コミを保存します。"""
     __tablename__ = "reviews"
     __table_args__ = (UniqueConstraint("listing_id", "user_id", name="uq_review_listing_user"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -298,6 +322,7 @@ class Review(db.Model):
     user = db.relationship("User")
 
 class ViewHistory(db.Model):
+    """利用者が閲覧した旅行記などの履歴を保存します。"""
     __tablename__ = "view_histories"
     __table_args__ = (UniqueConstraint("user_id", "target_type", "target_id", name="uq_view_history_target"),)
     id = db.Column(db.Integer, primary_key=True)
@@ -307,13 +332,35 @@ class ViewHistory(db.Model):
     viewed_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False, index=True)
 
 class AppNoticeRead(db.Model):
+    """利用者がお知らせを読んだ状態を記録します。"""
     __tablename__ = "app_notice_reads"
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), primary_key=True)
     latest_notice_id = db.Column(db.Integer, nullable=False, default=0)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     user = db.relationship("User")
 
+class PasswordResetToken(db.Model):
+    """期限と使用状態をDBで管理する、再設定リンクのハッシュだけを保存します。"""
+    __tablename__ = "password_reset_tokens"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
+    used_at = db.Column(db.DateTime(timezone=True))
+
+
+class FormRateLimitEvent(db.Model):
+    """お問い合わせ・再設定リンクの送信回数を、匿名化した照合値で管理します。"""
+    __tablename__ = "form_rate_limit_events"
+    id = db.Column(db.Integer, primary_key=True)
+    scope = db.Column(db.String(40), nullable=False, index=True)
+    fingerprint = db.Column(db.String(64), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+
+
 class ContactInquiry(db.Model):
+    """お問い合わせフォームから届いた内容を保存します。"""
     __tablename__ = "contact_inquiries"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
