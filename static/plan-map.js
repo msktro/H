@@ -1,7 +1,9 @@
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+
 (() => {
   const root = document.getElementById('map-controls');
   const mapNode = document.getElementById('trip-map');
-  if (!root || !mapNode || !window.maplibregl) return;
+  if (!root || !mapNode) return;
 
   const form = document.getElementById('place-search-form');
   const queryInput = document.getElementById('place-query');
@@ -25,7 +27,9 @@
     attributionControl: true
   });
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
+  let mapLoaded = false;
   map.on('load', () => {
+    mapLoaded = true;
     map.addSource(routeSourceId, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({
       id: 'tabidea-route-line', type: 'line', source: routeSourceId,
@@ -33,8 +37,9 @@
       paint: { 'line-color': '#126c5b', 'line-width': 5, 'line-opacity': 0.9 }
     });
   });
-  map.on('error', () => {
-    if (statusNode.textContent.includes('地図')) statusNode.textContent = '地図を読み込めません。インターネット接続を確認してください。';
+  map.on('error', (event) => {
+    console.error('MapLibre map error:', event?.error || event);
+    if (!mapLoaded) setStatus('地図を読み込めません。インターネット接続や地図データ配信を確認してください。', true);
   });
 
   function setStatus(message, isError = false) {
