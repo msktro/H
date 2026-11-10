@@ -52,7 +52,7 @@ def new_plan():
     profile = current_user.profile
     profile_ready = _profile_is_configured(profile)
     default_budget = (profile.budget_per_trip or "") if profile and profile.budget_per_trip is not None else ""
-    values = {"destination": "未定", "days": 3, "days_mode": "3", "custom_days": "", "people": 2, "budget": default_budget, "theme": "", "preferences": "", "companions": "", "use_profile": profile_ready, "manual_themes": [], "manual_pace": "", "manual_transport": "", "manual_food": "", "manual_age_group": "", "inspiration_story_id": "", "inspiration_story_title": ""}
+    values = {"destination": "未定", "start_date": "", "end_date": "", "days": 1, "people": 2, "budget": default_budget, "theme": "", "preferences": "", "companions": "", "use_profile": profile_ready, "manual_themes": [], "manual_pace": "", "manual_transport": "", "manual_food": "", "manual_age_group": "", "inspiration_story_id": "", "inspiration_story_title": ""}
     inspiration_story = None
     if request.method == "GET":
         requested_destination = request.args.get("destination", "").strip()
@@ -64,9 +64,10 @@ def new_plan():
             inspiration_story = candidate
             source_plan = candidate.plan
             values.update({
-                "destination": source_plan.destination, "days": source_plan.days,
-                "days_mode": str(source_plan.days) if source_plan.days <= 7 else "other",
-                "custom_days": str(source_plan.days) if source_plan.days > 7 else "",
+                "destination": source_plan.destination,
+                "start_date": source_plan.start_date.isoformat() if source_plan.start_date else "",
+                "end_date": source_plan.end_date.isoformat() if source_plan.end_date else "",
+                "days": source_plan.days,
                 "people": source_plan.num_people, "budget": source_plan.budget,
                 "theme": source_plan.theme or "",
                 "manual_themes": [theme.strip() for theme in re.split(r"[、,，]", source_plan.theme or "") if theme.strip() in THEMES],
@@ -74,7 +75,7 @@ def new_plan():
                 "inspiration_story_id": str(candidate.id), "inspiration_story_title": source_plan.title,
             })
     if request.method == "POST":
-        values.update({k: request.form.get(k, "").strip() for k in ("destination", "days", "people", "budget", "theme", "preferences", "companions", "manual_pace", "manual_transport", "manual_food", "manual_age_group", "custom_days")})
+        values.update({k: request.form.get(k, "").strip() for k in ("destination", "start_date", "end_date", "people", "budget", "theme", "preferences", "companions", "manual_pace", "manual_transport", "manual_food", "manual_age_group")})
         # 参考にする旅行記は、公開中か自分の投稿だけを読み込みます。
         raw_story_id = request.form.get("inspiration_story_id", "").strip()
         if raw_story_id.isdigit():
@@ -83,20 +84,22 @@ def new_plan():
                 inspiration_story = candidate
                 values["inspiration_story_id"] = str(candidate.id)
                 values["inspiration_story_title"] = candidate.plan.title
-        values["days_mode"] = values["days"]
-        raw_days = values["custom_days"] if values["days_mode"] == "other" else values["days"]
         values["use_profile"] = request.form.get("use_profile") == "on"
         values["manual_themes"] = [theme for theme in request.form.getlist("manual_themes") if theme in THEMES]
         budget_was_provided = bool(values["budget"].strip())
-        # 日数は文字列入力なので、数値化して許容範囲を確認してから使います。
         try:
-            days_count = int(raw_days)
+            start_date = date.fromisoformat(values["start_date"])
+            end_date = date.fromisoformat(values["end_date"])
+            days_count = (end_date - start_date).days + 1
         except (TypeError, ValueError):
+            start_date = end_date = None
             days_count = 0
         if not 1 <= days_count <= 30:
-            flash("日程は1〜30日の範囲で選択または入力してください。", "error")
+            flash("出発日と帰着日を選択してください。旅行期間は1〜30日で指定できます。", "error")
             return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
         values["days"] = days_count
+        values["start_date"] = start_date.isoformat()
+        values["end_date"] = end_date.isoformat()
         values["people"] = _bounded_int(values["people"], 1, 30, 1)
         values["budget"] = _bounded_int(values["budget"], 0, 100000000, 0)
         if not values["destination"]:
@@ -146,7 +149,7 @@ def new_plan():
         answer = _append_review_popular_spots(answer, business_candidates)
         plan = TravelPlan(
             user_id=current_user.id, title=f"{values['destination']}の旅行プラン",
-            destination=values["destination"][:100], days=values["days"],
+            destination=values["destination"][:100], start_date=start_date, end_date=end_date, days=values["days"],
             num_people=values["people"], budget=values["budget"] or 0,
             theme=values["theme"][:200], preferences=prompt_values["preferences"][:4000], ai_response=answer,
         )
@@ -163,6 +166,20 @@ def plan_detail(plan_id):
     plan = _visible_plan(plan_id)
     story = TravelStory.query.filter_by(plan_id=plan.id, user_id=current_user.id).first() if plan.user_id == current_user.id else None
     return page("plan_detail", plan=plan, story=story, is_plan_owner=plan.user_id == current_user.id)
+
+@plans_bp.post("/plans/<int:plan_id>/rename")
+@login_required
+def rename_plan(plan_id):
+    _traveler_only()
+    plan = _owned_plan(plan_id)
+    title = request.form.get("title", "").strip()
+    if not title or len(title) > 100:
+        flash("プラン名は1〜100文字で入力してください。", "error")
+        return redirect(url_for("plan_detail", plan_id=plan.id))
+    plan.title = title
+    db.session.commit()
+    flash("プラン名を更新しました。", "success")
+    return redirect(url_for("plan_detail", plan_id=plan.id))
 
 @plans_bp.route("/plans/<int:plan_id>/packing", methods=["GET", "POST"])
 @login_required

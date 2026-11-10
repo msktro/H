@@ -87,6 +87,12 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        plan_columns = {column["name"] for column in inspect(db.engine).get_columns("travel_plans")}
+        with db.engine.begin() as connection:
+            if "start_date" not in plan_columns:
+                connection.execute(text("ALTER TABLE travel_plans ADD COLUMN start_date DATE"))
+            if "end_date" not in plan_columns:
+                connection.execute(text("ALTER TABLE travel_plans ADD COLUMN end_date DATE"))
         user_columns = {column["name"] for column in inspect(db.engine).get_columns("user_auth")}
         if "avatar" not in user_columns:
             with db.engine.begin() as connection:

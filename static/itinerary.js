@@ -26,6 +26,13 @@
     if (locale === "ja") return `${number}日目`;
     return `DAY\n${day}`;
   };
+  const dayDateLabel = (number) => {
+    const [year, month, day] = (root.dataset.startDate || "").split("-").map(Number);
+    if (!year || !month || !day) return "";
+    const date = new Date(year, month - 1, day + number - 1);
+    const weekday = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
+    return `${date.getMonth() + 1}月${date.getDate()}日（${weekday}）`;
+  };
   const recommendedLabel = () => {
     const locale = document.documentElement.lang || "ja";
     if (locale === "ko") return "추천 스폿";
@@ -128,6 +135,8 @@
         const card = make("article", "itinerary-day");
         const head = make("header", "itinerary-day-head");
         head.append(make("span", "itinerary-day-number", dayLabel(event.number)));
+        const dateLabel = dayDateLabel(event.number);
+        if (dateLabel) head.append(make("span", "itinerary-day-date", dateLabel));
         head.append(make("h3", "", event.title));
         card.append(head);
         const sections = make("div", "itinerary-sections");

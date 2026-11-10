@@ -15,6 +15,7 @@
 .itinerary-day:nth-of-type(odd){background:#fff}
 .itinerary-day-head{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px dashed #d9dfd6}
 .itinerary-day-number{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:15px;background:#e3f1e7;color:#176957;font-size:11px;font-weight:900;line-height:1.1;text-align:center;letter-spacing:.04em;white-space:pre-line}
+.itinerary-day-date{flex:none;color:#16715f;font-size:13px;font-weight:800;white-space:nowrap}
 .itinerary-day:nth-of-type(even) .itinerary-day-number{background:#fff0d9;color:#916324}
 .itinerary-day-head h3{margin:0;color:#183b32;font-family:"Yu Mincho",serif;font-size:20px;line-height:1.45}
 .itinerary-sections{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
