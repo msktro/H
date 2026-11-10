@@ -18,12 +18,33 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
   const waypoints = [];
   const markers = [];
   const routeSourceId = 'tabidea-route';
+  const prefectureCenters = {
+    '北海道': [142.83, 43.47, 6.5], '青森県': [140.74, 40.82, 8], '岩手県': [141.15, 39.70, 7.5],
+    '宮城県': [140.87, 38.27, 8], '秋田県': [140.10, 39.72, 7.7], '山形県': [140.36, 38.24, 7.8],
+    '福島県': [140.47, 37.75, 7.5], '茨城県': [140.45, 36.34, 8], '栃木県': [139.88, 36.57, 8],
+    '群馬県': [139.06, 36.39, 8], '埼玉県': [139.65, 35.86, 8.5], '千葉県': [140.12, 35.60, 8],
+    '東京都': [139.69, 35.68, 9], '神奈川県': [139.64, 35.45, 8.8], '新潟県': [139.02, 37.90, 7.5],
+    '富山県': [137.21, 36.70, 8.5], '石川県': [136.63, 36.59, 8], '福井県': [136.22, 36.07, 8],
+    '山梨県': [138.57, 35.66, 8], '長野県': [138.18, 36.65, 7.5], '岐阜県': [136.76, 35.42, 7.8],
+    '静岡県': [138.38, 34.98, 7.8], '愛知県': [136.91, 35.18, 8.5], '三重県': [136.51, 34.73, 8],
+    '滋賀県': [135.87, 35.00, 8.5], '京都府': [135.76, 35.02, 9], '大阪府': [135.52, 34.69, 9],
+    '兵庫県': [135.18, 34.69, 8], '奈良県': [135.83, 34.69, 8.5], '和歌山県': [135.17, 34.23, 8],
+    '鳥取県': [134.24, 35.50, 8], '島根県': [132.77, 35.47, 7.8], '岡山県': [133.93, 34.66, 8.5],
+    '広島県': [132.46, 34.40, 8], '山口県': [131.47, 34.19, 8], '徳島県': [134.56, 34.07, 8.5],
+    '香川県': [134.04, 34.34, 9], '愛媛県': [132.77, 33.84, 8], '高知県': [133.53, 33.56, 7.8],
+    '福岡県': [130.42, 33.59, 8.5], '佐賀県': [130.30, 33.25, 8.5], '長崎県': [129.87, 32.75, 8],
+    '熊本県': [130.71, 32.79, 8], '大分県': [131.61, 33.24, 8], '宮崎県': [131.42, 31.91, 7.8],
+    '鹿児島県': [130.56, 31.60, 7.5], '沖縄県': [127.68, 26.21, 7.2]
+  };
+  const destination = root.dataset.destination || '';
+  const matchedPrefecture = Object.keys(prefectureCenters).find(name => destination.includes(name));
+  const destinationView = matchedPrefecture ? prefectureCenters[matchedPrefecture] : null;
 
   const map = new maplibregl.Map({
     container: mapNode,
     style: 'https://tiles.openfreemap.org/styles/liberty',
-    center: [137.5, 36.2],
-    zoom: 4.6,
+    center: destinationView ? destinationView.slice(0, 2) : [137.5, 36.2],
+    zoom: destinationView ? destinationView[2] : 4.6,
     attributionControl: true
   });
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
