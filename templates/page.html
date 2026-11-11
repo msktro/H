@@ -2,7 +2,7 @@
 {% if page == 'auth' or page=='notices' %}{% block title %}{{ ('ログイン' if mode=='login' else '新規登録') if page=='auth' else 'お知らせ' }} | Tabidea{% endblock %}{% endif %}
 {% block content %}
 {% if page=='auth' %}
-<div class="auth-wrap"><section class="card"><div class="auth-intro"><span class="brand-mark" style="margin:auto">✈</span><h1 style="margin:12px 0 5px">旅の準備をはじめよう</h1><p>Tabideaで、次の旅を計画しましょう。</p></div>
+<div class="auth-wrap"><section class="card"><div class="auth-intro"><span class="brand-mark" style="margin:auto" aria-hidden="true"></span><h1 style="margin:12px 0 5px">旅の準備をはじめよう</h1><p>Tabideaで、次の旅を計画しましょう。</p></div>
 <div class="auth-tabs"><a class="{{ 'active' if mode=='login' else '' }}" href="{{ url_for('auth',mode='login') }}">ログイン</a><a class="{{ 'active' if mode=='register' else '' }}" href="{{ url_for('auth',mode='register') }}">新規登録</a></div>
 <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="form-grid">
 {% if mode=='register' %}<div class="field full"><label for="user-type">アカウント種別</label><select id="user-type" name="user_type"><option value="traveler">旅行者</option><option value="business">事業者</option></select></div><div class="field full"><label for="username">ユーザー名</label><input id="username" name="username" minlength="2" maxlength="50" required placeholder="例：たび好き"></div>{% endif %}

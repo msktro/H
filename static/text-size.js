@@ -18,6 +18,7 @@
     const size = allowed.has(value) ? value : "1";
     const scale = Number(size);
     document.querySelectorAll("body *").forEach((element) => {
+      if (element.matches(".password-toggle, .password-toggle *")) return;
       const hasText = [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.nodeValue.trim());
       if (hasText || ["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(element.tagName)) scaleElement(element, scale);
     });
