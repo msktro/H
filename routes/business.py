@@ -25,6 +25,16 @@ from services.prompts import change_prompts, plan_prompts, translation_prompts
 
 business_bp = Blueprint("business", __name__)
 
+
+@business_bp.app_context_processor
+def inject_business_photo_credits():
+    credit_path = Path(current_app.static_folder) / "business_place_photos" / "attributions.json"
+    try:
+        credits = json.loads(credit_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        credits = {}
+    return {"business_photo_credits": credits}
+
 @business_bp.route("/business", methods=["GET", "POST"])
 @login_required
 def business():
@@ -139,14 +149,34 @@ def business_listing_photo(item_id, photo_id):
     photo = BusinessListingPhoto.query.filter_by(id=photo_id, listing_id=listing.id).first_or_404()
     if not listing.is_published and listing.user_id != current_user.id:
         abort(404)
+    if photo.filename.startswith("place_"):
+        credits = inject_business_photo_credits()["business_photo_credits"]
+        if photo.filename not in credits:
+            abort(404)
+        photo_path = Path(current_app.static_folder) / "business_place_photos"
+        filename = photo.filename
+    # Demo listing photos ship with the application under static/. Resolve them
+    # there instead of instance/ so AWS deployments can serve them after deploy.
+    elif photo.filename.startswith("demo_"):
+        match = re.fullmatch(
+            r"demo_(lodging_[1-3]|food_[1-3]|experience_[1-3]|transport_[1-3]|other_[1-3])(?:_\d+)?\.jpg",
+            photo.filename,
+        )
+        if not match:
+            abort(404)
+        photo_path = Path(current_app.static_folder) / "demo_business_photos"
+        filename = f"{match.group(1)}.jpg"
+    else:
+        photo_path = Path(current_app.instance_path) / "business_photos" / str(listing.id)
+        filename = photo.filename
     response = send_from_directory(
-        Path(current_app.instance_path) / "business_photos" / str(listing.id),
-        photo.filename,
+        photo_path,
+        filename,
         as_attachment=False,
         conditional=True,
     )
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Cache-Control"] = "private, max-age=3600"
+    response.headers["Cache-Control"] = "public, max-age=86400" if photo.filename.startswith("demo_") else "private, max-age=3600"
     return response
 
 @business_bp.post("/business/<int:item_id>/photos/<int:photo_id>/delete")

@@ -18,10 +18,58 @@ class User(UserMixin, db.Model):
     user_type = db.Column(db.String(20), nullable=False)
     avatar = db.Column(db.String(16), nullable=False, default="👤", server_default="👤")
     avatar_image = db.Column(db.String(255), nullable=True)
+    is_suspended = db.Column(db.Boolean, nullable=False, default=False, server_default="0", index=True)
+    suspension_reason = db.Column(db.Text, nullable=True)
+    suspended_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    suspended_by_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     profile = db.relationship("TravelerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     business_detail = db.relationship("BusinessDetail", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+
+class AccountModerationLog(db.Model):
+    """運営者によるアカウント停止・解除の監査記録です。"""
+    __tablename__ = "account_moderation_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    target_user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
+    action = db.Column(db.String(20), nullable=False, index=True)
+    reason = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    target_user = db.relationship("User", foreign_keys=[target_user_id])
+    operator = db.relationship("User", foreign_keys=[operator_id])
+
+
+class AccountReport(db.Model):
+    """利用者が不適切なアカウントを運営へ報告した記録です。"""
+    __tablename__ = "account_reports"
+    id = db.Column(db.Integer, primary_key=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
+    target_user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
+    category = db.Column(db.String(40), nullable=False)
+    details = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="open", server_default="open", index=True)
+    admin_note = db.Column(db.Text)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    handled_at = db.Column(db.DateTime(timezone=True))
+    handled_by_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"))
+    reporter = db.relationship("User", foreign_keys=[reporter_id])
+    target_user = db.relationship("User", foreign_keys=[target_user_id])
+    handled_by = db.relationship("User", foreign_keys=[handled_by_id])
+
+
+class AccountWarning(db.Model):
+    """運営者から利用者へ送る警告と確認状態を保存します。"""
+    __tablename__ = "account_warnings"
+    id = db.Column(db.Integer, primary_key=True)
+    target_user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
+    operator_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False, index=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    acknowledged_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    target_user = db.relationship("User", foreign_keys=[target_user_id])
+    operator = db.relationship("User", foreign_keys=[operator_id])
 
 class TravelerProfile(db.Model):
     """旅行者の好みを保存し、AIプラン作成時の参考にします。"""
@@ -54,6 +102,8 @@ class TripGroup(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     owner = db.relationship("User", foreign_keys=[owner_id])
     members = db.relationship("TripGroupMember", back_populates="group", cascade="all, delete-orphan")
+    bans = db.relationship("TripGroupBan", back_populates="group", cascade="all, delete-orphan")
+    rejoin_requests = db.relationship("TripGroupRejoinRequest", back_populates="group", cascade="all, delete-orphan")
     messages = db.relationship("GroupMessage", back_populates="group", cascade="all, delete-orphan", order_by="GroupMessage.id")
     album_photos = db.relationship("GroupAlbumPhoto", back_populates="group", cascade="all, delete-orphan", order_by="GroupAlbumPhoto.created_at.desc()")
     travel_notes = db.relationship("GroupTravelNote", back_populates="group", cascade="all, delete-orphan", order_by="GroupTravelNote.starts_at")
@@ -68,6 +118,31 @@ class TripGroupMember(db.Model):
     joined_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
     group = db.relationship("TripGroup", back_populates="members")
     user = db.relationship("User", backref=db.backref("trip_group_memberships", cascade="all, delete-orphan"))
+
+class TripGroupBan(db.Model):
+    """グループ作成者が参加を禁止した利用者を記録します。"""
+    __tablename__ = "trip_group_bans"
+    __table_args__ = (UniqueConstraint("group_id", "user_id", name="uq_trip_group_ban"),)
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    banned_by_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id"), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    group = db.relationship("TripGroup", back_populates="bans")
+    user = db.relationship("User", foreign_keys=[user_id])
+    banned_by = db.relationship("User", foreign_keys=[banned_by_id])
+
+class TripGroupRejoinRequest(db.Model):
+    """BANされた利用者からのグループ再参加申請を保存します。"""
+    __tablename__ = "trip_group_rejoin_requests"
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    requested_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    status = db.Column(db.String(16), nullable=False, default="pending", index=True)
+    handled_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    group = db.relationship("TripGroup", back_populates="rejoin_requests")
+    user = db.relationship("User", foreign_keys=[user_id])
 
 class GroupMessage(db.Model):
     """グループ内のチャット投稿を保存します。"""
@@ -338,6 +413,33 @@ class AppNoticeRead(db.Model):
     latest_notice_id = db.Column(db.Integer, nullable=False, default=0)
     updated_at = db.Column(db.DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
     user = db.relationship("User")
+
+class OperatorNotice(db.Model):
+    """運営者が対象別に配信するお知らせを保存します。"""
+    __tablename__ = "operator_notices"
+    id = db.Column(db.Integer, primary_key=True)
+    audience = db.Column(db.String(20), nullable=False, index=True)  # all / traveler / business
+    category = db.Column(db.String(40), nullable=False, default="運営からのお知らせ")
+    title = db.Column(db.String(120), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True, server_default="1", index=True)
+    author_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="SET NULL"), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    author = db.relationship("User", foreign_keys=[author_id])
+    reads = db.relationship("OperatorNoticeRead", back_populates="notice", cascade="all, delete-orphan")
+
+
+class OperatorNoticeRead(db.Model):
+    """運営からのお知らせを利用者ごとに既読管理します。"""
+    __tablename__ = "operator_notice_reads"
+    __table_args__ = (UniqueConstraint("notice_id", "user_id", name="uq_operator_notice_reader"),)
+    id = db.Column(db.Integer, primary_key=True)
+    notice_id = db.Column(db.Integer, db.ForeignKey("operator_notices.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    read_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    notice = db.relationship("OperatorNotice", back_populates="reads")
+    user = db.relationship("User")
+
 
 class PasswordResetToken(db.Model):
     """期限と使用状態をDBで管理する、再設定リンクのハッシュだけを保存します。"""

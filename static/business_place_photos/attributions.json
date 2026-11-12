@@ -1,0 +1,30 @@
+{
+  "place_fukui_raptor.jpg": {
+    "title": "Fukui Raptor skeleton fossil",
+    "creator": "Titomaurer",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "source_url": "https://commons.wikimedia.org/w/index.php?curid=70111225"
+  },
+  "place_shizuoka_annex.jpg": {
+    "title": "Shizuoka Prefectural Government Annex",
+    "creator": "Yama0904",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source_url": "https://commons.wikimedia.org/w/index.php?curid=145940838"
+  },
+  "place_doubletree_osaka_castle.jpg": {
+    "title": "DoubleTree by Hilton Osaka Castle",
+    "creator": "KishujiRapid",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source_url": "https://commons.wikimedia.org/w/index.php?curid=157833188"
+  },
+  "place_saga_kencho_class.jpg": {
+    "title": "Saga Prefectural Government Office (Kencho CLASS)",
+    "creator": "Nabeshima",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source_url": "https://commons.wikimedia.org/w/index.php?curid=159476863"
+  }
+}

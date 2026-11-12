@@ -15,6 +15,12 @@
     });
     if (updateHash) history.replaceState(null, "", `#${selected.dataset.groupTab}`);
     document.dispatchEvent(new CustomEvent("group:tab-shown", { detail: selected.dataset.groupTab }));
+    if (!updateHash && selected.dataset.groupTab === "chat") {
+      requestAnimationFrame(() => document.getElementById("group-chat")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }));
+    }
   }
 
   tabs.forEach((tab, index) => {

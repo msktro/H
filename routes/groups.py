@@ -33,6 +33,8 @@ def group_invite(invite_code):
     if not group:
         flash("招待コードが見つかりません。", "error")
         return redirect(url_for("auth", mode="login") if not current_user.is_authenticated else url_for("index"))
+    if current_user.is_authenticated and TripGroupBan.query.filter_by(group_id=group.id, user_id=current_user.id).first():
+        return redirect(url_for("group_rejoin_page", group_id=group.id))
     session["pending_group_invite"] = code
     if not current_user.is_authenticated:
         flash("ログインまたは新規登録すると、このグループに参加できます。", "info")
@@ -45,7 +47,9 @@ def groups():
     _traveler_only()
     memberships = TripGroupMember.query.filter_by(user_id=current_user.id).all()
     return page("groups", groups=[membership.group for membership in memberships],
-                group_unread_counts=unread_group_message_counts(current_user.id))
+                banned_groups=[ban.group for ban in TripGroupBan.query.filter_by(user_id=current_user.id).all()],
+                group_unread_counts=unread_group_message_counts(current_user.id),
+                group_rejoin_request_counts=pending_group_rejoin_counts(current_user.id))
 
 @groups_bp.get("/api/group-notifications")
 @login_required
@@ -53,6 +57,7 @@ def group_notifications():
     if current_user.user_type != "traveler":
         return jsonify(error="旅行者アカウントが必要です。"), 403
     after_id = max(0, request.args.get("after", default=0, type=int) or 0)
+    after_rejoin_id = max(0, request.args.get("after_rejoin", default=0, type=int) or 0)
     messages = (GroupMessage.query
                 .join(TripGroupMember, TripGroupMember.group_id == GroupMessage.group_id)
                 .filter(
@@ -65,20 +70,44 @@ def group_notifications():
     global_cursor = db.session.query(func.max(GroupMessage.id)).scalar() or after_id
     next_cursor = messages[-1].id if len(messages) == 50 else max(after_id, global_cursor)
     unread_counts = unread_group_message_counts(current_user.id)
+    rejoin_counts = pending_group_rejoin_counts(current_user.id)
     comment_notifications = unread_journey_comment_notifications(current_user.id)
+    rejoin_requests = (TripGroupRejoinRequest.query
+                       .join(TripGroup, TripGroup.id == TripGroupRejoinRequest.group_id)
+                       .filter(TripGroup.owner_id == current_user.id,
+                               TripGroupRejoinRequest.id > after_rejoin_id,
+                               TripGroupRejoinRequest.status == "pending")
+                       .order_by(TripGroupRejoinRequest.id.asc()).limit(50).all())
+    rejoin_cursor = (db.session.query(func.max(TripGroupRejoinRequest.id))
+                     .join(TripGroup, TripGroup.id == TripGroupRejoinRequest.group_id)
+                     .filter(TripGroup.owner_id == current_user.id).scalar() or after_rejoin_id)
     return jsonify(
         cursor=next_cursor,
         unread_total=sum(unread_counts.values()),
         unread_counts={str(group_id): count for group_id, count in unread_counts.items()},
+        pending_rejoin_counts={str(group_id): count for group_id, count in rejoin_counts.items()},
+        group_badge_total=sum(unread_counts.values()) + sum(rejoin_counts.values()),
+        rejoin_cursor=rejoin_cursor,
         unread_journey_comment_count=sum(item["count"] for item in comment_notifications),
         unread_journey_comment_counts={str(item["story"].id): item["count"] for item in comment_notifications},
         messages=[{
+            "type": "message",
             "id": message.id,
             "group_id": message.group_id,
             "group_name": message.group.name,
             "username": message.user.username,
             "content": message.content,
+            "chat_url": url_for("group_detail", group_id=message.group_id, _anchor="chat"),
         } for message in messages],
+        rejoin_requests=[{
+            "type": "rejoin_request",
+            "id": item.id,
+            "group_id": item.group_id,
+            "group_name": item.group.name,
+            "username": item.user.username,
+            "content": "グループへの再参加を申請しました。",
+            "group_url": url_for("group_detail", group_id=item.group_id, _anchor="overview"),
+        } for item in rejoin_requests],
     )
 
 @groups_bp.post("/groups/create")
@@ -156,6 +185,8 @@ def join_group():
     if not group:
         flash("招待コードが見つかりません。", "error")
         return redirect(url_for("groups"))
+    if TripGroupBan.query.filter_by(group_id=group.id, user_id=current_user.id).first():
+        return redirect(url_for("group_rejoin_page", group_id=group.id))
     membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=current_user.id).first()
     if membership:
         flash("すでにこのグループに参加しています。", "info")
@@ -165,10 +196,180 @@ def join_group():
         flash("グループに参加しました。", "success")
     return redirect(url_for("group_detail", group_id=group.id))
 
+@groups_bp.get("/groups/<int:group_id>/rejoin")
+@login_required
+def group_rejoin_page(group_id):
+    _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    ban = TripGroupBan.query.filter_by(group_id=group.id, user_id=current_user.id).first()
+    if not ban:
+        membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=current_user.id).first()
+        return redirect(url_for("group_detail", group_id=group.id) if membership else url_for("groups"))
+    latest_request = (TripGroupRejoinRequest.query
+                      .filter_by(group_id=group.id, user_id=current_user.id)
+                      .order_by(TripGroupRejoinRequest.requested_at.desc(), TripGroupRejoinRequest.id.desc())
+                      .first())
+    now = datetime.now(timezone.utc)
+    next_available_at = None
+    can_request = latest_request is None
+    is_pending = bool(latest_request and latest_request.status == "pending")
+    if latest_request and not is_pending:
+        requested_at = latest_request.requested_at
+        if requested_at.tzinfo is None:
+            requested_at = requested_at.replace(tzinfo=timezone.utc)
+        next_available_at = requested_at + timedelta(hours=1)
+        can_request = now >= next_available_at
+    return page("group_rejoin_request", group=group, can_request=can_request,
+                is_pending=is_pending, next_available_at=next_available_at)
+
+@groups_bp.post("/groups/<int:group_id>/rejoin-request")
+@login_required
+def create_group_rejoin_request(group_id):
+    _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    if not TripGroupBan.query.filter_by(group_id=group.id, user_id=current_user.id).first():
+        membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=current_user.id).first()
+        return redirect(url_for("group_detail", group_id=group.id) if membership else url_for("groups"))
+    latest_request = (TripGroupRejoinRequest.query
+                      .filter_by(group_id=group.id, user_id=current_user.id)
+                      .order_by(TripGroupRejoinRequest.requested_at.desc(), TripGroupRejoinRequest.id.desc())
+                      .first())
+    now = datetime.now(timezone.utc)
+    if latest_request and latest_request.status == "pending":
+        flash("再参加の申請はすでに送信済みです。作成者の確認をお待ちください。", "info")
+        return redirect(url_for("group_rejoin_page", group_id=group.id))
+    if latest_request:
+        requested_at = latest_request.requested_at
+        if requested_at.tzinfo is None:
+            requested_at = requested_at.replace(tzinfo=timezone.utc)
+        if now < requested_at + timedelta(hours=1):
+            flash("再参加の申請は1時間に1回までです。時間をおいて再度お試しください。", "error")
+            return redirect(url_for("group_rejoin_page", group_id=group.id))
+    db.session.add(TripGroupRejoinRequest(group_id=group.id, user_id=current_user.id,
+                                          requested_at=now, status="pending"))
+    db.session.commit()
+    flash("再参加を申請しました。作成者が承認すると、このグループに再加入します。", "success")
+    return redirect(url_for("group_rejoin_page", group_id=group.id))
+
+@groups_bp.post("/groups/<int:group_id>/rejoin-requests/<int:request_id>/approve")
+@login_required
+def approve_group_rejoin_request(group_id, request_id):
+    _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    if group.owner_id != current_user.id:
+        abort(403)
+    rejoin_request = TripGroupRejoinRequest.query.filter_by(
+        id=request_id, group_id=group.id, status="pending").first_or_404()
+    ban = TripGroupBan.query.filter_by(group_id=group.id, user_id=rejoin_request.user_id).first()
+    if ban:
+        db.session.delete(ban)
+    membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=rejoin_request.user_id).first()
+    if not membership:
+        db.session.add(TripGroupMember(group_id=group.id, user_id=rejoin_request.user_id))
+    rejoin_request.status = "approved"
+    rejoin_request.handled_at = datetime.now(timezone.utc)
+    db.session.commit()
+    flash(f"{rejoin_request.user.username}さんの申請を承認し、グループに再加入させました。", "success")
+    return redirect(url_for("group_detail", group_id=group.id, _anchor="overview"))
+
+@groups_bp.post("/groups/<int:group_id>/rejoin-requests/<int:request_id>/deny")
+@login_required
+def deny_group_rejoin_request(group_id, request_id):
+    _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    if group.owner_id != current_user.id:
+        abort(403)
+    rejoin_request = TripGroupRejoinRequest.query.filter_by(
+        id=request_id, group_id=group.id, status="pending").first_or_404()
+    rejoin_request.status = "denied"
+    rejoin_request.handled_at = datetime.now(timezone.utc)
+    db.session.commit()
+    flash("再参加の申請を却下しました。BANは継続しています。", "success")
+    return redirect(url_for("group_detail", group_id=group.id, _anchor="overview"))
+
+@groups_bp.post("/groups/<int:group_id>/leave")
+@login_required
+def leave_group(group_id):
+    _traveler_only()
+    group = _member_group(group_id)
+    membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=current_user.id).first()
+    other_members = (TripGroupMember.query
+                     .filter(TripGroupMember.group_id == group.id, TripGroupMember.user_id != current_user.id)
+                     .order_by(TripGroupMember.joined_at.asc(), TripGroupMember.id.asc()).all())
+    if group.owner_id == current_user.id and not other_members:
+        flash("最後の1人では退出できません。グループを閉じる場合は、グループ削除を利用してください。", "error")
+        return redirect(url_for("group_detail", group_id=group.id, _anchor="overview"))
+    transferred_to = None
+    if group.owner_id == current_user.id:
+        new_owner_membership = other_members[0]
+        group.owner_id = new_owner_membership.user_id
+        transferred_to = new_owner_membership.user.username
+    TravelPlan.query.filter_by(group_id=group.id, user_id=current_user.id).update(
+        {TravelPlan.group_id: None}, synchronize_session=False
+    )
+    db.session.delete(membership)
+    db.session.commit()
+    if transferred_to:
+        flash(f"グループから退出しました。作成者の権限は{transferred_to}さんに引き継がれました。", "success")
+    else:
+        flash("グループから退出しました。", "success")
+    return redirect(url_for("groups"))
+
+@groups_bp.post("/groups/<int:group_id>/members/<int:user_id>/ban")
+@login_required
+def ban_group_member(group_id, user_id):
+    _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    if group.owner_id != current_user.id:
+        abort(403)
+    if user_id == group.owner_id:
+        abort(400)
+    membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=user_id).first_or_404()
+    if not TripGroupBan.query.filter_by(group_id=group.id, user_id=user_id).first():
+        db.session.add(TripGroupBan(group_id=group.id, user_id=user_id, banned_by_id=current_user.id))
+    username = membership.user.username
+    TravelPlan.query.filter_by(group_id=group.id, user_id=user_id).update(
+        {TravelPlan.group_id: None}, synchronize_session=False
+    )
+    db.session.delete(membership)
+    db.session.commit()
+    flash(f"{username}さんをこのグループからBANしました。招待コードからも再参加できません。", "success")
+    return redirect(url_for("group_detail", group_id=group.id, _anchor="overview"))
+
+@groups_bp.post("/groups/<int:group_id>/bans/<int:user_id>/remove")
+@login_required
+def unban_group_member(group_id, user_id):
+    _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    if group.owner_id != current_user.id:
+        abort(403)
+    ban = TripGroupBan.query.filter_by(group_id=group.id, user_id=user_id).first_or_404()
+    db.session.delete(ban)
+    db.session.commit()
+    flash("BANを解除しました。解除だけではグループに再参加しません。", "success")
+    return redirect(url_for("group_detail", group_id=group.id, _anchor="overview"))
+
 @groups_bp.get("/groups/<int:group_id>")
 @login_required
 def group_detail(group_id):
     _traveler_only()
+    group = db.session.get(TripGroup, group_id)
+    if not group:
+        abort(404)
+    if TripGroupBan.query.filter_by(group_id=group.id, user_id=current_user.id).first():
+        return redirect(url_for("group_rejoin_page", group_id=group.id))
     group = _member_group(group_id)
     own_plans = TravelPlan.query.filter_by(user_id=current_user.id).order_by(TravelPlan.updated_at.desc()).all()
     shareable_plans = [plan for plan in own_plans if plan.group_id is None]
@@ -190,7 +391,11 @@ def group_detail(group_id):
                 travel_notes=travel_notes,
                 chat_messages=[_serialize_group_message(message, current_user.id) for message in chat_messages],
                 album_photos=album_photos,
-                group_members=sorted(group.members, key=lambda m: m.user.username.lower()))
+                group_members=sorted(group.members, key=lambda m: m.user.username.lower()),
+                group_bans=TripGroupBan.query.filter_by(group_id=group.id).order_by(TripGroupBan.created_at.desc()).all(),
+                group_rejoin_requests=(TripGroupRejoinRequest.query.filter_by(group_id=group.id, status="pending")
+                                       .order_by(TripGroupRejoinRequest.requested_at.asc()).all()
+                                       if group.owner_id == current_user.id else []))
 
 @groups_bp.post("/groups/<int:group_id>/icon")
 @login_required

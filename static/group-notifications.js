@@ -3,11 +3,12 @@
   if (!root) return;
 
   let cursor = Number(root.dataset.cursor || 0);
+  let rejoinCursor = Number(root.dataset.rejoinCursor || 0);
   let polling = false;
   let toastContainer = null;
 
   function updateBadges(data) {
-    const total = Number(data.unread_total || 0);
+    const total = Number(data.group_badge_total ?? data.unread_total ?? 0);
     document.querySelectorAll("[data-group-notification-badge]").forEach((badge) => {
       badge.dataset.count = String(total);
       badge.textContent = total ? String(total) : "";
@@ -21,7 +22,8 @@
     });
     document.querySelectorAll("[data-unread-notice-dot]").forEach((dot) => {
       const releaseUnread = dot.dataset.releaseUnread === "true";
-      dot.hidden = !releaseUnread && commentCount === 0;
+      const operatorUnread = dot.dataset.operatorUnread === "true";
+      dot.hidden = !releaseUnread && !operatorUnread && commentCount === 0;
     });
     const storyCounts = data.unread_journey_comment_counts || {};
     document.querySelectorAll("[data-my-posts-comment-dot]").forEach((dot) => {
@@ -40,11 +42,12 @@
       if (number) number.textContent = count ? String(count) : "";
     });
     const counts = data.unread_counts || {};
+    const rejoinCounts = data.pending_rejoin_counts || {};
     document.querySelectorAll("[data-group-unread-badge]").forEach((badge) => {
-      const count = Number(counts[badge.dataset.groupId] || 0);
+      const count = Number(counts[badge.dataset.groupId] || 0) + Number(rejoinCounts[badge.dataset.groupId] || 0);
       badge.textContent = count ? String(count) : "";
       badge.hidden = count === 0;
-      badge.setAttribute("aria-label", `未読メッセージ ${count}件`);
+      badge.setAttribute("aria-label", `未読通知 ${count}件`);
     });
     document.querySelectorAll("[data-group-chat-badge]").forEach((badge) => {
       const count = Number(counts[badge.dataset.groupId] || 0);
@@ -73,8 +76,12 @@
       document.body.appendChild(toastContainer);
     }
 
-    const toast = document.createElement("article");
+    if (!message.chat_url) return;
+
+    const toast = document.createElement("a");
     toast.className = "group-notification-toast";
+    toast.href = message.chat_url;
+    toast.setAttribute("aria-label", `${message.group_name || "グループ"}のチャットを開く`);
     const heading = document.createElement("strong");
     heading.className = "group-notification-toast-heading";
     heading.textContent = `${message.group_name || "グループ"} · ${message.username || "メンバー"}`;
@@ -90,20 +97,45 @@
     }, 3000);
   }
 
+  function showRejoinToast(item) {
+    if (document.visibilityState !== "visible" || !item.group_url) return;
+    if (!toastContainer) {
+      toastContainer = document.createElement("div");
+      toastContainer.className = "group-notification-toasts";
+      toastContainer.setAttribute("role", "status");
+      toastContainer.setAttribute("aria-live", "polite");
+      document.body.appendChild(toastContainer);
+    }
+    const toast = document.createElement("a");
+    toast.className = "group-notification-toast";
+    toast.href = item.group_url;
+    const heading = document.createElement("strong");
+    heading.className = "group-notification-toast-heading";
+    heading.textContent = `${item.group_name || "グループ"} · 再参加申請`;
+    const body = document.createElement("span");
+    body.className = "group-notification-toast-body";
+    body.textContent = `${item.username || "メンバー"}さんから再参加の申請が届きました。`;
+    toast.append(heading, body);
+    toastContainer.appendChild(toast);
+    window.setTimeout(() => { toast.classList.add("is-leaving"); window.setTimeout(() => toast.remove(), 220); }, 3000);
+  }
+
   async function poll() {
     if (polling || document.visibilityState !== "visible") return;
     polling = true;
     try {
-      const response = await fetch(`${root.dataset.pollUrl}?after=${cursor}`, {
+      const response = await fetch(`${root.dataset.pollUrl}?after=${cursor}&after_rejoin=${rejoinCursor}`, {
         cache: "no-store",
         headers: { Accept: "application/json" },
       });
       if (!response.ok) return;
       const data = await response.json();
       cursor = Math.max(cursor, Number(data.cursor || cursor));
+      rejoinCursor = Math.max(rejoinCursor, Number(data.rejoin_cursor || rejoinCursor));
       updateBadges(data);
       root.dataset.commentCount = String(Number(data.unread_journey_comment_count || 0));
       (data.messages || []).forEach(showToast);
+      (data.rejoin_requests || []).forEach(showRejoinToast);
     } catch (_error) {
       // Keep the current badges and retry on the next interval.
     } finally {

@@ -29,6 +29,8 @@ main_bp = Blueprint("main", __name__)
 @login_required
 # ホーム、お知らせ、お問い合わせ
 def index():
+    if current_user.user_type == "admin":
+        return redirect(url_for("admin_dashboard"))
     popular = []
     if current_user.user_type == "traveler":
         popular_rows = (db.session.query(TravelStory, func.count(TravelStoryLike.id).label("like_count"))
@@ -54,10 +56,42 @@ def notices():
         db.session.add(read_marker)
     else:
         read_marker.latest_notice_id = latest_notice_id
+
+    audience_notices = (OperatorNotice.query
+                        .filter(OperatorNotice.is_active.is_(True),
+                                OperatorNotice.audience.in_(["all", current_user.user_type]))
+                        .order_by(OperatorNotice.created_at.desc()).all())
+    read_notice_ids = {row.notice_id for row in OperatorNoticeRead.query.filter_by(user_id=current_user.id).all()}
+    for notice in audience_notices:
+        if notice.id not in read_notice_ids:
+            db.session.add(OperatorNoticeRead(notice_id=notice.id, user_id=current_user.id))
     db.session.commit()
+
+    sorted_notices = []
+    for notice in APP_NOTICES:
+        item = dict(notice)
+        item["_sort_at"] = datetime.strptime(notice["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        sorted_notices.append(item)
+    for notice in audience_notices:
+        created_at = notice.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        sorted_notices.append({
+            "id": f"operator-{notice.id}",
+            "date": created_at.strftime("%Y-%m-%d"),
+            "category": notice.category,
+            "title": notice.title,
+            "details": [notice.body],
+            "audience": notice.audience,
+            "audience_label": {"all": "全員向け", "traveler": "旅行者向け", "business": "事業者向け"}.get(notice.audience, ""),
+            "_sort_at": created_at,
+        })
+    sorted_notices.sort(key=lambda item: item["_sort_at"], reverse=True)
+    for item in sorted_notices:
+        item.pop("_sort_at", None)
     comment_notifications = (unread_journey_comment_notifications(current_user.id)
                              if current_user.user_type == "traveler" else [])
-    return page("notices", notices=APP_NOTICES,
+    return page("notices", notices=sorted_notices,
                 comment_notifications=comment_notifications)
 
 @main_bp.route("/contact", methods=["GET", "POST"])
@@ -100,6 +134,35 @@ def contact():
         flash(notice, "success")
         return redirect(url_for("contact"))
     return page("contact", contact_categories=contact_categories, values=values)
+
+
+@main_bp.route("/report-account", methods=["GET", "POST"])
+@login_required
+def report_account():
+    """ログイン利用者が旅行者・事業者アカウントを運営へ通報します。"""
+    if current_user.user_type not in ("traveler", "business"):
+        abort(403)
+    report_categories = ["不適切な投稿", "迷惑行為", "なりすまし・虚偽情報", "その他"]
+    targets = (User.query.filter(User.user_type.in_(("traveler", "business")), User.id != current_user.id)
+               .order_by(User.user_type.asc(), User.username.asc()).all())
+    if request.method == "POST":
+        target_id = request.form.get("target_user_id", type=int)
+        category = request.form.get("category", "").strip()
+        details = request.form.get("details", "").strip()
+        target = db.session.get(User, target_id) if target_id else None
+        if not _allow_rate_limited_action("account-report", str(current_user.id), 5, 3600):
+            flash("通報の送信回数が上限に達しました。時間を置いてからお試しください。", "error")
+        elif not target or target.id == current_user.id or target.user_type not in ("traveler", "business"):
+            flash("通報するアカウントを選択してください。", "error")
+        elif category not in report_categories or not 10 <= len(details) <= 2000:
+            flash("通報理由と詳細（10〜2,000文字）を確認してください。", "error")
+        else:
+            db.session.add(AccountReport(reporter_id=current_user.id, target_user_id=target.id,
+                                         category=category, details=details))
+            db.session.commit()
+            flash("通報を運営へ送信しました。確認までお待ちください。", "success")
+            return redirect(url_for("report_account"))
+    return page("report_account", targets=targets, report_categories=report_categories)
 
 @main_bp.get("/history")
 @login_required

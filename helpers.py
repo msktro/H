@@ -41,7 +41,9 @@ from models import (
     TravelStory,
     TravelStoryComment,
     TripGroup,
+    TripGroupBan,
     TripGroupMember,
+    TripGroupRejoinRequest,
     User,
     ViewHistory,
 )
@@ -76,6 +78,7 @@ __all__ = [
     "_prepare_avatar_image",
     "_store_business_photos",
     "unread_group_message_counts",
+    "pending_group_rejoin_counts",
     "unread_journey_comment_notifications",
     "photo_for_destination",
     "page",
@@ -97,7 +100,7 @@ def _normalize_business_phone(value):
 
 
 def _published_business_candidates(destination, limit=12):
-    """Return public listings relevant to the destination, ranked by review score."""
+    """Return destination listings with reviewed, unrated, and lower-rated options."""
     destination_key = "".join(destination.lower().split())
     if not destination_key:
         return []
@@ -109,9 +112,6 @@ def _published_business_candidates(destination, limit=12):
         if destination_key in location_text or location_text and location_text in destination_key:
             relevant.append(listing)
 
-    if not relevant:
-        return []
-
     listing_ids = [item.id for item in relevant]
     stats = db.session.query(
         Review.listing_id, func.avg(Review.rating), func.count(Review.id)
@@ -121,24 +121,48 @@ def _published_business_candidates(destination, limit=12):
     # Use a Bayesian-style score so a high rating with very few reviews does
     # not automatically outrank a consistently well-reviewed popular listing.
     reviewed = [item for item in relevant if review_stats.get(item.id, (0.0, 0))[1] > 0]
-    if not reviewed:
-        return []
     overall_average = sum(
         review_stats[item.id][0] * review_stats[item.id][1] for item in reviewed
-    ) / sum(review_stats[item.id][1] for item in reviewed)
+    ) / sum(review_stats[item.id][1] for item in reviewed) if reviewed else 0
     prior_weight = 5
 
     def popularity_score(item):
         average, count = review_stats[item.id]
         return (count / (count + prior_weight)) * average + (prior_weight / (count + prior_weight)) * overall_average
 
-    # Only recommend places with a clearly positive average rating.
-    relevant = [item for item in reviewed if review_stats[item.id][0] >= 4.0]
-    if not relevant:
-        return []
-    relevant.sort(key=lambda item: (popularity_score(item), review_stats[item.id][1]), reverse=True)
+    high_rated = [item for item in reviewed if review_stats[item.id][0] >= 4.0]
+    unrated = [item for item in relevant if review_stats.get(item.id, (0.0, 0))[1] == 0]
+    lower_rated = [item for item in reviewed if review_stats[item.id][0] < 4.0]
+    high_rated.sort(key=lambda item: (popularity_score(item), review_stats[item.id][1]), reverse=True)
+    lower_rated.sort(key=lambda item: (popularity_score(item), review_stats[item.id][1]), reverse=True)
+
+    # Reserve room for unrated food and lodging options so the AI has choices
+    # beyond places that already have reviews.
+    unrated.sort(key=lambda item: (
+        0 if item.category == "宿泊" else 1 if item.category == "飲食" else 2,
+        item.id,
+    ))
+    reserved_unrated = []
+    for category in ("宿泊", "飲食"):
+        candidate = next((item for item in unrated if item.category == category), None)
+        if candidate:
+            reserved_unrated.append(candidate)
+    for item in unrated:
+        if len(reserved_unrated) >= min(2, limit):
+            break
+        if item not in reserved_unrated:
+            reserved_unrated.append(item)
+
+    selected = high_rated[:max(0, limit - len(reserved_unrated))] + reserved_unrated[:limit]
+    for pool in (high_rated, unrated, lower_rated):
+        for item in pool:
+            if len(selected) >= limit:
+                break
+            if item not in selected:
+                selected.append(item)
+
     candidates = []
-    for item in relevant[:limit]:
+    for item in selected[:limit]:
         average, count = review_stats.get(item.id, (0.0, 0))
         candidates.append({
             "id": item.id,
@@ -155,26 +179,55 @@ def _published_business_candidates(destination, limit=12):
 
 
 def _append_review_popular_spots(answer, business_candidates, limit=3):
-    """Ensure the highest-rated, popular registered listings appear as clickable spots."""
+    """Ensure high-rated and a few unrated business listings become map-ready spots."""
     if not business_candidates:
         return answer
-    missing = [
+    missing_popular = [
         item for item in business_candidates[:limit]
-        if f"[[TABIDEA_LISTING_ID:{item['id']}]]" not in answer
+        if item["review_count"] > 0 and item["average"] is not None and item["average"] >= 4.0
+        and f"[[TABIDEA_LISTING_ID:{item['id']}]]" not in answer
     ]
-    if not missing:
+    unrated = [
+        item for item in business_candidates
+        if item["review_count"] == 0 and item["average"] is None
+        and f"[[TABIDEA_LISTING_ID:{item['id']}]]" not in answer
+    ]
+    missing_unrated = []
+    for category in ("宿泊", "飲食"):
+        item = next((candidate for candidate in unrated if candidate["category"] == category), None)
+        if item:
+            missing_unrated.append(item)
+    for item in unrated:
+        if len(missing_unrated) >= 2:
+            break
+        if item not in missing_unrated:
+            missing_unrated.append(item)
+
+    if not missing_popular and not missing_unrated:
         return answer
 
-    lines = ["## 口コミで人気のおすすめスポット", "事業者が登録したお店から、口コミ評価の高い候補を選びました。"]
-    for item in missing:
-        lines.append(f"- {item['name']} [おすすめスポット] [[TABIDEA_LISTING_ID:{item['id']}]]")
-        details = [f"住所：{item['address'] or item['prefecture']}", f"ジャンル：{item['category']}"]
-        if item["price_range"]:
-            details.append(f"料金目安：{item['price_range']}")
-        details.append(f"口コミ評価：{item['average']:.1f}/5（{item['review_count']}件）")
-        lines.append("  " + "｜".join(details))
-        if item["description"]:
-            lines.append(f"  {item['description']}")
+    lines = []
+    if missing_popular:
+        lines.extend(["## 口コミで人気のおすすめスポット", "事業者登録情報から、口コミ評価の高い候補です。"])
+        for item in missing_popular:
+            lines.append(f"- {item['name']} [おすすめスポット] [[TABIDEA_LISTING_ID:{item['id']}]]")
+            details = [f"住所：{item['address'] or item['prefecture']}", f"ジャンル：{item['category']}"]
+            if item["price_range"]:
+                details.append(f"料金目安：{item['price_range']}")
+            details.append(f"口コミ評価：{item['average']:.1f}/5（{item['review_count']}件）")
+            lines.append("  " + "｜".join(details))
+            if item["description"]:
+                lines.append(f"  {item['description']}")
+    if missing_unrated:
+        lines.extend(["## 口コミがまだない施設候補", "口コミ評価はありません。訪問前に公式情報をご確認ください。"])
+        for item in missing_unrated:
+            lines.append(f"- {item['name']} [おすすめスポット] [[TABIDEA_LISTING_ID:{item['id']}]]")
+            details = [f"住所：{item['address'] or item['prefecture']}", f"ジャンル：{item['category']}", "口コミ：まだありません"]
+            if item["price_range"]:
+                details.append(f"料金目安：{item['price_range']}")
+            lines.append("  " + "｜".join(details))
+            if item["description"]:
+                lines.append(f"  {item['description']}")
     return answer.rstrip() + "\n\n" + "\n".join(lines)
 
 
@@ -448,6 +501,9 @@ def _calculate_settlements(members, expenses):
         for index, user_id in enumerate(participant_ids):
             share_amount = base + (1 if (index - offset) % len(participant_ids) < remainder else 0)
             balances[user_id] = balances.get(user_id, 0) - share_amount
+    missing_user_ids = set(balances) - set(users)
+    if missing_user_ids:
+        users.update({user.id: user for user in User.query.filter(User.id.in_(missing_user_ids)).all()})
     # 立替額と各自の負担額の差から、支払う人と受け取る人を分けます。
     debtors = [[user_id, -balance] for user_id, balance in balances.items() if balance < 0]
     creditors = [[user_id, balance] for user_id, balance in balances.items() if balance > 0]
@@ -551,6 +607,15 @@ def unread_group_message_counts(user_id):
     return {group_id: count for group_id, count in rows}
 
 
+def pending_group_rejoin_counts(owner_id):
+    """Return pending rejoin-request counts for groups owned by this user."""
+    rows = (db.session.query(TripGroupRejoinRequest.group_id, func.count(TripGroupRejoinRequest.id))
+            .join(TripGroup, TripGroup.id == TripGroupRejoinRequest.group_id)
+            .filter(TripGroup.owner_id == owner_id, TripGroupRejoinRequest.status == "pending")
+            .group_by(TripGroupRejoinRequest.group_id).all())
+    return {group_id: count for group_id, count in rows}
+
+
 def unread_journey_comment_notifications(user_id):
     rows = (db.session.query(TravelStoryComment, TravelStory, User.username)
             .join(TravelStory, TravelStory.id == TravelStoryComment.story_id)
@@ -599,6 +664,9 @@ def complete_pending_group_invite(user):
     group = TripGroup.query.filter_by(invite_code=code).first()
     if not group:
         flash("招待コードが見つかりません。", "error")
+        return url_for("groups")
+    if TripGroupBan.query.filter_by(group_id=group.id, user_id=user.id).first():
+        flash("このグループへの参加は作成者によって禁止されています。", "error")
         return url_for("groups")
     membership = TripGroupMember.query.filter_by(group_id=group.id, user_id=user.id).first()
     if not membership:
