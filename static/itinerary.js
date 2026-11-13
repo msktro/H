@@ -42,6 +42,11 @@
     if (locale === "en") return "Recommended spot";
     return "おすすめスポット";
   };
+  const collapseLabel = (collapsed) => {
+    const locale = document.documentElement.lang || "ja";
+    const labels = { en: ["Collapse", "Expand"], ko: ["접기", "펼치기"], "zh-CN": ["收起", "展开"], "zh-TW": ["收合", "展開"], th: ["ย่อ", "ขยาย"] };
+    return labels[locale] ? labels[locale][collapsed ? 1 : 0] : collapsed ? "開く" : "折りたたむ";
+  };
 
   function render(raw) {
     root.replaceChildren();
@@ -118,11 +123,81 @@
             const link = make("a", "itinerary-stop-link", stopName);
             const listingUrl = new URL(root.dataset.listingUrlTemplate, window.location.href);
             listingUrl.pathname = listingUrl.pathname.replace(/\/0$/, `/${listingMarker[1]}`);
+            if (root.dataset.planId) listingUrl.searchParams.set("return_plan", root.dataset.planId);
             link.href = listingUrl.href;
             title.append(link);
           } else title.append(make("span", "itinerary-stop-name", stopName));
           if (isRecommended) title.append(make("span", "itinerary-recommended-badge", recommendedLabel()));
           currentStop.append(title);
+          const isMemoSection = /^(旅のメモ|旅メモ|メモ|travel notes|trip notes)$/i.test(section.title);
+          if ((isDaySection || isMemoSection) && root.dataset.editable === "true") {
+            const editButton = make("button", "itinerary-stop-edit", isMemoSection ? "メモ" : "スポット変更");
+            editButton.type = "button";
+            const stopCard = currentStop;
+            editButton.addEventListener("click", () => {
+              let editor = stopCard.querySelector(".itinerary-stop-editor");
+              if (editor) { editor.hidden = !editor.hidden; return; }
+              editor = make("form", "itinerary-stop-editor");
+              editor.method = "post";
+              editor.action = root.dataset.editUrlTemplate.replace(/\/0\/edit$/, `/${encodeURIComponent(stopName)}/edit`);
+              const csrf = make("input"); csrf.type = "hidden"; csrf.name = "csrf_token"; csrf.value = root.dataset.csrf;
+              const old = make("input"); old.type = "hidden"; old.name = "old_name"; old.value = stopName;
+              const selectedListing = make("input"); selectedListing.type = "hidden"; selectedListing.name = "new_listing_id"; selectedListing.value = "";
+              const input = make("input"); input.type = "text"; input.name = "new_name"; input.value = stopName; input.maxLength = 160; input.required = true; input.setAttribute("aria-label", "変更後のスポット名");
+              const descriptionBlocks = [...stopCard.querySelectorAll("p")];
+              const description = descriptionBlocks.map((block) => block.textContent.trim()).filter(Boolean).join("\n");
+              let descriptionInput = null;
+              if (description) {
+                const oldDescription = make("input"); oldDescription.type = "hidden"; oldDescription.name = "old_description"; oldDescription.value = description;
+                descriptionInput = make("textarea", "itinerary-stop-description-edit"); descriptionInput.name = "new_description"; descriptionInput.value = description; descriptionInput.maxLength = 3000; descriptionInput.rows = Math.min(8, Math.max(4, description.split("\n").length)); descriptionInput.required = true; descriptionInput.setAttribute("aria-label", "変更後のスポット説明");
+                editor.append(oldDescription);
+              }
+              if (isDaySection) {
+                let category = currentStop.textContent.match(/カテゴリ[：:]\s*(宿泊|飲食|観光・体験|その他)/)?.[1];
+                const contextText = `${stopName} ${stopCard.textContent}`;
+                if (!category) {
+                  if (/ホテル|旅館|宿泊|温泉宿/.test(contextText)) category = "宿泊";
+                  else if (/食堂|レストラン|カフェ|料理|グルメ|ランチ|食事/.test(contextText)) category = "飲食";
+                  else category = "観光・体験";
+                }
+                let suggestions = [];
+                try { suggestions = JSON.parse(root.dataset.spotSuggestions || "[]").filter((spot) => spot.category === category); } catch (_) {}
+                if (suggestions.length) {
+                  const picker = make("select", "itinerary-spot-suggestions");
+                  const placeholder = make("option", "", `同じジャンル（${category}）の候補を選択`); placeholder.value = ""; picker.append(placeholder);
+                  suggestions.forEach((spot) => { const option = make("option", "", `${spot.name} · ${spot.prefecture}`); option.value = String(spot.id); picker.append(option); });
+                  picker.addEventListener("change", () => {
+                    const selected = suggestions.find((spot) => String(spot.id) === picker.value);
+                    if (!selected) return;
+                    input.value = selected.name;
+                    selectedListing.value = String(selected.id);
+                    if (descriptionInput) {
+                      const details = [];
+                      if (selected.address) details.push(`住所：${selected.address}`);
+                      details.push(`カテゴリ：${selected.category}`);
+                      if (selected.price_range) details.push(`料金目安：${selected.price_range}`);
+                      details.push(selected.review_count ? `口コミ情報：平均評価 ${selected.average}（件数：${selected.review_count}）` : "口コミ情報：口コミなし");
+                      if (selected.description) details.push(`紹介：${selected.description}`);
+                      descriptionInput.value = details.join("\n");
+                    }
+                  });
+                  editor.append(picker);
+                  input.addEventListener("input", () => { selectedListing.value = ""; });
+                }
+              }
+              const back = make("button", "secondary itinerary-stop-back", "戻る");
+              back.type = "button";
+              back.addEventListener("click", () => editor.remove());
+              const save = make("button", "secondary", "保存"); save.type = "submit";
+              editor.prepend(csrf, old, selectedListing);
+              editor.append(input);
+              if (descriptionInput) editor.append(descriptionInput);
+              editor.append(back, save);
+              stopCard.append(editor);
+              input.focus(); input.select();
+            });
+            title.append(editButton);
+          }
           stops.append(currentStop);
         } else if (currentStop) currentStop.append(make("p", "", block.text));
         else box.append(make("p", isDaySection ? "itinerary-copy" : "", block.text));
@@ -137,11 +212,24 @@
         head.append(make("span", "itinerary-day-number", dayLabel(event.number)));
         const dateLabel = dayDateLabel(event.number);
         if (dateLabel) head.append(make("span", "itinerary-day-date", dateLabel));
-        head.append(make("h3", "", event.title));
+        const title = make("h3", "", event.title);
+        title.className = "itinerary-day-title";
+        head.append(title);
         card.append(head);
         const sections = make("div", "itinerary-sections");
         for (const section of event.sections) sections.append(renderSection(section, true));
         card.append(sections);
+        const toggle = make("button", "itinerary-day-toggle", collapseLabel(false));
+        toggle.type = "button";
+        toggle.setAttribute("aria-expanded", "true");
+        toggle.addEventListener("click", () => {
+          const collapsed = !sections.hidden;
+          sections.hidden = collapsed;
+          toggle.setAttribute("aria-expanded", String(!collapsed));
+          toggle.textContent = collapseLabel(collapsed);
+          card.classList.toggle("is-collapsed", collapsed);
+        });
+        head.append(toggle);
         root.append(card);
       } else root.append(renderSection(event));
     }
@@ -150,4 +238,14 @@
 
   render(source.content.textContent.trim());
   document.addEventListener("tabidea:plan-translated", (event) => render(event.detail?.text || source.content.textContent.trim()));
+
+  const scrollKey = `tabidea-plan-scroll:${root.dataset.planId || location.pathname}`;
+  const savedScroll = sessionStorage.getItem(scrollKey);
+  if (savedScroll !== null) {
+    sessionStorage.removeItem(scrollKey);
+    requestAnimationFrame(() => window.scrollTo(0, Number(savedScroll) || 0));
+  }
+  document.querySelectorAll('form[method="post"]').forEach((form) => {
+    form.addEventListener("submit", () => sessionStorage.setItem(scrollKey, String(window.scrollY)));
+  });
 })();

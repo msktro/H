@@ -65,6 +65,13 @@
       && panel && !panel.hidden && document.visibilityState === "visible";
   }
 
+  function appendName(parent, value, fallback) {
+    const name = document.createElement("span");
+    if (value) name.dataset.noTranslate = "";
+    name.textContent = value || fallback;
+    parent.appendChild(name);
+  }
+
   function showToast(message) {
     if (document.visibilityState !== "visible" || chatIsOpenFor(message.group_id)) return;
     if (!toastContainer) {
@@ -81,12 +88,15 @@
     const toast = document.createElement("a");
     toast.className = "group-notification-toast";
     toast.href = message.chat_url;
-    toast.setAttribute("aria-label", `${message.group_name || "グループ"}のチャットを開く`);
+    toast.setAttribute("aria-label", "グループチャットを開く");
     const heading = document.createElement("strong");
     heading.className = "group-notification-toast-heading";
-    heading.textContent = `${message.group_name || "グループ"} · ${message.username || "メンバー"}`;
+    appendName(heading, message.group_name, "グループ");
+    heading.appendChild(document.createTextNode(" · "));
+    appendName(heading, message.username, "メンバー");
     const body = document.createElement("span");
     body.className = "group-notification-toast-body";
+    if (message.content) body.dataset.noTranslate = "";
     body.textContent = message.content || "新しいメッセージが届きました。";
     toast.append(heading, body);
     toastContainer.appendChild(toast);
@@ -111,10 +121,15 @@
     toast.href = item.group_url;
     const heading = document.createElement("strong");
     heading.className = "group-notification-toast-heading";
-    heading.textContent = `${item.group_name || "グループ"} · 再参加申請`;
+    appendName(heading, item.group_name, "グループ");
+    heading.appendChild(document.createTextNode(" · "));
+    const requestLabel = document.createElement("span");
+    requestLabel.textContent = "再参加申請";
+    heading.appendChild(requestLabel);
     const body = document.createElement("span");
     body.className = "group-notification-toast-body";
-    body.textContent = `${item.username || "メンバー"}さんから再参加の申請が届きました。`;
+    appendName(body, item.username, "メンバー");
+    body.appendChild(document.createTextNode("さんから再参加の申請が届きました。"));
     toast.append(heading, body);
     toastContainer.appendChild(toast);
     window.setTimeout(() => { toast.classList.add("is-leaving"); window.setTimeout(() => toast.remove(), 220); }, 3000);

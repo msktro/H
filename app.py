@@ -147,6 +147,15 @@ def create_app():
 
         return response
 
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        app.logger.error("Unhandled application error", exc_info=error)
+        return render_template("error.html", error_code=500, error_title="ページを表示できませんでした", error_message="サーバーで一時的な問題が発生しました。少し待ってから、もう一度お試しください。"), 500
+
+    @app.errorhandler(503)
+    def service_unavailable(error):
+        return render_template("error.html", error_code=503, error_title="ただいま混み合っています", error_message="サーバーが混み合っているか、一時的に停止しています。少し待ってから、もう一度お試しください。"), 503
+
 
 
     @app.template_filter("avatar_html")
@@ -286,6 +295,10 @@ def create_app():
                 if column_name not in listing_columns:
 
                     connection.execute(text(f"ALTER TABLE business_listings ADD COLUMN {column_name} {column_type}"))
+
+            # The business listing category has been removed; keep existing data
+            # valid across local and deployed databases.
+            connection.execute(text("UPDATE business_listings SET category = 'その他' WHERE category = '交通'"))
 
         story_columns = {column["name"] for column in inspect(db.engine).get_columns("travel_stories")}
 

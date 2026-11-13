@@ -98,7 +98,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
 
   function matchesDestinationArea(place) {
     const address = (place.address || '').normalize('NFKC').replace(/\s+/g, '');
-    if (matchedPrefecture) return address.includes(matchedPrefecture);
+    const prefecture = (place.prefecture || '').normalize('NFKC');
+    if (matchedPrefecture) return address.includes(matchedPrefecture) || prefecture.includes(matchedPrefecture);
     const area = destination.normalize('NFKC').replace(/\s+/g, '');
     return !area || address.includes(area);
   }
@@ -128,7 +129,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       });
       item.append(label, remove);
       waypointNode.append(item);
-      const popup = new maplibregl.Popup({ offset: 24, closeButton: false, closeOnClick: false }).setText(place.name);
+      const popup = new maplibregl.Popup({ offset: 24, closeButton: false, closeOnClick: false })
+        .setText(`${place.name}（緯度 ${Number(place.lat).toFixed(5)}・経度 ${Number(place.lon).toFixed(5)}）`);
       const marker = new maplibregl.Marker({ color: '#126c5b' })
         .setLngLat([place.lon, place.lat]).setPopup(popup).addTo(map);
       const markerElement = marker.getElement();
@@ -140,7 +142,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       });
       markers.push(marker);
     });
-    calculateButton.disabled = waypoints.length < 2 || waypoints.length > 8;
+    calculateButton.disabled = waypoints.length < 2;
     nearbyButton.disabled = waypoints.length === 0;
     if (waypoints.length) {
       const bounds = new maplibregl.LngLatBounds();
@@ -175,10 +177,6 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       action.textContent = '地図に追加 ›';
       button.append(info, action);
       button.addEventListener('click', () => {
-        if (waypoints.length >= 8) {
-          setStatus('地点は最大8か所まで追加できます。', true);
-          return;
-        }
         if (waypoints.some(item => item.lat === place.lat && item.lon === place.lon)) {
           setStatus('この地点は追加済みです。');
           return;
@@ -197,7 +195,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
     if (!itineraryRoot) return [];
     const unique = new Map();
     const dayCards = [...itineraryRoot.querySelectorAll('.itinerary-day')];
-    for (const stop of itineraryRoot.querySelectorAll('.itinerary-stop')) {
+    // メモ・予算などの日程外セクションは地図の訪問先にしない。
+    for (const stop of itineraryRoot.querySelectorAll('.itinerary-day .itinerary-stop')) {
       const name = stop.querySelector('.itinerary-stop-link, .itinerary-stop-name')?.textContent.trim();
       if (!name || name.length < 2) continue;
       const key = name.normalize('NFKC').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
@@ -209,7 +208,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
     }
     const spots = [...unique.values()];
     // Keep the itinerary order and day grouping for nearby, day-by-day pins.
-    return spots.slice(0, 8);
+    return spots;
   }
 
   function distanceKm(a, b) {
@@ -227,11 +226,11 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
     const spots = itinerarySpotNames();
     if (!spots.length) return;
     planSpotsLoading = true;
-    const selectedSpots = spots.slice(0, 8);
+    const selectedSpots = spots;
     setMapLoading(true, 'プランの訪問先を地図に準備しています…');
     setStatus('プランで紹介されたスポットを地図で検索しています…');
     let added = 0;
-    let tooFar = 0;
+    let unresolved = 0;
     const previousByDay = new Map();
     try {
       // Small parallel batches keep the map responsive without sending all
@@ -240,10 +239,19 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
         const batch = selectedSpots.slice(index, index + 3);
         const resolved = await Promise.all(batch.map(async spot => {
           try {
-            const query = destination ? `${spot.name}, ${destination}` : spot.name;
-            const data = await getJson(`${root.dataset.searchUrl}?q=${encodeURIComponent(query)}`);
-            // Never use a same-name result from another prefecture as fallback.
-            const candidates = (data.results || []).filter(matchesDestinationArea);
+            const queries = destination ? [`${spot.name}, ${destination}`, `${destination} ${spot.name}`, spot.name] : [spot.name];
+            let candidates = [];
+            for (const query of queries) {
+              const urls = [root.dataset.geocodeUrl, root.dataset.searchUrl].filter(Boolean);
+              for (const baseUrl of urls) {
+                try {
+                  const data = await getJson(`${baseUrl}?q=${encodeURIComponent(query)}`);
+                  const matching = (data.results || []).filter(matchesDestinationArea);
+                  if (matching.length) { candidates = matching; break; }
+                } catch (_error) { /* try the next geocoder/query */ }
+              }
+              if (candidates.length) break;
+            }
             return { ...spot, candidates };
           } catch (_error) {
             return { ...spot, candidates: [] };
@@ -257,12 +265,10 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
           else {
             const nearby = spot.candidates
               .map(candidate => ({ candidate, distance: distanceKm(previous, candidate) }))
-              .filter(entry => entry.distance <= 25)
               .sort((a, b) => a.distance - b.distance);
-            result = nearby[0]?.candidate;
-            if (!result && spot.candidates.length) tooFar += 1;
+            result = nearby[0]?.candidate || spot.candidates[0];
           }
-          if (!result) continue;
+          if (!result) { unresolved += 1; continue; }
           const place = { ...result, name: spot.name };
           if (waypoints.some(item => item.lat === place.lat && item.lon === place.lon)) continue;
           waypoints.push(place);
@@ -279,9 +285,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       setMapLoading(false);
     }
     if (added) {
-      const omitted = Math.max(0, spots.length - selectedSpots.length);
-      const notFound = selectedSpots.length - added - tooFar;
-      setStatus(`${added}件のスポットを目的地の県内で地図に追加しました。${tooFar ? `同じ日の移動範囲から離れた${tooFar}件は誤った位置を避けるため追加していません。` : ''}${notFound > 0 ? `場所を特定できなかったものは${notFound}件です。` : ''}${omitted ? `（地図に追加できるのは最大8件です。残り${omitted}件は対象外です。）` : ''}`);
+      setStatus(`${added}件のスポットを座標付きで地図に表示しました。${unresolved > 0 ? `位置を特定できなかったものは${unresolved}件です。` : ''}${waypoints.length > 8 ? 'ルート計算は先頭8地点まで使います。' : ''}`);
     } else {
       setStatus('プランのスポットを地図で見つけられませんでした。場所を検索して追加してください。');
     }
@@ -339,7 +343,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       const data = await getJson(root.dataset.routeUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': root.dataset.csrf },
-        body: JSON.stringify({ waypoints, mode: modeSelect.value })
+        body: JSON.stringify({ waypoints: waypoints.slice(0, 8), mode: modeSelect.value })
       });
       const source = map.getSource(routeSourceId);
       if (!source) throw new Error('地図の準備が終わるまで少し待ってください。');
@@ -355,7 +359,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       const km = data.distance == null ? null : (data.distance / 1000).toFixed(1);
       const minutes = data.time == null ? null : Math.round(data.time / 60);
       summaryNode.textContent = [km && `距離 約${km} km`, minutes != null && `所要時間 約${minutes}分`].filter(Boolean).join(' · ');
-      setStatus('ルートを表示しました。実際の運行状況・通行状況もご確認ください。');
+      setStatus(`ルートを表示しました。${waypoints.length > 8 ? '計算には先頭8地点を使っています。' : ''}実際の運行状況・通行状況もご確認ください。`);
     } catch (error) {
       setStatus(error.message, true);
     } finally {

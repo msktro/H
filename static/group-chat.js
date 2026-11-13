@@ -61,6 +61,7 @@
       avatar.textContent = message.avatar || "👤";
     }
     const username = document.createElement("b");
+    if (message.username) username.dataset.noTranslate = "";
     username.textContent = message.username || "メンバー";
     const time = document.createElement("time");
     time.dateTime = message.created_at || "";
@@ -68,7 +69,7 @@
     meta.append(avatar, username, time);
 
     const content = document.createElement("p");
-    content.dataset.noTranslate = "";
+    if (!message.is_deleted) content.dataset.noTranslate = "";
     content.textContent = message.is_deleted ? "このメッセージは送信取り消しされました。" : (message.content || "");
     article.append(meta, content);
     const reactions = document.createElement("div");

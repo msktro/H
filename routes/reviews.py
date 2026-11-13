@@ -93,7 +93,13 @@ def listing_reviews(item_id):
     own_review = next((review for review in reviews if review.user_id == current_user.id), None)
     average_rating = sum(review.rating for review in reviews) / len(reviews) if reviews else None
     is_favorite = Favorite.query.filter_by(user_id=current_user.id, listing_id=listing.id).first() is not None
-    return page("listing_reviews", listing=listing, reviews=reviews, own_review=own_review, average_rating=average_rating, is_favorite=is_favorite)
+    return_plan_url = None
+    return_plan_id = request.args.get("return_plan", type=int)
+    if return_plan_id:
+        candidate = db.session.get(TravelPlan, return_plan_id)
+        if candidate and (candidate.user_id == current_user.id or candidate.group_id and TripGroupMember.query.filter_by(group_id=candidate.group_id, user_id=current_user.id).first()):
+            return_plan_url = url_for("plan_detail", plan_id=candidate.id)
+    return page("listing_reviews", listing=listing, reviews=reviews, own_review=own_review, average_rating=average_rating, is_favorite=is_favorite, return_plan_url=return_plan_url)
 
 @reviews_bp.post("/reviews/<int:item_id>")
 @login_required

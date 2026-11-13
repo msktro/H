@@ -57,6 +57,41 @@ def geoapify_places():
         current_app.logger.warning("Geoapify place lookup failed: %s", exc)
         return jsonify(error="場所を検索できませんでした。APIキーや通信状態を確認してください。"), 502
 
+@geoapify_bp.get("/api/geoapify/geocode")
+@login_required
+def geoapify_geocode():
+    """事業者登録の有無に関係なく、施設名や観光地名を座標に変換します。"""
+    _traveler_only()
+    if not current_app.config["GEOAPIFY_API_KEY"]:
+        return jsonify(error="Geoapify APIキーが未設定です。.envにGEOAPIFY_API_KEYを設定してください。"), 503
+    query = request.args.get("q", "").strip()[:180]
+    if len(query) < 2:
+        return jsonify(results=[])
+    try:
+        response = requests.get(
+            "https://api.geoapify.com/v1/geocode/search",
+            params={"text": query, "filter": "countrycode:jp", "lang": "ja", "limit": 8,
+                    "format": "json", "apiKey": current_app.config["GEOAPIFY_API_KEY"]},
+            timeout=12,
+        )
+        response.raise_for_status()
+        places = []
+        for place in response.json().get("results", []):
+            try:
+                lat, lon = float(place["lat"]), float(place["lon"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if 20 <= lat <= 46.5 and 122 <= lon <= 154:
+                address = str(place.get("formatted") or "")[:240]
+                places.append({"name": str(place.get("name") or place.get("address_line1") or address or "場所")[:160],
+                               "address": address, "prefecture": str(place.get("state") or "")[:40],
+                               "lat": lat, "lon": lon})
+        return jsonify(results=places)
+    except (requests.RequestException, ValueError) as exc:
+        current_app.logger.warning("Geoapify coordinate lookup failed: %s", exc)
+        return jsonify(error="場所の座標を取得できませんでした。APIキーや通信状態を確認してください。"), 502
+
+
 @geoapify_bp.get("/api/geoapify/nearby")
 @login_required
 def geoapify_nearby():

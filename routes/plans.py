@@ -138,7 +138,7 @@ def new_plan():
         if inspiration_story:
             prompt_values["inspiration"] = inspiration_story.plan.ai_response[:5000]
         # 行き先にある公開事業者情報を集め、AIへの依頼文に添えます。
-        business_candidates = _published_business_candidates(values["destination"])
+        business_candidates = _published_business_candidates(values["destination"], start_date=start_date, end_date=end_date)
         system, prompt = plan_prompts(prompt_values, current_user.profile if values["use_profile"] else None, business_candidates, manual_preferences)
         # 外部AIの失敗は利用者向けメッセージに変換し、入力画面へ戻します。
         try:
@@ -165,7 +165,8 @@ def new_plan():
 def plan_detail(plan_id):
     plan = _visible_plan(plan_id)
     story = TravelStory.query.filter_by(plan_id=plan.id, user_id=current_user.id).first() if plan.user_id == current_user.id else None
-    return page("plan_detail", plan=plan, story=story, is_plan_owner=plan.user_id == current_user.id)
+    suggestions = _published_business_candidates(plan.destination, limit=30, start_date=plan.start_date, end_date=plan.end_date) if plan.user_id == current_user.id else []
+    return page("plan_detail", plan=plan, story=story, is_plan_owner=plan.user_id == current_user.id, spot_suggestions=suggestions)
 
 @plans_bp.post("/plans/<int:plan_id>/rename")
 @login_required
@@ -186,6 +187,8 @@ def rename_plan(plan_id):
 def packing_list(plan_id):
     _traveler_only()
     plan = _visible_plan(plan_id)
+    # Group-shared plans use the plan owner's list as the group's shared checklist.
+    list_owner_id = plan.user_id if plan.group_id else current_user.id
     if request.method == "POST":
         action = request.form.get("action", "")
         if action == "add_template":
@@ -195,9 +198,9 @@ def packing_list(plan_id):
             else:
                 added = 0
                 for name, category in PACKING_TEMPLATES[template_name]:
-                    exists = PackingItem.query.filter_by(plan_id=plan.id, user_id=current_user.id, name=name).first()
+                    exists = PackingItem.query.filter_by(plan_id=plan.id, user_id=list_owner_id, name=name).first()
                     if not exists:
-                        db.session.add(PackingItem(plan_id=plan.id, user_id=current_user.id, name=name, category=category))
+                        db.session.add(PackingItem(plan_id=plan.id, user_id=list_owner_id, name=name, category=category))
                         added += 1
                 db.session.commit()
                 flash(f"テンプレート「{template_name}」から{added}件追加しました。", "success")
@@ -206,26 +209,28 @@ def packing_list(plan_id):
             category = request.form.get("category", "その他")
             if not name or len(name) > 100 or category not in PACKING_CATEGORIES:
                 flash("持ち物名を1〜100文字で入力してください。", "error")
-            elif PackingItem.query.filter_by(plan_id=plan.id, user_id=current_user.id, name=name).first():
+            elif PackingItem.query.filter_by(plan_id=plan.id, user_id=list_owner_id, name=name).first():
                 flash("この持ち物はすでに登録されています。", "info")
             else:
-                db.session.add(PackingItem(plan_id=plan.id, user_id=current_user.id, name=name, category=category))
+                db.session.add(PackingItem(plan_id=plan.id, user_id=list_owner_id, name=name, category=category))
                 db.session.commit()
                 flash("持ち物を追加しました。", "success")
         else:
             abort(400)
         return redirect(url_for("packing_list", plan_id=plan.id))
-    items = PackingItem.query.filter_by(plan_id=plan.id, user_id=current_user.id).order_by(PackingItem.id).all()
+    items = PackingItem.query.filter_by(plan_id=plan.id, user_id=list_owner_id).order_by(PackingItem.id).all()
     checked_count = sum(item.is_checked for item in items)
     return page("packing_list", plan=plan, items=items, packing_categories=PACKING_CATEGORIES,
-                packing_templates=PACKING_TEMPLATES.keys(), checked_count=checked_count)
+                packing_templates=PACKING_TEMPLATES.keys(), checked_count=checked_count,
+                shared_list=bool(plan.group_id))
 
 @plans_bp.post("/plans/<int:plan_id>/packing/<int:item_id>/toggle")
 @login_required
 def toggle_packing_item(plan_id, item_id):
     _traveler_only()
     plan = _visible_plan(plan_id)
-    item = PackingItem.query.filter_by(id=item_id, plan_id=plan.id, user_id=current_user.id).first_or_404()
+    owner_id = plan.user_id if plan.group_id else current_user.id
+    item = PackingItem.query.filter_by(id=item_id, plan_id=plan.id, user_id=owner_id).first_or_404()
     item.is_checked = not item.is_checked
     db.session.commit()
     return redirect(url_for("packing_list", plan_id=plan.id))
@@ -235,7 +240,8 @@ def toggle_packing_item(plan_id, item_id):
 def delete_packing_item(plan_id, item_id):
     _traveler_only()
     plan = _visible_plan(plan_id)
-    item = PackingItem.query.filter_by(id=item_id, plan_id=plan.id, user_id=current_user.id).first_or_404()
+    owner_id = plan.user_id if plan.group_id else current_user.id
+    item = PackingItem.query.filter_by(id=item_id, plan_id=plan.id, user_id=owner_id).first_or_404()
     db.session.delete(item)
     db.session.commit()
     flash("持ち物を削除しました。", "info")
@@ -288,12 +294,62 @@ def change_plan(plan_id):
     business_candidates = _published_business_candidates(plan.destination)
     system, prompt = change_prompts(plan, instruction, business_candidates)
     try:
-        answer = generate_text(system, prompt)
-        plan.ai_response = _append_review_popular_spots(answer, business_candidates)
+        answer = generate_text(system, prompt, temperature=0.25)
+        plan.ai_response = answer
         db.session.commit()
         flash("希望を反映してプランを更新しました。", "success")
     except AIServiceError as exc:
         flash(str(exc), "error")
+    return redirect(url_for("plan_detail", plan_id=plan.id))
+
+@plans_bp.post("/plans/<int:plan_id>/spot/<path:old_name>/edit")
+@login_required
+def edit_plan_spot(plan_id, old_name):
+    plan = _owned_plan(plan_id)
+    old_name = old_name.strip()[:160]
+    new_name = request.form.get("new_name", "").strip()[:160]
+    new_listing_id = request.form.get("new_listing_id", "").strip()
+    old_description = request.form.get("old_description", "").strip()[:3000]
+    new_description = request.form.get("new_description", "").strip()[:3000]
+    if not old_name or not new_name or (old_description and not new_description):
+        flash("スポット名と説明を入力してください。", "error")
+        return redirect(url_for("plan_detail", plan_id=plan.id))
+    selected_listing = None
+    if new_listing_id.isdigit():
+        selected_listing = BusinessListing.query.filter_by(id=int(new_listing_id), is_published=True).first()
+        if not selected_listing or selected_listing.name != new_name:
+            flash("選択した掲載スポットを確認できませんでした。もう一度候補を選んでください。", "error")
+            return redirect(url_for("plan_detail", plan_id=plan.id))
+    lines = plan.ai_response.splitlines()
+    for index, line in enumerate(lines):
+        if old_name in line:
+            line = line.replace(old_name, new_name, 1)
+            line = re.sub(r"\s*\[おすすめスポット\]\s*\[\[TABIDEA_LISTING_ID:\d+\]\]", "", line)
+            if selected_listing:
+                line = f"{line.rstrip()} [おすすめスポット] [[TABIDEA_LISTING_ID:{selected_listing.id}]]"
+            lines[index] = line
+            if old_description and new_description:
+                old_detail_lines = [part.strip() for part in old_description.splitlines() if part.strip()]
+                new_detail_lines = new_description.splitlines()
+                detail_indices = []
+                for detail_index in range(index + 1, len(lines)):
+                    detail = lines[detail_index]
+                    if detail.lstrip().startswith(("- ", "* ", "##", "#")):
+                        break
+                    if detail.strip():
+                        detail_indices.append(detail_index)
+                        if len(detail_indices) >= len(old_detail_lines):
+                            break
+                if detail_indices and old_detail_lines and old_detail_lines[0] in lines[detail_indices[0]]:
+                    start = detail_indices[0]
+                    end = detail_indices[-1] + 1
+                    lines[start:end] = new_detail_lines
+            plan.ai_response = "\n".join(lines)
+            db.session.commit()
+            flash("スポット名と説明を更新しました。", "success")
+            break
+    else:
+        flash("対象のスポットが見つかりませんでした。", "error")
     return redirect(url_for("plan_detail", plan_id=plan.id))
 
 @plans_bp.post("/plans/<int:plan_id>/delete")

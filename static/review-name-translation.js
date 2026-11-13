@@ -5,6 +5,7 @@
   async function translateNames(locale) {
     const elements = [...document.querySelectorAll(selector)];
     elements.forEach((element) => {
+      element.dataset.noTranslate = "";
       if (element.dataset.originalName === undefined) element.dataset.originalName = element.textContent.trim();
       element.textContent = element.dataset.originalName;
     });
@@ -31,6 +32,7 @@
     }
     if (document.documentElement.lang !== locale) return;
     elements.forEach((element) => {
+      element.dataset.noTranslate = "";
       const translated = sessionStorage.getItem(cacheKey(locale, element.dataset.listingId));
       if (translated) element.textContent = translated;
     });

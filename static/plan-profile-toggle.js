@@ -11,8 +11,6 @@
     const fields = ["manual-pace", "manual-transport", "manual-food", "manual-age-group"]
       .map((id) => document.getElementById(id)).filter(Boolean);
     const preferences = document.getElementById("preferences");
-    const themeBoxes = [...panel.querySelectorAll("input[name='manual_themes']")];
-    const themeError = document.getElementById("manual-theme-error");
 
     function sync() {
       const manual = !toggle.checked;
@@ -37,17 +35,5 @@
     people?.addEventListener("input", sync);
     people?.addEventListener("change", sync);
     sync();
-    form.addEventListener("submit", (event) => {
-      if (!toggle.checked && !themeBoxes.some((box) => box.checked)) {
-        event.preventDefault();
-        if (themeError) themeError.textContent = "テーマを1つ以上選んでください。";
-        themeBoxes[0]?.focus();
-        return;
-      }
-      if (themeError) themeError.textContent = "";
-    });
-    themeBoxes.forEach((box) => box.addEventListener("change", () => {
-      if (themeBoxes.some((item) => item.checked) && themeError) themeError.textContent = "";
-    }));
   });
 })();

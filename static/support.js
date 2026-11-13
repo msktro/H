@@ -22,6 +22,7 @@
   function appendMessage(role, content, extraClass = "") {
     const message = document.createElement("div");
     message.className = `support-message ${role} ${extraClass}`.trim();
+    if (role === "user" || role === "assistant") message.dataset.noTranslate = "";
     message.textContent = content;
     messageList.appendChild(message);
     messageList.scrollTop = messageList.scrollHeight;

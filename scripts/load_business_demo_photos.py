@@ -22,7 +22,6 @@ ASSETS = {
     "宿泊": ("lodging_1.jpg", "lodging_2.jpg", "lodging_3.jpg"),
     "飲食": ("food_1.jpg", "food_2.jpg", "food_3.jpg"),
     "観光・体験": ("experience_1.jpg", "experience_2.jpg", "experience_3.jpg"),
-    "交通": ("transport_1.jpg", "transport_2.jpg", "transport_3.jpg"),
     "その他": ("other_1.jpg", "other_2.jpg", "other_3.jpg"),
 }
 PLACE_PHOTOS = {

@@ -64,6 +64,7 @@ def auth(mode):
 
         return redirect(url_for("index"))
 
+    form_values = {"email": "", "username": "", "user_type": "traveler"}
     if request.method == "POST":
 
         # メールアドレスの前後の空白を除き、小文字にそろえて検索します。
@@ -71,6 +72,9 @@ def auth(mode):
         email = request.form.get("email", "").strip().lower()
 
         password = request.form.get("password", "")
+        form_values.update(email=email)
+        if mode == "register":
+            form_values.update(username=request.form.get("username", "").strip(), user_type=request.form.get("user_type", "traveler"))
 
         if mode == "login":
 
@@ -82,7 +86,7 @@ def auth(mode):
 
                 if user.is_suspended:
                     flash("このアカウントは運営により利用停止中です。心当たりがない場合はお問い合わせください。", "error")
-                    return page("auth", mode=mode)
+                    return page("auth", mode=mode, form_values=form_values)
                 login_user(user)
 
                 if user.user_type == "admin":
@@ -149,7 +153,7 @@ def auth(mode):
 
                 return redirect(complete_pending_group_invite(user) or url_for("index"))
 
-    return page("auth", mode=mode)
+    return page("auth", mode=mode, form_values=form_values)
 
 
 
@@ -174,13 +178,16 @@ def admin_accounts():
     """運営者だけが、追加の運営アカウントを発行できます。"""
     if current_user.user_type != "admin":
         abort(403)
+    username_error = False
+    username_value = ""
     if request.method == "POST":
         username = request.form.get("username", "").strip()
+        username_value = username
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         password_confirm = request.form.get("password_confirm", "")
         if not 2 <= len(username) <= 50:
-            flash("運営者名は2〜50文字で入力してください。", "error")
+            username_error = True
         elif "@" not in email or len(email) > 255:
             flash("有効なメールアドレスを入力してください。", "error")
         elif len(password) < 12:
@@ -197,7 +204,8 @@ def admin_accounts():
             flash(f"運営アカウント「{username}」を作成しました。", "success")
             return redirect(url_for("admin_accounts"))
     operators = User.query.filter_by(user_type="admin").order_by(User.created_at.asc()).all()
-    return page("admin_accounts", operators=operators)
+    return page("admin_accounts", operators=operators, username_error=username_error,
+                username_value=username_value)
 
 
 @auth_bp.get("/admin/moderation")
@@ -622,7 +630,7 @@ def logout():
 
     logout_user()
 
-    return redirect(url_for("auth", mode="login"))
+    return redirect(url_for("auth", mode="login", logged_out=1))
 
 
 
@@ -717,6 +725,8 @@ def profile():
             p.food_preference = request.form.get("food_preference", "")[:100]
 
             p.avoid_conditions = request.form.get("avoid_conditions", "")[:2000]
+            if not p.interest_themes or not p.travel_pace or not request.form.get("budget_per_trip", "").strip() or not p.transportation or not p.food_preference:
+                error_message = "旅行プロフィールの必須項目（テーマ、ペース、予算、移動手段、食事の希望）をすべて入力してください。"
 
             try:
 

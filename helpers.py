@@ -99,7 +99,7 @@ def _normalize_business_phone(value):
     return normalized if re.fullmatch(r"\+[1-9]\d{7,14}", normalized) else ""
 
 
-def _published_business_candidates(destination, limit=12):
+def _published_business_candidates(destination, limit=12, start_date=None, end_date=None):
     """Return destination listings with reviewed, unrated, and lower-rated options."""
     destination_key = "".join(destination.lower().split())
     if not destination_key:
@@ -108,6 +108,13 @@ def _published_business_candidates(destination, limit=12):
     listings = BusinessListing.query.filter_by(is_published=True).all()
     relevant = []
     for listing in listings:
+        closed_text = (listing.opening_hours or "").replace("曜日", "曜")
+        closed_weekdays = {i for i, day in enumerate(("月", "火", "水", "木", "金", "土", "日")) if re.search(rf"{day}曜(?:定休|休み|休業|休館|休診)", closed_text)}
+        if closed_weekdays and start_date:
+            last_date = end_date or start_date
+            trip_dates = (start_date + timedelta(days=offset) for offset in range((last_date - start_date).days + 1))
+            if any((trip_day.weekday()) in closed_weekdays for trip_day in trip_dates):
+                continue
         location_text = "".join(f"{listing.prefecture or ''} {listing.address or ''}".lower().split())
         if destination_key in location_text or location_text and location_text in destination_key:
             relevant.append(listing)

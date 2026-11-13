@@ -68,3 +68,15 @@ button:disabled,.button:disabled{background:#c6d3ce;color:#fff;cursor:not-allowe
 .group-notification-toast:focus-visible{outline:3px solid #13836e;outline-offset:3px}
 
 .operator-notice-actions{gap:6px;margin-top:8px}.operator-notice-actions form{margin:0;display:inline-flex}.app-page .operator-notice-actions .button,.app-page .operator-notice-actions button{height:30px!important;min-height:30px!important;padding:3px 9px!important;font-size:12px;line-height:1;border-radius:8px;gap:4px;white-space:nowrap}.operator-notice-actions button:hover,.operator-notice-actions .button:hover{transform:none}
+
+.required-mark{display:inline-flex;align-items:center;margin-left:.35rem;padding:.12rem .42rem;border-radius:999px;background:#fff0ed;color:#a53324;font-size:.72em;font-weight:700;line-height:1.4;vertical-align:middle}
+
+
+label:has(>.required-mark){display:inline-flex!important;align-items:center;gap:5px}.required-mark{display:inline-flex!important;flex:0 0 auto;width:auto!important;max-width:max-content;padding:0 .35rem;margin:0;border-radius:6px;background:#fff0ed;color:#a53324;font-size:.7em;line-height:1.25}
+
+
+label:has(>.required-mark){display:flex!important;flex-direction:column;align-items:flex-start;gap:2px}.required-mark{align-self:flex-start}
+
+
+.app-page-auth .form-actions{justify-content:center}.app-page-auth #auth-submit{margin-inline:auto}
+
