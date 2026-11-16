@@ -412,7 +412,7 @@ def update_group_icon(group_id):
         flash(str(error), "error")
     else:
         if not prepared_icon and icon not in AVATARS:
-            flash("絵文字を選ぶか、画像を指定してください。", "error")
+            flash("アイコンは変更されていません。", "info")
         else:
             old_icon_path = None
             if prepared_icon:

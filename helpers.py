@@ -26,6 +26,7 @@ from constants import (
     CHAT_STAMPS,
     PREFECTURE_PHOTOS,
     PREFECTURES,
+    PREFECTURE_REGIONS,
     THEMES,
 )
 from extensions import db
@@ -101,8 +102,12 @@ def _normalize_business_phone(value):
 
 def _published_business_candidates(destination, limit=12, start_date=None, end_date=None):
     """Return destination listings with reviewed, unrated, and lower-rated options."""
-    destination_key = "".join(destination.lower().split())
-    if not destination_key:
+    destination_keys = [
+        "".join(part.lower().split())
+        for part in re.split(r"[、,，/・]", destination or "")
+        if part.strip() and part.strip() != "未定"
+    ]
+    if not destination_keys:
         return []
 
     listings = BusinessListing.query.filter_by(is_published=True).all()
@@ -116,7 +121,7 @@ def _published_business_candidates(destination, limit=12, start_date=None, end_d
             if any((trip_day.weekday()) in closed_weekdays for trip_day in trip_dates):
                 continue
         location_text = "".join(f"{listing.prefecture or ''} {listing.address or ''}".lower().split())
-        if destination_key in location_text or location_text and location_text in destination_key:
+        if any(key in location_text or location_text and location_text in key for key in destination_keys):
             relevant.append(listing)
 
     listing_ids = [item.id for item in relevant]
@@ -658,7 +663,7 @@ def photo_for_destination(destination):
 
 
 def page(name, **kwargs):
-    return render_template("page.html", page=name, themes=THEMES, prefectures=PREFECTURES, categories=CATEGORIES, avatars=AVATARS, chat_stamps=CHAT_STAMPS, prefecture_photos=PREFECTURE_PHOTOS, photo_for_destination=photo_for_destination, **kwargs)
+    return render_template("page.html", page=name, themes=THEMES, prefectures=PREFECTURES, prefecture_regions=PREFECTURE_REGIONS, categories=CATEGORIES, avatars=AVATARS, chat_stamps=CHAT_STAMPS, prefecture_photos=PREFECTURE_PHOTOS, photo_for_destination=photo_for_destination, **kwargs)
 
 
 def complete_pending_group_invite(user):

@@ -70,3 +70,14 @@
 .itinerary-stop-description-edit{min-height:120px;white-space:pre-wrap}
 
 
+.plan-itinerary-layout{align-items:start}.itinerary-card,.itinerary-sidebar-card{min-width:0}.itinerary-sidebar-card{align-self:start;position:sticky;top:96px}.itinerary-sidebar-body{margin-top:14px}.itinerary-sidebar-body .itinerary-note{margin-bottom:12px}.itinerary-sidebar-body:empty{display:none}@media(max-width:800px){.itinerary-sidebar-card{position:static}}
+.itinerary-sidebar-card{position:static}
+.itinerary-sidebar-budget{margin-top:18px;padding-top:16px;border-top:1px solid #e7eee8}.itinerary-sidebar-budget h3{margin:0 0 8px;color:#176957;font-size:16px}.itinerary-sidebar-budget .stat{margin-top:10px}
+.itinerary-sidebar-change{margin-top:18px;padding-top:16px;border-top:1px solid #e7eee8}.itinerary-sidebar-change h2{margin-top:8px}.itinerary-sidebar-change .plan-edit-suggestions{margin-top:14px}
+.itinerary-plan-change{margin-top:20px;padding-top:18px;border-top:1px solid #e7eee8}.itinerary-plan-change h2{margin-top:8px}.itinerary-plan-change .plan-edit-suggestions{margin-top:14px}
+.plan-itinerary-layout{align-items:stretch}.itinerary-sidebar-card{align-self:stretch;display:flex;flex-direction:column}.itinerary-sidebar-change{margin-top:auto;padding-top:18px;border-top:1px solid #e7eee8}.itinerary-sidebar-change h2{margin-top:8px}.itinerary-sidebar-change .plan-edit-suggestions{margin-top:14px}
+.plan-itinerary-layout{align-items:start}.itinerary-sidebar-card{align-self:start}.itinerary-sidebar-change{margin-top:18px}
+.itinerary-note .itinerary-stop-edit{min-height:34px;padding:7px 11px;border:1px solid #d4e5da!important;border-radius:10px;background:#edf6f0!important;color:#27614f!important;font-size:12px;font-weight:700;box-shadow:none!important;transform:none!important;white-space:nowrap}.itinerary-note .itinerary-stop-edit:hover,.itinerary-note .itinerary-stop-edit:focus-visible{background:#e3f0e7!important;color:#174b3d!important;border-color:#c4dccd!important;outline:2px solid #c5ded0!important;outline-offset:1px}
+.itinerary-note .itinerary-stop{padding-right:88px}.itinerary-note .itinerary-stop-title{padding-right:0}.itinerary-note .itinerary-stop-edit{position:absolute;top:10px;right:12px;margin:0}
+.itinerary-sidebar-change{margin-top:0;padding-top:0;border-top:0}
+.itinerary-sidebar-change{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #e7eee8}

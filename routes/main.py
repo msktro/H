@@ -189,23 +189,57 @@ def viewing_history():
     if tab not in {"all", "journeys", "reviews"}:
         tab = "all"
     rows = ViewHistory.query.filter_by(user_id=current_user.id).order_by(ViewHistory.viewed_at.desc()).limit(200).all()
-    history_items = []
+    all_items = []
     for row in rows:
-        if tab == "journeys" and row.target_type != "journey":
-            continue
-        if tab == "reviews" and row.target_type != "review":
-            continue
         if row.target_type == "journey":
             story = db.session.get(TravelStory, row.target_id)
             if not story or (not story.is_public and story.user_id != current_user.id):
                 continue
-            history_items.append({"type": "旅行記", "title": story.plan.title, "subtitle": f"{story.plan.destination} · {story.plan.days}日", "url": url_for("journey_detail", story_id=story.id), "viewed_at": row.viewed_at})
+            all_items.append({"type": "旅行記", "target_type": row.target_type, "target_id": row.target_id,
+                              "title": story.plan.title, "subtitle": f"{story.plan.destination} · {story.plan.days}日",
+                              "url": url_for("journey_detail", story_id=story.id), "viewed_at": row.viewed_at})
         elif row.target_type == "review":
             listing = db.session.get(BusinessListing, row.target_id)
             if not listing or not listing.is_published:
                 continue
-            history_items.append({"type": "口コミ", "title": listing.name, "subtitle": f"{listing.prefecture} · {listing.category}", "url": url_for("listing_reviews", item_id=listing.id), "viewed_at": row.viewed_at})
-    return page("history", history_items=history_items, history_tab=tab)
+            all_items.append({"type": "口コミ", "target_type": row.target_type, "target_id": row.target_id,
+                              "title": listing.name, "subtitle": f"{listing.prefecture} · {listing.category}",
+                              "url": url_for("listing_reviews", item_id=listing.id), "viewed_at": row.viewed_at})
+    history_items = [item for item in all_items
+                     if tab == "all" or (tab == "journeys" and item["target_type"] == "journey")
+                     or (tab == "reviews" and item["target_type"] == "review")]
+    return page("history", history_items=history_items, history_tab=tab,
+                history_has_journeys=any(item["target_type"] == "journey" for item in all_items),
+                history_has_reviews=any(item["target_type"] == "review" for item in all_items))
+
+@main_bp.post("/history/delete/<target_type>/<int:target_id>")
+@login_required
+def delete_viewing_history_item(target_type, target_id):
+    _traveler_only()
+    if target_type not in {"journey", "review"}:
+        abort(404)
+    item = ViewHistory.query.filter_by(user_id=current_user.id, target_type=target_type, target_id=target_id).first_or_404()
+    db.session.delete(item)
+    db.session.commit()
+    flash("閲覧履歴を削除しました。", "success")
+    tab = request.form.get("tab", "all")
+    if tab not in {"all", "journeys", "reviews"}:
+        tab = "all"
+    return redirect(url_for("viewing_history", tab=tab))
+
+@main_bp.post("/history/clear/<target_type>")
+@login_required
+def clear_viewing_history_category(target_type):
+    _traveler_only()
+    if target_type not in {"journey", "review"}:
+        abort(404)
+    deleted = ViewHistory.query.filter_by(user_id=current_user.id, target_type=target_type).delete(synchronize_session=False)
+    db.session.commit()
+    flash("旅行記の履歴を削除しました。" if target_type == "journey" else "口コミの履歴を削除しました。", "success")
+    tab = request.form.get("tab", target_type + "s")
+    if tab not in {"all", "journeys", "reviews"}:
+        tab = "all"
+    return redirect(url_for("viewing_history", tab=tab))
 
 @main_bp.post("/history/clear")
 @login_required

@@ -1,6 +1,8 @@
 (() => {
   const source = document.querySelector("#itinerary-source");
   const root = document.querySelector("#itinerary-content");
+  const sidebar = document.querySelector("#itinerary-sidebar-content");
+  const sidebarEmpty = document.querySelector("#itinerary-sidebar-empty");
   if (!source || !root) return;
 
   const clean = (text) => text.replace(/^\s{0,3}#{1,6}\s*/, "").replace(/\*\*(.*?)\*\*/g, "$1").replace(/__(.*?)__/g, "$1").replace(/`/g, "").trim();
@@ -50,6 +52,7 @@
 
   function render(raw) {
     root.replaceChildren();
+    sidebar?.replaceChildren();
     const events = [];
     let currentDay = null;
     let currentSection = null;
@@ -205,7 +208,10 @@
       return box;
     };
 
+    let moveToSidebar = false;
     for (const event of events) {
+      if (sidebar && event.type === "section" && /^(旅のメモ|旅メモ|メモ|travel notes|trip notes|予算の目安|budget estimate)$/i.test(event.title.trim())) moveToSidebar = true;
+      const target = moveToSidebar && sidebar ? sidebar : root;
       if (event.type === "day") {
         const card = make("article", "itinerary-day");
         const head = make("header", "itinerary-day-head");
@@ -230,10 +236,11 @@
           card.classList.toggle("is-collapsed", collapsed);
         });
         head.append(toggle);
-        root.append(card);
-      } else root.append(renderSection(event));
+        target.append(card);
+      } else target.append(renderSection(event));
     }
     if (!events.length) root.append(make("p", "itinerary-copy", raw));
+    if (sidebarEmpty) sidebarEmpty.hidden = Boolean(sidebar?.children.length);
   }
 
   render(source.content.textContent.trim());

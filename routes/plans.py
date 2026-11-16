@@ -106,8 +106,20 @@ def new_plan():
         values["end_date"] = end_date.isoformat()
         values["people"] = _bounded_int(values["people"], 1, 30, 1)
         values["budget"] = _bounded_int(values["budget"], 0, 100000000, 0)
-        if not values["destination"]:
-            flash("行き先を入力してください。", "error")
+        destination_tokens = [part.strip() for part in re.split(r"[、,，/・]", values["destination"]) if part.strip()]
+        if not destination_tokens:
+            destination_tokens = ["未定"]
+        invalid_destinations = [name for name in destination_tokens if name != "未定" and name not in PREFECTURES]
+        if invalid_destinations or ("未定" in destination_tokens and len(destination_tokens) > 1):
+            flash("行き先は一覧から都道府県を選択してください。", "error")
+            return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
+        selected_destinations = [name for name in destination_tokens if name != "未定"]
+        if len(selected_destinations) > 8:
+            flash("選べる都道府県は最大8県です。移動時間も含めて現実的なプランを作れる範囲で選んでください。", "error")
+            return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
+        values["destination"] = "、".join(selected_destinations) if selected_destinations else "未定"
+        if len(values["destination"]) > 100:
+            flash("選択した都道府県が多すぎます。数を減らしてください。", "error")
             return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
         manual_preferences = None
         if values["use_profile"] and not profile_ready:

@@ -40,7 +40,9 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
     '鹿児島県': [130.56, 31.60, 7.5], '沖縄県': [127.68, 26.21, 7.2]
   };
   const destination = root.dataset.destination || '';
-  const matchedPrefecture = Object.keys(prefectureCenters).find(name => destination.includes(name));
+  const selectedPrefectures = destination.split(/[、,，/・]/).map(name => name.trim()).filter(name => Object.hasOwn(prefectureCenters, name));
+  const matchedPrefectures = selectedPrefectures.length ? selectedPrefectures : Object.keys(prefectureCenters).filter(name => destination.includes(name));
+  const matchedPrefecture = matchedPrefectures[0];
   const destinationView = matchedPrefecture ? prefectureCenters[matchedPrefecture] : null;
 
   const mapLoading = document.createElement('div');
@@ -49,8 +51,6 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
   mapLoading.setAttribute('aria-live', 'polite');
   mapLoading.innerHTML = '<span class="map-loading-spinner" aria-hidden="true"></span><span class="map-loading-label">地図とプラン内の場所を読み込んでいます…</span>';
   mapNode.append(mapLoading);
-  let mapLoadingTimer = window.setTimeout(() => setMapLoading(false), 45000);
-
   function setMapLoading(isLoading, message) {
     mapLoading.hidden = !isLoading;
     if (message) mapLoading.querySelector('.map-loading-label').textContent = message;
@@ -99,9 +99,15 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
   function matchesDestinationArea(place) {
     const address = (place.address || '').normalize('NFKC').replace(/\s+/g, '');
     const prefecture = (place.prefecture || '').normalize('NFKC');
-    if (matchedPrefecture) return address.includes(matchedPrefecture) || prefecture.includes(matchedPrefecture);
+    if (matchedPrefectures.length) return matchedPrefectures.some(name => address.includes(name) || prefecture.includes(name));
     const area = destination.normalize('NFKC').replace(/\s+/g, '');
     return !area || address.includes(area);
+  }
+
+  function matchesRequestedPrefecture(place, name) {
+    const address = (place.address || '').normalize('NFKC').replace(/\s+/g, '');
+    const prefecture = (place.prefecture || '').normalize('NFKC');
+    return address.includes(name) || prefecture.includes(name);
   }
 
   function clearRoute() {
@@ -203,8 +209,12 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       if (!key) continue;
       const dayCard = stop.closest('.itinerary-day');
       const dayKey = dayCard ? `day-${dayCards.indexOf(dayCard)}` : 'other';
+      const addressLine = [...stop.querySelectorAll('p')]
+        .map(paragraph => paragraph.textContent.trim())
+        .find(text => /^(?:住所|所在地)\s*[：:]\s*/.test(text));
+      const address = addressLine?.replace(/^(?:住所|所在地)\s*[：:]\s*/, '').trim();
       const uniqueKey = `${dayKey}:${key}`;
-      if (!unique.has(uniqueKey)) unique.set(uniqueKey, { key: uniqueKey, name, dayKey });
+      if (!unique.has(uniqueKey)) unique.set(uniqueKey, { key: uniqueKey, name, dayKey, address: address && address !== '未確認' ? address : '' });
     }
     const spots = [...unique.values()];
     // Keep the itinerary order and day grouping for nearby, day-by-day pins.
@@ -239,14 +249,18 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
         const batch = selectedSpots.slice(index, index + 3);
         const resolved = await Promise.all(batch.map(async spot => {
           try {
-            const queries = destination ? [`${spot.name}, ${destination}`, `${destination} ${spot.name}`, spot.name] : [spot.name];
+            const queries = matchedPrefectures.length
+              ? [...(spot.address ? [`${spot.name}, ${spot.address}`, `${spot.address}, ${spot.name}`] : []), ...matchedPrefectures.map(name => `${spot.name}, ${name}`), spot.name]
+              : destination ? [`${spot.name}, ${destination}`, `${destination} ${spot.name}`, spot.name] : [spot.name];
             let candidates = [];
             for (const query of queries) {
               const urls = [root.dataset.geocodeUrl, root.dataset.searchUrl].filter(Boolean);
               for (const baseUrl of urls) {
                 try {
                   const data = await getJson(`${baseUrl}?q=${encodeURIComponent(query)}`);
-                  const matching = (data.results || []).filter(matchesDestinationArea);
+                  const queryPrefecture = matchedPrefectures.find(name => query.endsWith(`, ${name}`));
+                  const matching = (data.results || []).filter(place => matchesDestinationArea(place)
+                    && (!queryPrefecture || matchesRequestedPrefecture(place, queryPrefecture)));
                   if (matching.length) { candidates = matching; break; }
                 } catch (_error) { /* try the next geocoder/query */ }
               }
@@ -281,7 +295,6 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
       planSpotsLoaded = true;
     } finally {
       planSpotsLoading = false;
-      window.clearTimeout(mapLoadingTimer);
       setMapLoading(false);
     }
     if (added) {
@@ -296,7 +309,6 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-
     itineraryObserver.observe(itineraryRoot, { childList: true, subtree: true });
     window.setTimeout(() => {
       if (!itinerarySpotNames().length) {
-        window.clearTimeout(mapLoadingTimer);
         setMapLoading(false, 'プラン内に地図へ追加できる場所がありません。');
       }
     }, 15000);
