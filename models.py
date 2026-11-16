@@ -334,6 +334,17 @@ class PackingItem(db.Model):
     plan = db.relationship("TravelPlan", back_populates="packing_items")
     user = db.relationship("User")
 
+class PackingPreset(db.Model):
+    """利用者が別の旅行でも使い回す持ち物プリセットです。"""
+    __tablename__ = "packing_presets"
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_packing_preset_user_name"),)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    name = db.Column(db.String(60), nullable=False)
+    items_json = db.Column(db.Text, nullable=False, default="[]")
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    user = db.relationship("User")
+
 class BusinessListing(db.Model):
     """旅行者向けに掲載する施設・店舗情報を保存します。"""
     __tablename__ = "business_listings"

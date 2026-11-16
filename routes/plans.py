@@ -94,8 +94,12 @@ def new_plan():
         except (TypeError, ValueError):
             start_date = end_date = None
             days_count = 0
+        today_jst = datetime.now(timezone(timedelta(hours=9))).date()
+        if start_date and start_date < today_jst:
+            flash("出発日は今日以降の日付を選択してください。", "error")
+            return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
         if not 1 <= days_count <= 30:
-            flash("出発日と帰着日を選択してください。旅行期間は1〜30日で指定できます。", "error")
+            flash("出発日と帰着日を選択してください。旅行期間は開始日から最大30日です。", "error")
             return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
         values["days"] = days_count
         values["start_date"] = start_date.isoformat()
@@ -160,6 +164,90 @@ def new_plan():
         return redirect(url_for("plan_detail", plan_id=plan.id))
     return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
 
+@plans_bp.route("/plans/manual", methods=["GET", "POST"])
+@login_required
+def manual_plan():
+    """AIを使わず、旅行記向けの旅行プランを自分で作成します。"""
+    _traveler_only()
+    draft = {"title": "", "destination": "", "start_date": "", "days": 1, "people": 1, "budget": "", "introduction": "", "day_titles": [], "stops": []}
+    if request.method == "POST":
+        draft.update({"title": request.form.get("title", "").strip(), "destination": request.form.get("destination", "").strip(), "start_date": request.form.get("start_date", "").strip(), "days": request.form.get("days", "1").strip(), "people": request.form.get("people", "1").strip(), "budget": request.form.get("budget", "").strip(), "introduction": request.form.get("introduction", "").strip(), "day_titles": request.form.getlist("day_title")})
+        try:
+            days, people, budget = int(draft["days"]), int(draft["people"]), int(draft["budget"])
+            start_date = date.fromisoformat(draft["start_date"])
+        except (TypeError, ValueError):
+            days = people = budget = 0
+            start_date = None
+        stop_days = request.form.getlist("stop_day")
+        stop_times = request.form.getlist("stop_time")
+        stop_names = request.form.getlist("stop_name")
+        stop_categories = request.form.getlist("stop_category")
+        stop_descriptions = request.form.getlist("stop_description")
+        lists = (stop_days, stop_times, stop_names, stop_categories, stop_descriptions)
+        draft["stops"] = [{"day": stop_days[i], "time": stop_times[i], "name": stop_names[i], "category": stop_categories[i], "description": stop_descriptions[i]} for i in range(min(map(len, lists)))]
+        def invalid(message):
+            flash(message, "error")
+            return page("manual_plan", manual_draft=draft)
+        today_jst = datetime.now(timezone(timedelta(hours=9))).date()
+        if start_date and start_date < today_jst:
+            return invalid("出発日は今日以降の日付を選択してください。")
+        if not draft["title"] or len(draft["title"]) > 100:
+            return invalid("プラン名を1〜100文字で入力してください。")
+        if not draft["destination"] or len(draft["destination"]) > 100:
+            return invalid("行き先を1〜100文字で入力してください。")
+        if not start_date or not 1 <= days <= 30 or len(draft["day_titles"]) != days:
+            return invalid("出発日と、日数に合った日ごとの予定を確認してください。")
+        if not 1 <= people <= 30 or not 0 <= budget <= 100000000:
+            return invalid("人数は1〜30人、予算は0〜100,000,000円で入力してください。")
+        if len(draft["introduction"]) > 1200 or len(set(map(len, lists))) != 1:
+            return invalid("紹介文またはスポット情報を確認してください。")
+        if any(not title.strip() or len(title.strip()) > 100 for title in draft["day_titles"]):
+            return invalid("各日の見出しを1〜100文字で入力してください。")
+        categories = {"観光・体験", "食事", "宿泊", "移動", "自由時間", "その他"}
+        grouped = {day: [] for day in range(1, days + 1)}
+        for item in draft["stops"]:
+            try:
+                day_number = int(item["day"])
+            except (TypeError, ValueError):
+                return invalid("スポットの日付を確認してください。")
+            spot_time = item["time"].strip()
+            if not 1 <= day_number <= days or not item["name"].strip() or len(item["name"].strip()) > 160:
+                return invalid("各スポットの対象日と名前を確認してください。")
+            if spot_time and not re.fullmatch(r"(?:[01]?\d|2[0-3]):[0-5]\d", spot_time):
+                return invalid("スポットの時刻は例のように09:30で入力してください。")
+            if item["category"] not in categories or len(item["description"]) > 1000:
+                return invalid("スポットの種類または説明文を確認してください。")
+            grouped[day_number].append({**item, "time": spot_time, "name": item["name"].strip(), "description": item["description"].strip()})
+        if any(not grouped[day] for day in grouped):
+            return invalid("各日にスポットを1件以上追加してください。")
+        content = ["# 旅のしおり"]
+        if draft["introduction"]:
+            content.extend(["## 旅のハイライト", draft["introduction"]])
+        for day_number in range(1, days + 1):
+            content.append(f"## 第{day_number}日目｜{draft['day_titles'][day_number - 1].strip()}")
+            periods = {"午前": [], "午後": [], "夕方": []}
+            for item in grouped[day_number]:
+                hour = int(item["time"].split(":", 1)[0]) if item["time"] else 13
+                period = "午前" if hour < 12 else "夕方" if hour >= 17 else "午後"
+                periods[period].append(item)
+            for period in ("午前", "午後", "夕方"):
+                if not periods[period]:
+                    continue
+                content.append(f"### {period}")
+                for item in periods[period]:
+                    prefix = f"{item['time']}｜" if item["time"] else ""
+                    content.append(f"- {prefix}{item['name']}")
+                    content.append(f"種類：{item['category']}")
+                    if item["description"]:
+                        content.extend(item["description"].splitlines())
+        plan = TravelPlan(user_id=current_user.id, title=draft["title"], destination=draft["destination"], start_date=start_date, end_date=start_date + timedelta(days=days - 1), days=days, num_people=people, budget=budget, theme="自分で作成", preferences="手入力で作成した旅行プラン", ai_response="\n".join(content))
+        db.session.add(plan)
+        db.session.commit()
+        flash("手作りの旅行プランを保存しました。旅行記として公開できます。", "success")
+        return redirect(url_for("plan_detail", plan_id=plan.id))
+    return page("manual_plan", manual_draft=draft)
+
+
 @plans_bp.get("/plans/<int:plan_id>")
 @login_required
 def plan_detail(plan_id):
@@ -215,13 +303,72 @@ def packing_list(plan_id):
                 db.session.add(PackingItem(plan_id=plan.id, user_id=list_owner_id, name=name, category=category))
                 db.session.commit()
                 flash("持ち物を追加しました。", "success")
+        elif action == "save_preset":
+            preset_name = request.form.get("preset_name", "").strip()
+            current_items = PackingItem.query.filter_by(plan_id=plan.id, user_id=list_owner_id).order_by(PackingItem.id).all()
+            if not 1 <= len(preset_name) <= 60:
+                flash("プリセット名を1〜60文字で入力してください。", "error")
+            elif not current_items:
+                flash("先に持ち物を追加してからプリセットを保存してください。", "error")
+            elif len(current_items) > 200:
+                flash("プリセットに保存できる持ち物は200件までです。", "error")
+            elif PackingPreset.query.filter_by(user_id=current_user.id, name=preset_name).first():
+                flash("同じ名前のプリセットがあります。別の名前にしてください。", "error")
+            else:
+                preset_items = [{"name": item.name, "category": item.category} for item in current_items]
+                db.session.add(PackingPreset(user_id=current_user.id, name=preset_name,
+                                             items_json=json.dumps(preset_items, ensure_ascii=False)))
+                db.session.commit()
+                flash(f"「{preset_name}」を自分の持ち物プリセットに保存しました。", "success")
+        elif action == "add_preset":
+            preset_id = request.form.get("preset_id", type=int)
+            preset = PackingPreset.query.filter_by(id=preset_id, user_id=current_user.id).first() if preset_id else None
+            if not preset:
+                flash("プリセットが見つかりません。", "error")
+            else:
+                try:
+                    preset_items = json.loads(preset.items_json)
+                except (TypeError, ValueError):
+                    preset_items = []
+                added = 0
+                for entry in preset_items[:200] if isinstance(preset_items, list) else []:
+                    if not isinstance(entry, dict):
+                        continue
+                    name = str(entry.get("name", "")).strip()
+                    category = entry.get("category", "その他")
+                    if not name or len(name) > 100 or category not in PACKING_CATEGORIES:
+                        continue
+                    if PackingItem.query.filter_by(plan_id=plan.id, user_id=list_owner_id, name=name).first():
+                        continue
+                    db.session.add(PackingItem(plan_id=plan.id, user_id=list_owner_id, name=name, category=category))
+                    added += 1
+                db.session.commit()
+                flash(f"「{preset.name}」から{added}件追加しました。重複する持ち物は追加していません。", "success")
+        elif action == "delete_preset":
+            preset_id = request.form.get("preset_id", type=int)
+            preset = PackingPreset.query.filter_by(id=preset_id, user_id=current_user.id).first() if preset_id else None
+            if not preset:
+                flash("削除するプリセットが見つかりません。", "error")
+            else:
+                db.session.delete(preset)
+                db.session.commit()
+                flash(f"プリセット「{preset.name}」を削除しました。", "info")
         else:
             abort(400)
         return redirect(url_for("packing_list", plan_id=plan.id))
     items = PackingItem.query.filter_by(plan_id=plan.id, user_id=list_owner_id).order_by(PackingItem.id).all()
     checked_count = sum(item.is_checked for item in items)
+    presets = PackingPreset.query.filter_by(user_id=current_user.id).order_by(PackingPreset.created_at.desc(), PackingPreset.id.desc()).all()
+    preset_counts = {}
+    for preset in presets:
+        try:
+            decoded = json.loads(preset.items_json)
+            preset_counts[preset.id] = len(decoded) if isinstance(decoded, list) else 0
+        except (TypeError, ValueError):
+            preset_counts[preset.id] = 0
     return page("packing_list", plan=plan, items=items, packing_categories=PACKING_CATEGORIES,
                 packing_templates=PACKING_TEMPLATES.keys(), checked_count=checked_count,
+                custom_packing_presets=presets, packing_preset_counts=preset_counts,
                 shared_list=bool(plan.group_id))
 
 @plans_bp.post("/plans/<int:plan_id>/packing/<int:item_id>/toggle")

@@ -218,13 +218,14 @@ def admin_moderation():
     if active_role not in ("traveler", "business"):
         active_role = "traveler"
     search = request.args.get("q", "").strip()[:120]
-    status = request.args.get("status", "all").strip()
+    status = request.args.get("status", "active").strip()
     if status not in ("all", "active", "suspended"):
         status = "all"
     account_query = User.query.filter_by(user_type=active_role)
     if search:
         needle = f"%{search}%"
-        account_query = account_query.filter(or_(User.username.ilike(needle), User.email.ilike(needle)))
+        account_query = (account_query.filter(User.username.ilike(needle)) if active_role == "traveler"
+                         else account_query.filter(or_(User.username.ilike(needle), User.email.ilike(needle))))
     if status == "active":
         account_query = account_query.filter_by(is_suspended=False)
     elif status == "suspended":
@@ -258,7 +259,7 @@ def suspend_account(user_id):
                                             action="suspend", reason=reason))
         db.session.commit()
         flash(f"「{account.username}」のアカウントを利用停止にしました。", "success")
-    return redirect(url_for("admin_moderation", type=request.form.get("type", "traveler"), q=request.form.get("q", ""), status=request.form.get("status", "all"), page=request.form.get("page", 1)))
+    return redirect(url_for("admin_moderation", type=request.form.get("type", "traveler"), q=request.form.get("q", ""), status="active" if account.is_suspended else request.form.get("status", "active"), page=request.form.get("page", 1)))
 
 
 @auth_bp.post("/admin/accounts/<int:user_id>/restore")
@@ -279,7 +280,7 @@ def restore_account(user_id):
     account.suspended_by_id = None
     db.session.commit()
     flash(f"「{account.username}」の利用停止を解除しました。", "success")
-    return redirect(url_for("admin_moderation", type=request.form.get("type", "traveler"), q=request.form.get("q", ""), status=request.form.get("status", "all"), page=request.form.get("page", 1)))
+    return redirect(url_for("admin_moderation", type=request.form.get("type", "traveler"), q=request.form.get("q", ""), status="active", page=request.form.get("page", 1)))
 
 
 @auth_bp.get("/admin/moderation/history")
