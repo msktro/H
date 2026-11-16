@@ -145,6 +145,20 @@ def report_account():
     report_categories = ["不適切な投稿", "迷惑行為", "なりすまし・虚偽情報", "その他"]
     targets = (User.query.filter(User.user_type.in_(("traveler", "business")), User.id != current_user.id)
                .order_by(User.user_type.asc(), User.username.asc()).all())
+    selected_target_id = request.args.get("target_user_id", type=int) if request.method == "GET" else request.form.get("target_user_id", type=int)
+    selected_target = db.session.get(User, selected_target_id) if selected_target_id else None
+    if selected_target and (selected_target.id == current_user.id or selected_target.user_type not in ("traveler", "business")):
+        selected_target = None
+        selected_target_id = None
+    return_to = request.args.get("return_to", "") if request.method == "GET" else request.form.get("return_to", "")
+    parsed_return = urlparse(return_to)
+    if not return_to.startswith("/") or return_to.startswith("//") or "\\" in return_to or parsed_return.netloc:
+        return_to = ""
+    context_label = (request.args.get("context", "") if request.method == "GET" else request.form.get("context", ""))[:80]
+    selected_category = request.form.get("category", report_categories[0]) if request.method == "POST" else report_categories[0]
+    details_value = request.form.get("details", "") if request.method == "POST" else ""
+    if selected_target:
+        targets = [selected_target]
     if request.method == "POST":
         target_id = request.form.get("target_user_id", type=int)
         category = request.form.get("category", "").strip()
@@ -161,8 +175,11 @@ def report_account():
                                          category=category, details=details))
             db.session.commit()
             flash("通報を運営へ送信しました。確認までお待ちください。", "success")
-            return redirect(url_for("report_account"))
-    return page("report_account", targets=targets, report_categories=report_categories)
+            return redirect(return_to or url_for("report_account"))
+    return page("report_account", targets=targets, report_categories=report_categories,
+                selected_target=selected_target, selected_target_id=selected_target_id,
+                return_to=return_to, context_label=context_label,
+                selected_category=selected_category, details_value=details_value)
 
 @main_bp.get("/history")
 @login_required

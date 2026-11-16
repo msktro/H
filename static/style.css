@@ -80,3 +80,5 @@ label:has(>.required-mark){display:flex!important;flex-direction:column;align-it
 
 .app-page-auth .form-actions{justify-content:center}.app-page-auth #auth-submit{margin-inline:auto}
 
+
+.report-account-link{display:inline-flex;align-items:center;margin:0 0 0 8px;padding:5px 9px;border:1px solid #e3ece6;border-radius:9px;color:#62766f;background:#f7faf8;font-size:12px;line-height:1.3;white-space:nowrap}.report-account-link:hover{background:#fff0ed;color:#a24b3e;border-color:#f3d5cf}
