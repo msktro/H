@@ -82,3 +82,4 @@ label:has(>.required-mark){display:flex!important;flex-direction:column;align-it
 
 
 .report-account-link{display:inline-flex;align-items:center;margin:0 0 0 8px;padding:5px 9px;border:1px solid #e3ece6;border-radius:9px;color:#62766f;background:#f7faf8;font-size:12px;line-height:1.3;white-space:nowrap}.report-account-link:hover{background:#fff0ed;color:#a24b3e;border-color:#f3d5cf}
+.admin-stat-card{display:block;color:inherit;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease}.admin-stat-card:hover,.admin-stat-card:focus-visible{transform:translateY(-2px);box-shadow:0 10px 26px rgba(31,95,77,.12)}.admin-stat-link-hint{display:inline-block;color:var(--green);font-size:.85rem;font-weight:700}
