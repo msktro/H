@@ -337,13 +337,17 @@ def create_app():
     def inject_group_notification_counts():
 
         latest_notice_id = max((notice["id"] for notice in APP_NOTICES), default=0)
+        notice_preview_count = 100 if (current_user.is_authenticated and request.args.get("notice_preview") == "100") else 0
 
         notice_read = (db.session.get(AppNoticeRead, current_user.id)
 
                        if current_user.is_authenticated else None)
 
-        has_unread_release_notices = latest_notice_id > (notice_read.latest_notice_id if notice_read else 0)
+        read_notice_id = notice_read.latest_notice_id if notice_read else 0
+        unread_release_notice_count = sum(1 for notice in APP_NOTICES if notice["id"] > read_notice_id)
+        has_unread_release_notices = unread_release_notice_count > 0
 
+        operator_unread_count = 0
         operator_unread = False
         if current_user.is_authenticated:
             visible_operator_notices = OperatorNotice.query.filter(
@@ -353,7 +357,8 @@ def create_app():
             read_operator_notice_ids = {
                 row.notice_id for row in OperatorNoticeRead.query.filter_by(user_id=current_user.id).all()
             }
-            operator_unread = any(notice.id not in read_operator_notice_ids for notice in visible_operator_notices)
+            operator_unread_count = sum(1 for notice in visible_operator_notices if notice.id not in read_operator_notice_ids)
+            operator_unread = operator_unread_count > 0
         has_unread_notices = has_unread_release_notices or operator_unread
 
         comment_notifications = []
@@ -376,6 +381,7 @@ def create_app():
                              .filter(TripGroup.owner_id == current_user.id).scalar() or 0)
 
             comment_notifications = unread_journey_comment_notifications(current_user.id)
+            unread_comment_count = sum(item["count"] for item in comment_notifications)
 
             return {"group_notification_counts": counts,
                     "group_rejoin_request_counts": rejoin_counts,
@@ -385,11 +391,19 @@ def create_app():
                     "group_notification_cursor": cursor,
                     "group_rejoin_request_cursor": rejoin_cursor,
 
-                    "unread_journey_comment_count": sum(item["count"] for item in comment_notifications),
+                    "unread_journey_comment_count": unread_comment_count,
+
+                    "unread_notice_count": notice_preview_count or unread_release_notice_count + operator_unread_count + unread_comment_count,
+
+                    "notice_preview_count": notice_preview_count,
 
                     "account_warnings": account_warnings,
 
                     "has_unread_release_notices": has_unread_release_notices,
+
+                    "unread_release_notice_count": unread_release_notice_count,
+
+                    "unread_operator_notice_count": operator_unread_count,
 
                     "has_unread_operator_notices": operator_unread,
 
@@ -403,9 +417,17 @@ def create_app():
 
                 "unread_journey_comment_count": 0,
 
+                "unread_notice_count": notice_preview_count or unread_release_notice_count + operator_unread_count,
+
+                "notice_preview_count": notice_preview_count,
+
                 "account_warnings": account_warnings,
 
                 "has_unread_release_notices": has_unread_release_notices,
+
+                "unread_release_notice_count": unread_release_notice_count,
+
+                "unread_operator_notice_count": operator_unread_count,
 
                 "has_unread_operator_notices": operator_unread,
 

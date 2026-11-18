@@ -21,9 +21,14 @@
       dot.setAttribute("aria-label", commentCount ? `新着コメント ${commentCount}件` : "");
     });
     document.querySelectorAll("[data-unread-notice-dot]").forEach((dot) => {
-      const releaseUnread = dot.dataset.releaseUnread === "true";
-      const operatorUnread = dot.dataset.operatorUnread === "true";
-      dot.hidden = !releaseUnread && !operatorUnread && commentCount === 0;
+      const releaseCount = Number(dot.dataset.releaseCount || 0);
+      const operatorCount = Number(dot.dataset.operatorCount || 0);
+      const previewCount = Number(dot.dataset.previewCount || 0);
+      const unreadCount = previewCount || releaseCount + operatorCount + commentCount;
+      dot.textContent = unreadCount > 99 ? "99+" : (unreadCount ? String(unreadCount) : "");
+      dot.hidden = unreadCount === 0;
+      dot.setAttribute("aria-label", `${unreadCount}件の未読のお知らせ`);
+      dot.closest(".home-notification-link")?.classList.toggle("has-unread-notices", unreadCount > 0);
     });
     const storyCounts = data.unread_journey_comment_counts || {};
     document.querySelectorAll("[data-my-posts-comment-dot]").forEach((dot) => {

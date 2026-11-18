@@ -800,6 +800,9 @@
     "生成中…": ["Generating…", "생성 중…", "正在生成…", "正在生成…", "กำลังสร้าง…"],
     "生成に失敗しました。もう一度お試しください。": ["Generation failed. Please try again.", "생성에 실패했습니다. 다시 시도해 주세요.", "生成失败，请重试。", "生成失敗，請再試一次。", "สร้างไม่สำเร็จ โปรดลองอีกครั้ง"],
     "テーマを1つ以上選んでください。": ["Select at least one theme.", "테마를 하나 이상 선택해 주세요.", "请至少选择一个主题。", "請至少選擇一個主題。", "เลือกธีมอย่างน้อยหนึ่งรายการ"],
+    "1つ以上選択してください。": ["Select at least one option.", "하나 이상 선택해 주세요.", "请至少选择一项。", "請至少選擇一項。", "เลือกอย่างน้อยหนึ่งรายการ"],
+    "入力内容が一致しません。": ["The entries do not match.", "입력 내용이 일치하지 않습니다.", "输入内容不一致。", "輸入內容不一致。", "ข้อมูลที่กรอกไม่ตรงกัน"],
+    "入力文字数を確認してください。": ["Check the number of characters.", "입력한 글자 수를 확인해 주세요.", "请检查输入的字符数。", "請檢查輸入的字元數。", "โปรดตรวจสอบจำนวนตัวอักษร"],
     "送信できませんでした。": ["Could not send.", "전송하지 못했습니다.", "发送失败。", "傳送失敗。", "ส่งไม่สำเร็จ"],
     "JPG、PNG、GIF、WebP／5MBまで": ["JPG, PNG, GIF, or WebP, up to 5 MB", "JPG, PNG, GIF, WebP 형식, 최대 5MB", "支持 JPG、PNG、GIF、WebP，最大5MB", "支援 JPG、PNG、GIF、WebP，最大 5 MB", "รองรับ JPG, PNG, GIF และ WebP ขนาดไม่เกิน 5 MB"],
     "JPG、PNG、GIF、WebP／1枚5MBまで": ["JPG, PNG, GIF, or WebP, up to 5 MB per image", "JPG, PNG, GIF, WebP 형식, 이미지당 최대 5MB", "支持 JPG、PNG、GIF、WebP，每张最大5MB", "支援 JPG、PNG、GIF、WebP，每張最大 5 MB", "รองรับ JPG, PNG, GIF และ WebP ขนาดไม่เกิน 5 MB ต่อภาพ"],
@@ -1313,6 +1316,184 @@
     planUiLocales.forEach((locale, index) => { dictionaries[locale][source] = translations[index]; });
   }
 
+  const interfaceTranslations = {
+    "複数選択可": ["Select multiple", "여러 개 선택 가능", "可多选", "可複選", "เลือกได้หลายข้อ"],
+    "お問い合わせ": ["Contact", "문의하기", "联系支持", "聯絡我們", "ติดต่อเรา"],
+    "ご質問や不具合の報告、機能のご要望はこちらからお送りください。": ["Send questions, bug reports, or feature requests here.", "질문, 오류 신고, 기능 요청을 여기에서 보내 주세요.", "请在此提交问题、错误报告或功能建议。", "請在此提交問題、錯誤回報或功能建議。", "ส่งคำถาม รายงานปัญหา หรือข้อเสนอแนะได้ที่นี่"],
+    "お問い合わせ内容": ["Contact details", "문의 내용", "联系内容", "聯絡內容", "รายละเอียดการติดต่อ"],
+    "お問い合わせ種別": ["Request type", "문의 유형", "咨询类型", "聯絡類型", "ประเภทคำขอ"],
+    "お名前": ["Name", "이름", "姓名", "姓名", "ชื่อ"],
+    "件名": ["Subject", "제목", "主题", "主旨", "หัวข้อ"],
+    "お問い合わせを送信": ["Send message", "문의 보내기", "发送消息", "送出訊息", "ส่งข้อความ"],
+    "送信後について": ["After sending", "전송 후 안내", "发送后说明", "送出後說明", "หลังส่งข้อความ"],
+    "返信が必要な場合は、受信できるメールアドレスを入力してください。パスワードなどの秘密情報は記載しないでください。": ["If you need a reply, enter an email address you can access. Do not include passwords or other sensitive information.", "답변이 필요하면 수신 가능한 이메일 주소를 입력하세요. 비밀번호 등 민감한 정보는 적지 마세요.", "如需回复，请填写可收信的邮箱。请勿填写密码等敏感信息。", "如需回覆，請填寫可收信的電子郵件。請勿填寫密碼等敏感資訊。", "หากต้องการคำตอบ โปรดกรอกอีเมลที่ติดต่อได้ และอย่าระบุรหัสผ่านหรือข้อมูลลับ"],
+    "変更内容を保存すると掲載情報に反映されます。": ["Saved changes will appear in your listing.", "변경 사항을 저장하면 등록 정보에 반영됩니다.", "保存后，修改将显示在您的刊登信息中。", "儲存後，變更會顯示在您的刊登資訊中。", "เมื่อบันทึก การเปลี่ยนแปลงจะแสดงในข้อมูลที่ลงประกาศ"],
+    "掲載情報を編集": ["Edit listing", "등록 정보 수정", "编辑刊登信息", "編輯刊登資訊", "แก้ไขข้อมูลที่ลงประกาศ"],
+    "施設・店舗名": ["Place or business name", "시설·매장 이름", "设施或店铺名称", "設施或店家名稱", "ชื่อสถานที่หรือร้านค้า"],
+    "カテゴリ": ["Category", "카테고리", "类别", "類別", "หมวดหมู่"],
+    "住所・エリア": ["Address or area", "주소·지역", "地址或区域", "地址或地區", "ที่อยู่หรือพื้นที่"],
+    "料金の目安": ["Estimated price", "예상 요금", "参考价格", "參考價格", "ราคาโดยประมาณ"],
+    "紹介文・おすすめポイント": ["Description and highlights", "소개 및 추천 포인트", "介绍与推荐亮点", "介紹與推薦亮點", "คำแนะนำและจุดเด่น"],
+    "公式サイト": ["Official website", "공식 웹사이트", "官方网站", "官方網站", "เว็บไซต์ทางการ"],
+    "店の写真を追加": ["Add business photos", "매장 사진 추가", "添加商家照片", "新增店家照片", "เพิ่มรูปภาพร้านค้า"],
+    "JPG、PNG、GIF、WebP／1枚5MBまで・合計": ["JPG, PNG, GIF, or WebP; up to 5 MB each, total", "JPG, PNG, GIF, WebP 파일: 각 5MB, 총", "JPG、PNG、GIF、WebP；每张最多5MB，共", "JPG、PNG、GIF、WebP；每張最多5MB，共", "JPG, PNG, GIF หรือ WebP ขนาดไม่เกิน 5MB ต่อภาพ รวม"],
+    "は認証済みです。": [" is verified.", " 인증되었습니다.", "已通过验证。", "已通過驗證。", " ได้รับการยืนยันแล้ว"],
+    "戻る": ["Back", "뒤로", "返回", "返回", "ย้อนกลับ"],
+    "もう一度読み込む": ["Reload", "다시 불러오기", "重新加载", "重新載入", "โหลดอีกครั้ง"],
+    "ホームへ戻る": ["Back to Home", "홈으로 돌아가기", "返回首页", "返回首頁", "กลับหน้าแรก"],
+    "Tabidea · 時間をおいても解決しない場合は、お問い合わせください。": ["Tabidea · If the problem continues, please contact us.", "Tabidea · 문제가 계속되면 문의해 주세요.", "Tabidea · 如果问题仍未解决，请联系我们。", "Tabidea · 如果問題仍未解決，請聯絡我們。", "Tabidea · หากปัญหายังคงอยู่ โปรดติดต่อเรา"],
+    "ページを表示できませんでした": ["We couldn't load this page", "페이지를 표시할 수 없습니다", "无法显示此页面", "無法顯示此頁面", "ไม่สามารถแสดงหน้านี้ได้"],
+    "サーバーで一時的な問題が発生しました。少し待ってから、もう一度お試しください。": ["A temporary server issue occurred. Please wait a moment and try again.", "서버에서 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.", "服务器暂时出现问题，请稍候再试。", "伺服器暫時發生問題，請稍候再試。", "เซิร์ฟเวอร์ขัดข้องชั่วคราว โปรดรอสักครู่แล้วลองอีกครั้ง"],
+    "ただいま混み合っています": ["The service is temporarily busy", "현재 접속이 많습니다", "当前访问繁忙", "目前流量繁忙", "ขณะนี้มีผู้ใช้งานจำนวนมาก"],
+    "サーバーが混み合っているか、一時的に停止しています。少し待ってから、もう一度お試しください。": ["The server is busy or temporarily unavailable. Please wait a moment and try again.", "서버가 혼잡하거나 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.", "服务器繁忙或暂时不可用，请稍候再试。", "伺服器繁忙或暫時無法使用，請稍候再試。", "เซิร์ฟเวอร์ไม่ว่างหรือใช้งานไม่ได้ชั่วคราว โปรดลองอีกครั้งภายหลัง"],
+    "10〜5,000文字で入力してください。": ["Enter between 10 and 5,000 characters.", "10~5,000자로 입력하세요.", "请输入10至5,000个字符。", "請輸入10至5,000個字元。", "กรอกข้อความ 10–5,000 ตัวอักษร"],
+    "複数選択可": ["Select multiple", "여러 개 선택 가능", "可多选", "可複選", "เลือกได้หลายข้อ"],
+    "グループアイコンを任意にしました": ["Group icons are optional", "그룹 아이콘을 선택 사항으로 변경했습니다", "群组图标改为可选", "群組圖示已改為選填", "ตั้งค่าไอคอนกลุ่มเป็นตัวเลือกแล้ว"],
+    "グループアイコンを変更しない場合は、選択せずに保存できます。": ["You can save without selecting an icon to keep the current one.", "아이콘을 선택하지 않고 저장하면 현재 아이콘이 유지됩니다.", "不选择图标直接保存即可保留当前图标。", "不選擇圖示直接儲存即可保留目前圖示。", "บันทึกได้โดยไม่เลือกไอคอน เพื่อคงไอคอนเดิมไว้"],
+    "旅行テーマの必須表示と複数選択案内を整理しました": ["Clarified required and multi-select labels for trip themes", "여행 테마의 필수 및 다중 선택 안내를 정리했습니다", "整理了旅行主题的必填和多选提示", "整理了旅遊主題的必填與多選提示", "ปรับป้ายกำกับธีมการเดินทางที่จำเป็นและเลือกได้หลายข้อ"],
+    "必須表示をテーマ名の下に置き、複数選択可の案内を右側に薄緑で表示します。": ["The required label appears below the theme name, with a pale green multi-select label beside it.", "필수 표시는 테마 이름 아래에, 다중 선택 안내는 오른쪽에 연한 녹색으로 표시합니다.", "必填提示显示在主题名称下方，多选提示以浅绿色显示在右侧。", "必填提示顯示於主題名稱下方，多選提示以淺綠色顯示於右側。", "ป้ายจำเป็นอยู่ใต้ชื่อธีม และป้ายเลือกหลายข้อสีเขียวอ่อนอยู่ด้านข้าง"],
+    "運営ホームのアカウント数から一覧を開けるようにしました": ["Account totals on the operations home now open their account lists", "운영 홈의 계정 수에서 계정 목록을 열 수 있습니다", "现在可从运营主页的账户数量打开账户列表", "現在可從營運首頁的帳戶數量開啟帳戶清單", "เปิดรายการบัญชีได้จากยอดบัญชีบนหน้าแรกผู้ดูแลแล้ว"],
+    "旅行者・事業者・運営アカウントの数をクリックすると、それぞれのアカウント一覧へ移動できます。": ["Select a traveler, business, or operator account count to open its account list.", "여행자·사업자·운영자 계정 수를 선택하면 해당 계정 목록이 열립니다.", "点击旅行者、商家或运营账户数量即可打开对应的账户列表。", "點選旅客、商家或營運帳戶數量即可開啟對應的帳戶清單。", "คลิกยอดบัญชีนักเดินทาง ผู้ประกอบการ หรือผู้ดูแลเพื่อเปิดรายการบัญชี"],
+  };
+  for (const [source, translations] of Object.entries(interfaceTranslations)) {
+    planUiLocales.forEach((locale, index) => { dictionaries[locale][source] = translations[index]; });
+  }
+  const screenTextTranslations = {
+    "プランを見る・変更する": ["View or edit plans", "계획 보기·수정", "查看或修改计划", "查看或修改計畫", "ดูหรือแก้ไขแผน"],
+    "旅のプラン": ["Travel plan", "여행 계획", "旅行计划", "旅遊計畫", "แผนการเดินทาง"],
+    "行き先や日程、好きなことを入力すると、AIが旅のたたき台を提案します。": ["Enter your destination, dates, and interests to get an AI trip draft.", "여행지, 일정, 관심사를 입력하면 AI가 여행 계획 초안을 제안합니다.", "输入目的地、日期和兴趣，AI将为您提供旅行计划草案。", "輸入目的地、日期和興趣，AI 將為您提供旅遊計畫草案。", "ระบุจุดหมาย วันที่ และสิ่งที่สนใจ เพื่อให้ AI ช่วยร่างแผนการเดินทาง"],
+    "できあがったプランも、希望に合わせて何度でも変更できます。": ["You can revise the finished plan as many times as you like.", "완성된 계획도 원하는 대로 여러 번 수정할 수 있습니다.", "您可以根据需要随时修改生成的计划。", "您可以依需求隨時修改產生的計畫。", "ปรับแผนที่สร้างเสร็จแล้วได้ตามต้องการ"],
+    "旅の条件を入力": ["Enter your trip details", "여행 조건 입력", "填写旅行条件", "輸入旅遊條件", "กรอกรายละเอียดการเดินทาง"],
+    "行き先・地域": ["Destination or region", "여행지·지역", "目的地或地区", "目的地或地區", "จุดหมายหรือภูมิภาค"],
+    "AIで旅プランを作る": ["Create an AI trip plan", "AI 여행 계획 만들기", "用 AI 创建旅行计划", "使用 AI 建立旅遊計畫", "สร้างแผนเที่ยวด้วย AI"],
+    "生成したプランはこの画面上で変更できます。保存機能はまだありません。": ["You can edit the generated plan here. Saving is not available yet.", "생성된 계획을 이 화면에서 수정할 수 있습니다. 저장 기능은 아직 없습니다.", "您可以在此页面修改生成的计划。目前无法保存。", "您可以在此頁面修改產生的計畫。目前無法儲存。", "แก้ไขแผนที่สร้างในหน้านี้ได้ ขณะนี้ยังไม่มีฟังก์ชันบันทึก"],
+    "このプランを変更する": ["Edit this plan", "이 계획 수정", "修改此计划", "修改此計畫", "แก้ไขแผนนี้"],
+    "希望を伝えてプランを変更": ["Tell us what to change", "원하는 변경 사항 입력", "说明希望如何修改", "說明希望如何修改", "แจ้งสิ่งที่ต้องการเปลี่ยน"],
+    "ここに旅のプランが届きます": ["Your trip plan will appear here", "여행 계획이 여기에 표시됩니다", "旅行计划会显示在这里", "旅遊計畫會顯示在這裡", "แผนการเดินทางจะแสดงที่นี่"],
+    "行き先や希望を入力して": ["Enter a destination and preferences", "여행지와 선호 사항 입력", "输入目的地和偏好", "輸入目的地與偏好", "ระบุจุดหมายและความต้องการ"],
+    "まずはプラン作成の基礎機能から": ["Start with the basics of trip planning", "여행 계획의 기본 기능부터 시작하세요", "先从基本的旅行计划功能开始", "先從基本的旅遊計畫功能開始", "เริ่มจากฟังก์ชันวางแผนการเดินทางพื้นฐาน"],
+    "ログイン、保存、地図、予約などは含めず、AIとのやりとりを試せる構成です。": ["This demo lets you try the AI planner without login, saving, maps, or bookings.", "로그인, 저장, 지도, 예약 없이 AI와 대화해 볼 수 있는 데모입니다.", "此演示可体验 AI 对话，不包含登录、保存、地图或预订功能。", "此示範可體驗 AI 對話，不包含登入、儲存、地圖或預訂功能。", "เดโมนี้ทดลองใช้ AI ได้โดยไม่มีระบบเข้าสู่ระบบ บันทึก แผนที่ หรือจอง"],
+    "行き先や希望を入力して": ["Enter your destination and preferences", "여행지와 선호 사항 입력", "输入目的地和偏好", "輸入目的地與偏好", "ระบุจุดหมายและความต้องการ"],
+    "（未読 ": [" (unread ", " (읽지 않음 ", "（未读 ", "（未讀 ", " (ยังไม่อ่าน "],
+    "未読コメント": ["Unread comments", "읽지 않은 댓글", "未读评论", "未讀留言", "ความคิดเห็นที่ยังไม่อ่าน"],
+    "旅行記を削除": ["Delete travel story", "여행기 삭제", "删除游记", "刪除遊記", "ลบบันทึกการเดินทาง"],
+    "口コミを削除": ["Delete review", "리뷰 삭제", "删除评论", "刪除評論", "ลบรีวิว"],
+    "閲覧：": ["Viewed: ", "열람: ", "浏览：", "瀏覽：", "ดูเมื่อ: "],
+    "この履歴を削除": ["Delete this history item", "이 기록 삭제", "删除此条记录", "刪除此筆記錄", "ลบประวัตินี้"],
+    "自分の投稿": ["My posts", "내 게시물", "我的帖子", "我的貼文", "โพสต์ของฉัน"],
+    "自分で旅程を作って旅行記にする": ["Create an itinerary and share it as a travel story", "직접 일정을 만들고 여행기로 공유", "自行创建行程并发布为游记", "自行建立行程並分享為遊記", "สร้างกำหนดการและแชร์เป็นบันทึกการเดินทาง"],
+    "目的地": ["Destination", "목적지", "目的地", "目的地", "จุดหมาย"],
+    "予算 ": ["Budget ", "예산 ", "预算 ", "預算 ", "งบประมาณ "],
+    "いいね": ["likes", "좋아요", "赞", "讚", "ถูกใจ"],
+    "回": ["views", "회", "次", "次", "ครั้ง"],
+    "旅行プランを自分で作る": ["Create a trip plan yourself", "직접 여행 계획 만들기", "自行创建旅行计划", "自行建立旅遊計畫", "สร้างแผนการเดินทางด้วยตนเอง"],
+    "行き先やスポットを自分で選んで、旅程を一から組み立てられます。保存後はしおりを整えて、旅行記としてほかの旅人に共有できます。": ["Choose your own destination and places, then build an itinerary from scratch. Save it, refine your guide, and share it as a travel story.", "여행지와 장소를 직접 골라 일정을 처음부터 만들 수 있습니다. 저장 후 여행기를 다듬어 다른 여행자와 공유하세요.", "自行选择目的地和景点，从头规划行程。保存后可完善旅行手册并分享为游记。", "自行選擇目的地與景點，從頭規劃行程。儲存後可完善旅遊手冊並分享為遊記。", "เลือกจุดหมายและสถานที่เอง วางแผนตั้งแต่ต้น บันทึกแล้วปรับคู่มือและแชร์เป็นบันทึกการเดินทางได้"],
+    "AIで作る": ["Create with AI", "AI로 만들기", "使用 AI 创建", "使用 AI 建立", "สร้างด้วย AI"],
+    "みんなの旅行記を見る": ["Browse travel stories", "여행기 보기", "浏览游记", "瀏覽遊記", "ดูบันทึกการเดินทาง"],
+    "この画面ではAIを使わずにプランを作成します。スポットの住所や営業時間は、保存後にしおり・地図で確認できます。": ["Create a plan here without AI. After saving, check place addresses and hours in the itinerary and map.", "이 화면에서는 AI 없이 계획을 만듭니다. 저장 후 일정표와 지도에서 장소 주소와 영업시간을 확인할 수 있습니다.", "此页面可不使用 AI 创建计划。保存后可在行程和地图中查看地点地址及营业时间。", "此頁面可不使用 AI 建立計畫。儲存後可在行程和地圖中查看地點地址及營業時間。", "สร้างแผนโดยไม่ใช้ AI ได้ ตรวจสอบที่อยู่และเวลาเปิดทำการในกำหนดการหรือแผนที่หลังบันทึก"],
+    "県名や市区町村を入れると、地図の場所探しに役立ちます。": ["Entering a prefecture or city helps locate places on the map.", "현이나 시·구·정·촌을 입력하면 지도에서 장소를 찾기 쉽습니다.", "输入都道府县或市区町村有助于在地图上查找地点。", "輸入都道府縣或市區町村有助於在地圖上尋找地點。", "การระบุจังหวัดหรือเมืองช่วยค้นหาสถานที่บนแผนที่"],
+    "今日以降の日付を選択してください。旅行は最大30日間です。": ["Choose today or a later date. Trips can be up to 30 days.", "오늘 이후 날짜를 선택하세요. 여행 기간은 최대 30일입니다.", "请选择今天或之后的日期，旅行最多为30天。", "請選擇今天或之後的日期，旅程最長為30天。", "เลือกวันที่ตั้งแต่วันนี้เป็นต้นไป ทริปยาวได้สูงสุด 30 วัน"],
+    "旅行日数": ["Trip length", "여행 일수", "旅行天数", "旅遊天數", "จำนวนวันเดินทาง"],
+    "予算（1人あたり・円）": ["Budget per person (JPY)", "예산 (1인당·엔)", "预算（每人・日元）", "預算（每人・日圓）", "งบประมาณต่อคน (เยน)"],
+    "旅の紹介（任意）": ["Trip introduction (optional)", "여행 소개 (선택)", "旅行介绍（选填）", "旅程介紹（選填）", "แนะนำการเดินทาง (ไม่บังคับ)"],
+    "旅行記に公開すると、プランの紹介として表示されます。": ["This appears as the plan introduction when shared as a travel story.", "여행기로 공개하면 계획 소개로 표시됩니다.", "发布为游记后，此内容会作为计划介绍显示。", "發布為遊記後，此內容會作為計畫介紹顯示。", "ข้อความนี้จะแสดงเป็นคำแนะนำแผนเมื่อเผยแพร่เป็นบันทึกการเดินทาง"],
+    "日ごとの旅程": ["Daily itinerary", "일별 일정", "每日行程", "每日行程", "กำหนดการรายวัน"],
+    "時間・スポット・種類・説明を入力します。各日に1件以上のスポットが必要です。": ["Enter a time, place, category, and description. Add at least one place per day.", "시간, 장소, 종류, 설명을 입력하세요. 매일 장소를 1개 이상 등록해야 합니다.", "填写时间、地点、类别和说明。每天至少添加一个地点。", "填寫時間、地點、類別與說明。每天至少新增一個地點。", "ระบุเวลา สถานที่ หมวดหมู่ และคำอธิบาย โดยเพิ่มอย่างน้อยวันละหนึ่งแห่ง"],
+    "この日のテーマ": ["Day theme", "오늘의 테마", "当日主题", "當日主題", "ธีมของวันนี้"],
+    "＋ スポットを追加": ["＋ Add a place", "＋ 장소 추가", "＋ 添加地点", "＋ 新增地點", "＋ เพิ่มสถานที่"],
+    "スポット名だけでも登録できます": ["You can add a place by name only.", "장소 이름만으로도 등록할 수 있습니다.", "仅填写地点名称也可以添加。", "只填寫地點名稱也可以新增。", "เพิ่มสถานที่โดยระบุชื่ออย่างเดียวได้"],
+    "時間（任意）": ["Time (optional)", "시간 (선택)", "时间（选填）", "時間（選填）", "เวลา (ไม่บังคับ)"],
+    "スポット名": ["Place name", "장소 이름", "地点名称", "地點名稱", "ชื่อสถานที่"],
+    "食事": ["Meal", "식사", "用餐", "用餐", "มื้ออาหาร"],
+    "自由時間": ["Free time", "자유 시간", "自由时间", "自由時間", "เวลาว่าง"],
+    "説明（任意）": ["Description (optional)", "설명 (선택)", "说明（选填）", "說明（選填）", "คำอธิบาย (ไม่บังคับ)"],
+    "このスポットを削除": ["Remove this place", "이 장소 삭제", "删除此地点", "刪除此地點", "ลบสถานที่นี้"],
+    "プランを保存してしおりを作る": ["Save plan and create itinerary", "계획을 저장하고 일정표 만들기", "保存计划并创建行程手册", "儲存計畫並建立旅遊手冊", "บันทึกแผนและสร้างคู่มือการเดินทาง"],
+    "自分でプランを作る": ["Create your own plan", "직접 계획 만들기", "自行创建计划", "自行建立計畫", "สร้างแผนเอง"],
+    "未定に戻す": ["Clear selection", "선택 해제", "清除选择", "清除選取", "ล้างการเลือก"],
+    "複数の都道府県を選べます（最大8県）。日数や移動距離に対して難しい場合は、AIが理由と現実的な代案を案内します。": ["Select multiple prefectures (up to 8). If the trip is impractical for the duration or distance, AI will explain why and suggest an alternative.", "여러 현을 선택할 수 있습니다(최대 8개). 기간이나 이동 거리에 비해 무리라면 AI가 이유와 현실적인 대안을 안내합니다.", "可选择多个都道府县（最多8个）。若行程时长或距离不合理，AI会说明原因并提供可行替代方案。", "可選擇多個都道府縣（最多8個）。若行程時間或距離不合理，AI會說明原因並提供可行替代方案。", "เลือกได้หลายจังหวัด (สูงสุด 8 แห่ง) หากระยะเวลาหรือระยะทางไม่เหมาะสม AI จะแจ้งเหตุผลและเสนอทางเลือกที่เป็นไปได้"],
+    "出発日と同じ日なら日帰りです。今日以降、最大30日間で指定できます。": ["Choose the same date for a day trip. Select dates from today up to 30 days ahead.", "출발일과 같은 날짜를 선택하면 당일 여행입니다. 오늘부터 최대 30일 이내로 지정할 수 있습니다.", "出发日与返程日相同即为一日游。可选择今天起30天内的日期。", "出發日與返程日相同即為一日遊。可選擇今天起30天內的日期。", "เลือกวันเดียวกันสำหรับไปเช้าเย็นกลับ ระบุวันที่ตั้งแต่วันนี้ถึง 30 วันข้างหน้าได้"],
+    "自分で作成": ["Create manually", "직접 만들기", "手动创建", "手動建立", "สร้างเอง"],
+    "AIプランを確認": ["View AI plan", "AI 계획 보기", "查看 AI 计划", "查看 AI 計畫", "ดูแผนจาก AI"],
+    "旅行者アカウント": ["Traveler accounts", "여행자 계정", "旅行者账户", "旅客帳戶", "บัญชีนักเดินทาง"],
+    "事業者アカウント": ["Business accounts", "사업자 계정", "商家账户", "商家帳戶", "บัญชีผู้ประกอบการ"],
+    "一覧を見る →": ["View list →", "목록 보기 →", "查看列表 →", "查看清單 →", "ดูรายการ →"],
+    "運営からの警告": ["Administrator warning", "운영자 경고", "管理员警告", "管理員警告", "คำเตือนจากผู้ดูแล"],
+    "グループ共有中": ["Shared with group", "그룹 공유 중", "正在群组共享", "正在群組分享", "แชร์กับกลุ่มแล้ว"],
+    "追加・チェック・削除した内容は、グループのメンバー全員に反映されます。": ["Items you add, check, or delete are updated for all group members.", "추가·체크·삭제한 내용은 그룹 구성원 모두에게 반영됩니다.", "添加、勾选或删除的内容会同步给所有群组成员。", "新增、勾選或刪除的內容會同步給所有群組成員。", "รายการที่เพิ่ม ทำเครื่องหมาย หรือลบจะอัปเดตให้สมาชิกทุกคน"],
+    "自分のプリセット": ["My presets", "내 프리셋", "我的预设", "我的預設", "พรีเซ็ตของฉัน"],
+    "保存したセットは、ほかの旅行の持ち物リストでも使えます。": ["Saved sets can be used on packing lists for other trips.", "저장한 세트는 다른 여행의 준비물 목록에서도 사용할 수 있습니다.", "保存的清单也可用于其他旅行的行李清单。", "儲存的清單也可用於其他旅程的行李清單。", "ชุดที่บันทึกไว้ใช้กับรายการสัมภาระของทริปอื่นได้"],
+    "プリセットはまだありません。下のチェックリストを整えて保存すると、次の旅行から使えます。": ["No presets yet. Organize and save the checklist below to use it on your next trip.", "아직 프리셋이 없습니다. 아래 체크리스트를 정리해 저장하면 다음 여행부터 사용할 수 있습니다.", "还没有预设。整理并保存下方清单后，即可用于下次旅行。", "尚無預設。整理並儲存下方清單後，即可用於下次旅程。", "ยังไม่มีพรีเซ็ต จัดรายการด้านล่างแล้วบันทึกเพื่อใช้กับทริปถัดไป"],
+    "今のリストをプリセットとして保存": ["Save current list as a preset", "현재 목록을 프리셋으로 저장", "将当前清单保存为预设", "將目前清單儲存為預設", "บันทึกรายการปัจจุบันเป็นพรีเซ็ต"],
+    "この内容を保存": ["Save this set", "이 내용 저장", "保存此内容", "儲存此內容", "บันทึกชุดนี้"],
+    "プリセットを作るには、先にこの旅行のチェックリストへ持ち物を追加してください。": ["Add items to this trip's checklist before creating a preset.", "프리셋을 만들기 전에 이 여행의 체크리스트에 준비물을 추가하세요.", "创建预设前，请先将物品添加到本次旅行的清单中。", "建立預設前，請先將物品新增至本次旅程的清單。", "เพิ่มสิ่งของลงในเช็กลิสต์ทริปนี้ก่อนสร้างพรีเซ็ต"],
+    "変更候補": ["Suggested changes", "변경 제안", "修改建议", "修改建議", "ข้อเสนอการเปลี่ยนแปลง"],
+    "予算を抑える": ["Lower the budget", "예산 줄이기", "降低预算", "降低預算", "ลดงบประมาณ"],
+    "予算内にする": ["Stay within budget", "예산 내로 조정", "控制在预算内", "控制在預算內", "ให้อยู่ในงบประมาณ"],
+    "体験を充実": ["Enhance experiences", "체험 강화", "丰富体验", "豐富體驗", "เพิ่มประสบการณ์"],
+    "候補を押すと変更内容に追加されます。送信する前に文章を編集できます。": ["Selecting a suggestion adds it to your request. You can edit the text before submitting.", "제안을 선택하면 요청에 추가됩니다. 보내기 전에 문구를 수정할 수 있습니다.", "选择建议后会添加到修改内容中，提交前可以编辑文字。", "選擇建議後會新增至修改內容中，送出前可以編輯文字。", "เมื่อเลือกข้อเสนอจะเพิ่มลงในคำขอ และแก้ไขข้อความก่อนส่งได้"],
+    "旅のメモ・予算": ["Trip notes and budget", "여행 메모·예산", "旅行备忘与预算", "旅程備忘與預算", "บันทึกและงบประมาณการเดินทาง"],
+    "旅のメモや予算の目安を表示します。": ["Trip notes and estimated costs appear here.", "여행 메모와 예상 비용이 여기에 표시됩니다.", "旅行备忘和费用估算会显示在这里。", "旅程備忘與費用估算會顯示在這裡。", "บันทึกการเดินทางและค่าใช้จ่ายโดยประมาณจะแสดงที่นี่"],
+    "事業者を通報": ["Report business", "사업자 신고", "举报商家", "檢舉商家", "รายงานผู้ประกอบการ"],
+    "投稿者を通報": ["Report author", "작성자 신고", "举报发布者", "檢舉發文者", "รายงานผู้โพสต์"],
+    "通報": ["Report", "신고", "举报", "檢舉", "รายงาน"],
+    "登録済みのメールアドレスの場合、再設定リンクをメールで送信します。": ["If the email is registered, we will send a password reset link.", "등록된 이메일 주소라면 비밀번호 재설정 링크를 보내드립니다.", "如果该邮箱已注册，我们会发送密码重置链接。", "若此電子郵件已註冊，我們會寄送密碼重設連結。", "หากอีเมลนี้ลงทะเบียนไว้ เราจะส่งลิงก์รีเซ็ตรหัสผ่านให้"],
+  };
+  for (const [source, translations] of Object.entries(screenTextTranslations)) {
+    planUiLocales.forEach((locale, index) => { dictionaries[locale][source] = translations[index]; });
+  }
+  const dynamicUiTranslations = {
+    "画面切り替え後も翻訳が保たれるよう改善しました": ["Improved translation persistence after switching screens", "화면 전환 후에도 번역이 유지되도록 개선했습니다", "改进了切换页面后的翻译保持", "改善了切換頁面後的翻譯維持", "ปรับปรุงให้การแปลคงอยู่หลังเปลี่ยนหน้า"],
+    "動的に変わる画面表示の翻訳処理を見直し、固定メッセージやエラー画面の翻訳を追加しました。": ["Improved translations for dynamic screen updates and added translations for fixed messages and error pages.", "동적으로 바뀌는 화면 번역을 개선하고 고정 메시지와 오류 페이지 번역을 추가했습니다.", "改进了动态页面内容的翻译，并补充了固定提示和错误页面的翻译。", "改善了動態頁面內容的翻譯，並補上固定提示與錯誤頁面的翻譯。", "ปรับปรุงการแปลเมื่อเนื้อหาหน้าเปลี่ยน และเพิ่มคำแปลสำหรับข้อความกับหน้าแสดงข้อผิดพลาด"],
+    "画面を移動しても選択した言語が保たれるようにし、旅行者・事業者・運営者のアカウント名は翻訳しないようにしました。": ["The selected language now persists when navigating between pages, and traveler, business, and operator account names are no longer translated.", "페이지 이동 후에도 선택한 언어가 유지되며 여행자·사업자·운영자 계정 이름은 번역되지 않습니다.", "切换页面后仍会保留所选语言，且不再翻译旅行者、商家和运营者的账户名称。", "切換頁面後仍會保留所選語言，且不再翻譯旅人、商家與管理員的帳戶名稱。", "ภาษาที่เลือกจะคงอยู่เมื่อเปลี่ยนหน้า และจะไม่แปลชื่อบัญชีของนักเดินทาง ผู้ประกอบการ หรือผู้ดูแล"],
+    "未定（都道府県を選択）": ["Undecided (select prefectures)", "미정 (현 선택)", "未定（选择都道府县）", "未定（選擇都道府縣）", "ยังไม่กำหนด (เลือกจังหวัด)"],
+    "スポット変更": ["Change place", "장소 변경", "更换地点", "更換地點", "เปลี่ยนสถานที่"],
+    "保存": ["Save", "저장", "保存", "儲存", "บันทึก"],
+    "口コミ情報：口コミなし": ["Reviews: none yet", "리뷰 정보: 리뷰 없음", "评论信息：暂无评论", "評論資訊：尚無評論", "รีวิว: ยังไม่มี"],
+    "変更後のスポット名": ["New place name", "변경할 장소 이름", "更改后的地点名称", "變更後的地點名稱", "ชื่อสถานที่ใหม่"],
+    "変更後のスポット説明": ["New place description", "변경할 장소 설명", "更改后的地点说明", "變更後的地點說明", "คำอธิบายสถานที่ใหม่"],
+    "チャットに接続できません。通信状態を確認しています…": ["Unable to connect to chat. Checking your connection…", "채팅에 연결할 수 없습니다. 연결 상태를 확인 중입니다…", "无法连接聊天，正在检查网络…", "無法連線至聊天，正在檢查網路…", "เชื่อมต่อแชตไม่ได้ กำลังตรวจสอบเครือข่าย…"],
+    "メッセージをコピーしました。": ["Message copied.", "메시지를 복사했습니다.", "已复制消息。", "已複製訊息。", "คัดลอกข้อความแล้ว"],
+    "入力したグループ名が一致しません。名前を確認してください。": ["The group name does not match. Check the name and try again.", "입력한 그룹 이름이 일치하지 않습니다. 이름을 확인해 주세요.", "输入的群组名称不匹配，请确认名称。", "輸入的群組名稱不符，請確認名稱。", "ชื่อกลุ่มที่กรอกไม่ตรงกัน โปรดตรวจสอบชื่ออีกครั้ง"],
+    "地図とプラン内の場所を読み込んでいます…": ["Loading the map and places in your plan…", "지도와 계획의 장소를 불러오는 중…", "正在加载地图和计划中的地点…", "正在載入地圖與計畫中的地點…", "กำลังโหลดแผนที่และสถานที่ในแผน…"],
+    "実際の運行状況・通行状況もご確認ください。": ["Please also check current transit and road conditions.", "실제 운행 및 도로 상황도 확인해 주세요.", "请同时确认实际运营及道路状况。", "請同時確認實際營運與道路狀況。", "โปรดตรวจสอบสถานะการเดินรถและสภาพถนนจริงด้วย"],
+    "ルートを計算しています…": ["Calculating route…", "경로 계산 중…", "正在计算路线…", "正在計算路線…", "กำลังคำนวณเส้นทาง…"],
+    "ルート計算は先頭8地点まで使います。": ["Route calculation uses the first 8 places.", "경로 계산에는 처음 8곳까지 사용합니다.", "路线计算最多使用前8个地点。", "路線計算最多使用前8個地點。", "การคำนวณเส้นทางใช้สถานที่ 8 แห่งแรก"],
+    "未確認": ["Unverified", "미확인", "未确认", "未確認", "ยังไม่ยืนยัน"],
+    "相談する旅行プランを選択してください。": ["Select a trip plan to discuss.", "상담할 여행 계획을 선택하세요.", "请选择要咨询的旅行计划。", "請選擇要諮詢的旅遊計畫。", "เลือกแผนการเดินทางที่ต้องการปรึกษา"],
+    "プランを選ぶと、ここに内容が表示されます。": ["Select a plan to see its details here.", "계획을 선택하면 여기에 내용이 표시됩니다.", "选择计划后，内容会显示在这里。", "選擇計畫後，內容會顯示在這裡。", "เลือกแผนเพื่อดูรายละเอียดที่นี่"],
+    "メインナビゲーション": ["Main navigation", "주요 메뉴", "主导航", "主導覽", "เมนูหลัก"],
+    "新着コメント": ["New comments", "새 댓글", "新评论", "新留言", "ความคิดเห็นใหม่"],
+    "未読のお知らせ": ["Unread announcements", "읽지 않은 공지", "未读通知", "未讀公告", "ประกาศที่ยังไม่อ่าน"],
+    "ユーザー名を入力": ["Enter a username", "사용자 이름 입력", "输入用户名", "輸入使用者名稱", "กรอกชื่อผู้ใช้"],
+    "お知らせ一覧": ["Announcements", "공지 목록", "通知列表", "公告清單", "รายการประกาศ"],
+    "閲覧履歴の種類": ["History type", "기록 유형", "历史记录类型", "歷史記錄類型", "ประเภทประวัติ"],
+    "旅行記の切り替え": ["Travel story navigation", "여행기 이동", "游记导航", "遊記導覽", "การนำทางบันทึกการเดินทาง"],
+    "自分の投稿を追加": ["Add my post", "내 게시물 추가", "添加我的帖子", "新增我的貼文", "เพิ่มโพสต์ของฉัน"],
+    "現在の画像を使う": ["Use current image", "현재 이미지 사용", "使用当前图片", "使用目前圖片", "ใช้รูปภาพปัจจุบัน"],
+    "ページ移動": ["Pagination", "페이지 이동", "分页", "分頁", "การแบ่งหน้า"],
+    "グループメニュー": ["Group menu", "그룹 메뉴", "群组菜单", "群組選單", "เมนูกลุ่ม"],
+    "グループ参加用QRコード": ["Group invitation QR code", "그룹 초대 QR 코드", "群组加入二维码", "群組加入 QR 碼", "QR code สำหรับเข้าร่วมกลุ่ม"],
+    "グループ予算の使用状況": ["Group budget usage", "그룹 예산 사용 현황", "群组预算使用情况", "群組預算使用情況", "การใช้งบประมาณกลุ่ม"],
+    "例：温泉旅行セット": ["e.g. Hot spring trip", "예: 온천 여행 세트", "例如：温泉旅行套装", "例如：溫泉旅行組合", "เช่น ทริปบ่อน้ำพุร้อน"],
+    "＋ AIで作成": ["＋ Create with AI", "＋ AI로 만들기", "＋ 使用 AI 创建", "＋ 使用 AI 建立", "＋ สร้างด้วย AI"],
+    "質問例": ["Example questions", "질문 예시", "问题示例", "問題範例", "ตัวอย่างคำถาม"],    "例：金沢の街と旬の味を楽しむ旅": ["e.g. Enjoy Kanazawa and seasonal cuisine", "예: 가나자와 거리와 제철 요리를 즐기는 여행", "例如：畅游金泽街区，品尝时令美食", "例如：暢遊金澤街區，品嚐時令美食", "เช่น เที่ยวเมืองคานาซาวะและลิ้มลองอาหารตามฤดูกาล"],
+    "例：石川県金沢市": ["e.g. Kanazawa, Ishikawa", "예: 이시카와현 가나자와시", "例如：石川县金泽市", "例如：石川縣金澤市", "เช่น เมืองคานาซาวะ จังหวัดอิชิคาวะ"],
+    "例：50000": ["e.g. 50000", "예: 50000", "例如：50000", "例如：50000", "เช่น 50000"],
+    "例：兼六園と金沢城をめぐる": ["e.g. Visit Kenrokuen Garden and Kanazawa Castle", "예: 겐로쿠엔과 가나자와성 둘러보기", "例如：游览兼六园和金泽城", "例如：遊覽兼六園與金澤城", "เช่น เที่ยวสวนเค็นโรคุเอ็นและปราสาทคานาซาวะ"],
+    "例：兼六園": ["e.g. Kenrokuen Garden", "예: 겐로쿠엔", "例如：兼六园", "例如：兼六園", "เช่น สวนเค็นโรคุเอ็น"],
+    "都道府県を検索": ["Search prefectures", "도도부현 검색", "搜索都道府县", "搜尋都道府縣", "ค้นหาจังหวัด"],
+    "北海道を選んでプランを作る": ["Create a Hokkaido plan", "홋카이도 여행 계획 만들기", "创建北海道旅行计划", "建立北海道旅遊計畫", "สร้างแผนเที่ยวฮอกไกโด"],
+    "京都府を選んでプランを作る": ["Create a Kyoto plan", "교토 여행 계획 만들기", "创建京都旅行计划", "建立京都旅遊計畫", "สร้างแผนเที่ยวเกียวโต"],
+    "大阪府を選んでプランを作る": ["Create an Osaka plan", "오사카 여행 계획 만들기", "创建大阪旅行计划", "建立大阪旅遊計畫", "สร้างแผนเที่ยวโอซากะ"],
+    "沖縄県を選んでプランを作る": ["Create an Okinawa plan", "오키나와 여행 계획 만들기", "创建冲绳旅行计划", "建立沖繩旅遊計畫", "สร้างแผนเที่ยวโอกินาวะ"],
+    "山梨県を選んでプランを作る": ["Create a Yamanashi plan", "야마나시 여행 계획 만들기", "创建山梨旅行计划", "建立山梨旅遊計畫", "สร้างแผนเที่ยวยามานาชิ"],
+    "広島県を選んでプランを作る": ["Create a Hiroshima plan", "히로시마 여행 계획 만들기", "创建广岛旅行计划", "建立廣島旅遊計畫", "สร้างแผนเที่ยวฮิโรชิมะ"],
+    "パスワードを隠す": ["Hide password", "비밀번호 숨기기", "隐藏密码", "隱藏密碼", "ซ่อนรหัสผ่าน"],
+  };
+  for (const [source, translations] of Object.entries(dynamicUiTranslations)) {
+    planUiLocales.forEach((locale, index) => { dictionaries[locale][source] = translations[index]; });
+  }
   const prefectures = {
     "北海道":"Hokkaido","青森県":"Aomori","岩手県":"Iwate","宮城県":"Miyagi","秋田県":"Akita","山形県":"Yamagata","福島県":"Fukushima","茨城県":"Ibaraki","栃木県":"Tochigi","群馬県":"Gunma","埼玉県":"Saitama","千葉県":"Chiba","東京都":"Tokyo","神奈川県":"Kanagawa","新潟県":"Niigata","富山県":"Toyama","石川県":"Ishikawa","福井県":"Fukui","山梨県":"Yamanashi","長野県":"Nagano","岐阜県":"Gifu","静岡県":"Shizuoka","愛知県":"Aichi","三重県":"Mie","滋賀県":"Shiga","京都府":"Kyoto","大阪府":"Osaka","兵庫県":"Hyogo","奈良県":"Nara","和歌山県":"Wakayama","鳥取県":"Tottori","島根県":"Shimane","岡山県":"Okayama","広島県":"Hiroshima","山口県":"Yamaguchi","徳島県":"Tokushima","香川県":"Kagawa","愛媛県":"Ehime","高知県":"Kochi","福岡県":"Fukuoka","佐賀県":"Saga","長崎県":"Nagasaki","熊本県":"Kumamoto","大分県":"Oita","宮崎県":"Miyazaki","鹿児島県":"Kagoshima","沖縄県":"Okinawa"
   };
@@ -1327,6 +1508,33 @@
       .sort((a, b) => b.length - a.length),
   ]));
 
+  // Keep the original Japanese source when page scripts update text that is currently translated.
+  // Without this reverse lookup, a later render can mistake an English/Korean label for its source.
+  const uniqueReverse = Object.fromEntries(Object.entries(dictionaries).map(([locale, dict]) => {
+    const candidates = new Map();
+    for (const [source, destination] of Object.entries(dict)) {
+      if (typeof destination !== "string" || !destination || destination === source) continue;
+      const existing = candidates.get(destination);
+      candidates.set(destination, existing === undefined ? source : null);
+    }
+    const exact = Object.fromEntries([...candidates].filter(([, source]) => source));
+    const parts = Object.entries(exact)
+      .filter(([destination]) => destination.length >= 3)
+      .sort(([a], [b]) => b.length - a.length);
+    return [locale, { exact, parts }];
+  }));
+
+  function restoreSourceText(text, locale) {
+    if (!text || locale === "ja") return text;
+    const reverse = uniqueReverse[locale];
+    if (!reverse) return text;
+    if (reverse.exact[text] !== undefined) return reverse.exact[text];
+    let restored = text;
+    for (const [destination, source] of reverse.parts) {
+      if (restored.includes(destination)) restored = restored.replaceAll(destination, source);
+    }
+    return restored;
+  }
   function translated(text, locale) {
     const dict = dictionaries[locale] || {};
     if (dict[text] !== undefined) return dict[text];
@@ -1462,6 +1670,15 @@
       if (locale === "zh-CN") return `删除${place}`;
       if (locale === "zh-TW") return `移除 ${place}`;
       if (locale === "th") return `ลบ ${place}`;
+    }
+    const unreadItemCount = text.match(/^未読\s*(\d+)件$/);
+    if (unreadItemCount) {
+      const count = unreadItemCount[1];
+      if (locale === "en") return `${count} unread`;
+      if (locale === "ko") return `읽지 않음 ${count}개`;
+      if (locale === "zh-CN") return `未读 ${count} 条`;
+      if (locale === "zh-TW") return `未讀 ${count} 則`;
+      if (locale === "th") return `ยังไม่อ่าน ${count} รายการ`;
     }
     const unreadNotificationCount = text.match(/^未読通知\s*(\d+)件$/);
     if (unreadNotificationCount) {
@@ -1710,7 +1927,8 @@
       if (locale === "zh-CN") return `（未读 ${count} 条）`;
       if (locale === "zh-TW") return `（未讀 ${count} 則）`;
       if (locale === "th") return `(ยังไม่อ่าน ${count} รายการ)`;
-    }    const rejoinWindow = text.match(/^再申請は1時間に1回できます。次回の申請可能時刻：\s*(.+?)頃$/);
+    }
+    const rejoinWindow = text.match(/^再申請は1時間に1回できます。次回の申請可能時刻：\s*(.+?)頃$/);
     if (rejoinWindow) {
       const time = rejoinWindow[1];
       if (locale === "en") return `You can request to rejoin once every hour. Next request available around ${time}.`;
@@ -1738,6 +1956,15 @@
       if (locale === "zh-TW") return `超出預算 ¥${amount}`;
       if (locale === "th") return `เกินงบ ¥${amount}`;
     }
+    const photoLimits = text.match(/^JPG、PNG、GIF、WebP／1枚5MBまで・合計(\d+)枚まで$/);
+    if (photoLimits) {
+      const count = photoLimits[1];
+      if (locale === "en") return `JPG, PNG, GIF, or WebP · up to 5 MB each · ${count} photos total`;
+      if (locale === "ko") return `JPG, PNG, GIF, WebP · 사진당 최대 5MB · 총 ${count}장`;
+      if (locale === "zh-CN") return `JPG、PNG、GIF、WebP · 每张最多5MB · 共${count}张`;
+      if (locale === "zh-TW") return `JPG、PNG、GIF、WebP · 每張最多5MB · 共 ${count} 張`;
+      if (locale === "th") return `JPG, PNG, GIF หรือ WebP · ไม่เกิน 5MB ต่อภาพ · รวม ${count} ภาพ`;
+    }
     const photoCount = text.match(/^店の写真を追加（あと(\d+)枚）$/);
     if (photoCount) {
       const count = photoCount[1];
@@ -1763,6 +1990,87 @@
       if (locale === "zh-CN") return `${days[1]}天 · ${days[2]}人 · 预算 ¥${days[3]}`;
       if (locale === "zh-TW") return `${days[1]}天 · ${days[2]}人 · 預算 ¥${days[3]}`;
       if (locale === "th") return `${days[1]} วัน · ${days[2]} คน · งบ ¥${days[3]}`;
+    }
+    const tripDaysBadge = text.match(/^▦\s*(\d+)日間$/);
+    if (tripDaysBadge) {
+      const n = tripDaysBadge[1];
+      if (locale === "en") return `▦ ${n} days`;
+      if (locale === "ko") return `▦ ${n}일`;
+      if (locale === "zh-CN") return `▦ ${n}天`;
+      if (locale === "zh-TW") return `▦ ${n}天`;
+      if (locale === "th") return `▦ ${n} วัน`;
+    }
+    const peopleBadge = text.match(/^♙\s*(\d+)名$/);
+    if (peopleBadge) {
+      const n = peopleBadge[1];
+      if (locale === "en") return `♙ ${n} people`;
+      if (locale === "ko") return `♙ ${n}명`;
+      if (locale === "zh-CN" || locale === "zh-TW") return `♙ ${n}人`;
+      if (locale === "th") return `♙ ${n} คน`;
+    }
+    const likesBadge = text.match(/^♥\s*(\d+)\s*いいね$/);
+    if (likesBadge) {
+      const n = likesBadge[1];
+      if (locale === "en") return `♥ ${n} likes`;
+      if (locale === "ko") return `♥ 좋아요 ${n}`;
+      if (locale === "zh-CN") return `♥ ${n}赞`;
+      if (locale === "zh-TW") return `♥ ${n}讚`;
+      if (locale === "th") return `♥ ถูกใจ ${n}`;
+    }
+    const viewsBadge = text.match(/^👁\s*(\d+)回$/);
+    if (viewsBadge) {
+      const n = viewsBadge[1];
+      if (locale === "en") return `👁 ${n} views`;
+      if (locale === "ko") return `👁 ${n}회 조회`;
+      if (locale === "zh-CN") return `👁 浏览 ${n} 次`;
+      if (locale === "zh-TW") return `👁 瀏覽 ${n} 次`;
+      if (locale === "th") return `👁 ดู ${n} ครั้ง`;
+    }
+    const dayPlan = text.match(/^(\d+)日目の予定$/);
+    if (dayPlan) {
+      const n = dayPlan[1];
+      if (locale === "en") return `Day ${n} itinerary`;
+      if (locale === "ko") return `${n}일 차 일정`;
+      if (locale === "zh-CN") return `第${n}天行程`;
+      if (locale === "zh-TW") return `第${n}天行程`;
+      if (locale === "th") return `กำหนดการวันที่ ${n}`;
+    }
+    const dayNumber = text.match(/^旅行 (\d+) 日目$/);
+    if (dayNumber) {
+      const n = dayNumber[1];
+      if (locale === "en") return `Trip day ${n}`;
+      if (locale === "ko") return `여행 ${n}일 차`;
+      if (locale === "zh-CN") return `旅行第${n}天`;
+      if (locale === "zh-TW") return `旅程第${n}天`;
+      if (locale === "th") return `วันที่ ${n} ของการเดินทาง`;
+    }
+    const dayOnly = text.match(/^(\d+)日目$/);
+    if (dayOnly) {
+      const n = dayOnly[1];
+      if (locale === "en") return `Day ${n}`;
+      if (locale === "ko") return `${n}일 차`;
+      if (locale === "zh-CN") return `第${n}天`;
+      if (locale === "zh-TW") return `第${n}天`;
+      if (locale === "th") return `วันที่ ${n}`;
+    }
+    const prefectureCount = text.match(/^(\d+)県$/);
+    if (prefectureCount) {
+      const n = prefectureCount[1];
+      if (locale === "en") return `${n} prefectures`;
+      if (locale === "ko") return `${n}개 현`;
+      if (locale === "zh-CN") return `${n}个都道府县`;
+      if (locale === "zh-TW") return `${n}個都道府縣`;
+      if (locale === "th") return `${n} จังหวัด`;
+    }
+    const unreadLabel = text.match(/^未読(通知|メッセージ|コメント)\s*(\d+)件$/);
+    if (unreadLabel) {
+      const [, kind, count] = unreadLabel;
+      const label = kind === "通知" ? ["notifications", "알림", "条通知", "則通知", "การแจ้งเตือน"] : kind === "コメント" ? ["comments", "댓글", "条评论", "則留言", "ความคิดเห็น"] : ["messages", "메시지", "条消息", "則訊息", "ข้อความ"];
+      if (locale === "en") return `${count} unread ${label[0]}`;
+      if (locale === "ko") return `읽지 않은 ${label[1]} ${count}개`;
+      if (locale === "zh-CN") return `${count}${label[2]}未读`;
+      if (locale === "zh-TW") return `${count}${label[3]}未讀`;
+      if (locale === "th") return `ยังไม่อ่าน ${count} ${label[4]}`;
     }
     // Text nodes often combine a fixed label with a dynamic value (for example,
     // a destination and a trip title). Translate known phrases inside the node too.
@@ -1804,8 +2112,8 @@
       const parent = node.parentElement;
       if (!parent || parent.closest("script,style,textarea,[data-no-translate],[aria-hidden='true'],.avatar,.prose")) continue;
       const current = node.nodeValue;
-      if (!originals.has(node)) originals.set(node, current);
-      else if (lastTranslations.has(node) && current !== lastTranslations.get(node)) originals.set(node, current);
+      if (!originals.has(node)) originals.set(node, restoreSourceText(current, locale));
+      else if (lastTranslations.has(node) && current !== lastTranslations.get(node)) originals.set(node, restoreSourceText(current, locale));
       const original = originals.get(node);
       const leading = original.match(/^\s*/)?.[0] || "";
       const trailing = original.match(/\s*$/)?.[0] || "";
@@ -1823,7 +2131,7 @@
         let last = lastAttributeTranslations.get(element);
         if (!last) { last = {}; lastAttributeTranslations.set(element, last); }
         const current = element.getAttribute(attr);
-        if (saved[attr] === undefined || (last[attr] !== undefined && current !== last[attr])) saved[attr] = current;
+        if (saved[attr] === undefined || (last[attr] !== undefined && current !== last[attr])) saved[attr] = restoreSourceText(current, locale);
         const next = translated(saved[attr], locale);
         last[attr] = next;
         if (current !== next) element.setAttribute(attr, next);
@@ -1853,17 +2161,22 @@
     // Translate controls and labels inserted or replaced by page scripts.
     translationObserver = new MutationObserver((records) => {
       const locale = savedLocale();
+      const roots = new Set();
       records.forEach((record) => {
         if (record.type === "characterData") {
-          translateSubtree(record.target.parentElement, locale);
+          if (record.target.parentElement) roots.add(record.target.parentElement);
         } else if (record.type === "attributes") {
-          translateSubtree(record.target, locale);
+          roots.add(record.target);
         } else {
           record.addedNodes.forEach((node) => {
-            if (node.nodeType === Node.TEXT_NODE) translateSubtree(node.parentElement, locale);
-            else if (node.nodeType === Node.ELEMENT_NODE) translateSubtree(node, locale);
+            if (node.nodeType === Node.TEXT_NODE && node.parentElement) roots.add(node.parentElement);
+            else if (node.nodeType === Node.ELEMENT_NODE) roots.add(node);
           });
         }
+      });
+      const candidates = [...roots];
+      candidates.forEach((root) => {
+        if (!candidates.some((other) => other !== root && other.contains(root))) translateSubtree(root, locale);
       });
     });
     translationObserver.observe(document.body, { childList: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "aria-label", "title", "alt", "data-prompt", "value"], subtree: true });
@@ -1877,6 +2190,8 @@
 
   // Browsers may restore a previous page from the back/forward cache without
   // firing DOMContentLoaded. Re-apply the saved language whenever that happens.
+  window.TabideaI18n = Object.freeze({ translate: (text, locale = savedLocale()) => translated(String(text), locale), applyLanguage });
+
   window.addEventListener("pageshow", () => {
     if (!initialized) initializeTranslations();
     else applyLanguage(savedLocale());

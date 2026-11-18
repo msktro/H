@@ -271,12 +271,54 @@
     copyOption.hidden = false;
     reactionMenu.classList.toggle("is-own-menu", isOwnMessage);
     reactionMenu.hidden = false;
-    const left = Math.max(8, Math.min(x, window.innerWidth - 220));
-    const top = Math.max(8, Math.min(y, window.innerHeight - 64));
+    const menuWidth = reactionMenu.offsetWidth || 230;
+    const menuHeight = reactionMenu.offsetHeight || 320;
+    const left = Math.max(8, Math.min(x, window.innerWidth - menuWidth - 8));
+    const top = Math.max(8, Math.min(y, window.innerHeight - menuHeight - 8));
     reactionMenu.style.left = `${left}px`;
     reactionMenu.style.top = `${top}px`;
     reactionMenu.querySelector("button:not([hidden])")?.focus();
   }
+
+  let longPressTimer = null;
+  let longPressPointer = null;
+  const cancelLongPress = () => {
+    if (longPressTimer !== null) window.clearTimeout(longPressTimer);
+    longPressTimer = null;
+    longPressPointer = null;
+  };
+
+  list.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch" || event.button !== 0) return;
+    const article = event.target.closest(".chat-message");
+    if (!article || article.dataset.deleted === "true") return;
+    cancelLongPress();
+    longPressPointer = {
+      id: event.pointerId,
+      article,
+      x: event.clientX,
+      y: event.clientY,
+    };
+    longPressTimer = window.setTimeout(() => {
+      const target = longPressPointer;
+      longPressTimer = null;
+      if (!target || target.article.dataset.deleted === "true") return;
+      const isOwnMessage = Number(target.article.dataset.userId) === Number(root.dataset.userId);
+      openReactionMenu(target.article.dataset.messageId, target.x, target.y, isOwnMessage);
+    }, 500);
+  });
+
+  list.addEventListener("pointermove", (event) => {
+    if (!longPressPointer || event.pointerId !== longPressPointer.id) return;
+    if (Math.hypot(event.clientX - longPressPointer.x, event.clientY - longPressPointer.y) > 12) {
+      cancelLongPress();
+    }
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+    list.addEventListener(eventName, (event) => {
+      if (!longPressPointer || event.pointerId === longPressPointer.id) cancelLongPress();
+    });
+  });
 
   list.addEventListener("contextmenu", (event) => {
     const article = event.target.closest(".chat-message");

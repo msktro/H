@@ -1,4 +1,5 @@
 (() => {
+  const localizeMessage = (message) => window.TabideaI18n?.translate(message) || message;
   const markRequired = (root = document) => {
     root.querySelectorAll('input[required], select[required], textarea[required]').forEach((field) => {
       const label = field.id ? root.querySelector(`label[for="${CSS.escape(field.id)}"]`) : field.closest('label');
@@ -16,7 +17,7 @@
       const inactive = Boolean(group.closest('[hidden]'));
       const selected = boxes.some((box) => box.checked);
       boxes[0].setCustomValidity(!inactive && !selected
-        ? (group.dataset.validationMessage || '1つ以上選択してください。')
+        ? localizeMessage(group.dataset.validationMessage || '1つ以上選択してください。')
         : '');
       boxes.forEach((box) => {
         if (box.dataset.requiredGroupBound) return;
@@ -28,7 +29,7 @@
       const other = document.getElementById(field.dataset.matchField);
       if (!other) return;
       field.setCustomValidity(field.value && other.value && field.value !== other.value
-        ? (field.dataset.matchMessage || '入力内容が一致しません。')
+        ? localizeMessage(field.dataset.matchMessage || '入力内容が一致しません。')
         : '');
       if (field.dataset.matchBound) return;
       field.dataset.matchBound = 'true';
@@ -41,7 +42,7 @@
       const min = Number(field.dataset.lengthMin || 0);
       const max = Number(field.dataset.lengthMax || Number.MAX_SAFE_INTEGER);
       const invalid = valueLength > 0 && (valueLength < min || valueLength > max);
-      field.setCustomValidity(invalid ? (field.dataset.lengthMessage || '入力文字数を確認してください。') : '');
+      field.setCustomValidity(invalid ? localizeMessage(field.dataset.lengthMessage || '入力文字数を確認してください。') : '');
       if (field.dataset.lengthBound) return;
       field.dataset.lengthBound = 'true';
       field.addEventListener('input', () => markRequired(document));
@@ -93,8 +94,10 @@
     } catch (_) { sessionStorage.removeItem(key); }
   };
   restore(); markRequired();
+  document.addEventListener('tabidea:language-changed', () => markRequired(document));
   document.querySelectorAll('input[data-report-validity="true"]').forEach((field) => {
-    window.setTimeout(() => { field.focus({ preventScroll: false }); field.reportValidity(); }, 0);
+    window.setTimeout(() => {
+  field.focus({ preventScroll: false }); field.reportValidity(); }, 0);
   });
   document.querySelectorAll('form').forEach((form, formIndex) => form.addEventListener('submit', () => {
     if (form.dataset.noPersist === 'true') return;

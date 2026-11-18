@@ -5,7 +5,7 @@
 .itinerary-cover h2{font-family:Georgia,"Yu Mincho",serif;font-size:clamp(25px,3vw,34px);letter-spacing:.08em;margin:9px 0 4px}
 .itinerary-cover p{max-width:540px;margin:0;color:#e7f5ed;line-height:1.8;font-size:14px}
 .itinerary-stamps{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.itinerary-stamps span{display:inline-flex;padding:6px 11px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff17;font-size:12px;font-weight:700}
+.itinerary-stamps>span{display:inline-flex;padding:6px 11px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff17;font-size:12px;font-weight:700}
 .itinerary-body{padding:22px clamp(16px,3vw,30px) 28px;background:radial-gradient(#e9dfc9 0.8px,transparent .8px);background-size:17px 17px}
 .itinerary-intro,.itinerary-note{padding:16px 18px;margin:0 0 15px;background:#fff;border:1px solid #eee7d9;border-radius:14px;line-height:1.9;color:#465c53}
 .itinerary-intro h3,.itinerary-note h3,.itinerary-note h4{font-size:15px;color:#176957;margin:0 0 9px}
@@ -38,7 +38,7 @@
 .itinerary-source{display:none}
 .itinerary-card>.notice{margin:0 18px 18px}
 @media(min-width:760px){.itinerary-day{padding:21px 22px 20px 28px}.itinerary-day-head h3{font-size:22px}}
-@media(max-width:520px){.itinerary-cover{padding:24px 20px}.itinerary-cover:after{right:12px;top:10px;font-size:60px}.itinerary-stamps{gap:6px}.itinerary-stamps span{font-size:11px;padding:5px 9px}.itinerary-body{padding:15px 12px 20px}.itinerary-day{padding:15px 12px}.itinerary-day-head h3{font-size:17px}.itinerary-period{padding:11px 10px}}
+@media(max-width:520px){.itinerary-cover{padding:24px 20px}.itinerary-cover:after{right:12px;top:10px;font-size:60px}.itinerary-stamps{gap:6px}.itinerary-stamps>span{font-size:11px;padding:5px 9px}.itinerary-body{padding:15px 12px 20px}.itinerary-day{padding:15px 12px}.itinerary-day-head h3{font-size:17px}.itinerary-period{padding:11px 10px}}
 @media print{.topbar,.nav,.top-actions,.map-controls,#trip-map,#change-plan{display:none!important}.itinerary-card{box-shadow:none;border:0}.itinerary-body{background:none;padding:12px 0}.itinerary-day{break-inside:avoid;box-shadow:none}.itinerary-cover{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 
 

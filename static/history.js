@@ -36,7 +36,24 @@
       if (focusMenu) menu.querySelector('button')?.focus({ preventScroll: true });
     });
   };
+  let longPressTimer = null;
+  let longPressPointer = null;
+  const cancelLongPress = () => {
+    if (longPressTimer !== null) window.clearTimeout(longPressTimer);
+    longPressTimer = null;
+    longPressPointer = null;
+  };
   cards.forEach(card => {
+    card.addEventListener('pointerdown', event => {
+      if (event.pointerType !== 'touch' || event.button !== 0) return;
+      cancelLongPress();
+      longPressPointer = { id: event.pointerId, card, x: event.clientX, y: event.clientY };
+      longPressTimer = window.setTimeout(() => {
+        const target = longPressPointer;
+        longPressTimer = null;
+        if (target) showMenu(target.card, target.x, target.y);
+      }, 500);
+    });
     card.addEventListener('contextmenu', event => {
       event.preventDefault();
       showMenu(card, event.clientX, event.clientY);
@@ -47,6 +64,15 @@
         const rect = card.getBoundingClientRect();
         showMenu(card, rect.left + 16, rect.top + 16, true);
       }
+    });
+  });
+  document.addEventListener('pointermove', event => {
+    if (!longPressPointer || event.pointerId !== longPressPointer.id) return;
+    if (Math.hypot(event.clientX - longPressPointer.x, event.clientY - longPressPointer.y) > 12) cancelLongPress();
+  });
+  ['pointerup', 'pointercancel'].forEach(eventName => {
+    document.addEventListener(eventName, event => {
+      if (longPressPointer && event.pointerId === longPressPointer.id) cancelLongPress();
     });
   });
   document.addEventListener('click', event => {
