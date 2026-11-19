@@ -27,7 +27,7 @@ load_dotenv()
 
 
 
-from flask import Flask, current_app, flash, redirect, request, session, url_for
+from flask import Flask, current_app, flash, redirect, render_template, request, session, url_for
 from werkzeug.exceptions import HTTPException
 
 from flask_login import LoginManager, current_user
