@@ -360,6 +360,10 @@ def create_app():
 
                 connection.execute(text("ALTER TABLE group_messages ADD COLUMN is_deleted BOOLEAN NOT NULL DEFAULT 0"))
 
+        if "image_filename" not in message_columns:
+            with db.engine.begin() as connection:
+                connection.execute(text("ALTER TABLE group_messages ADD COLUMN image_filename VARCHAR(80)"))
+
 
 
     @app.context_processor

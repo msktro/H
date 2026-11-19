@@ -82,12 +82,21 @@
       const thunderChance = score < 60 ? 0 : Math.min(0.4, 0.22 + (score - 60) * 0.002);
       const thunder = Math.random() < thunderChance;
       const speed = 115 + Math.min(score * 2.25, 270) + Math.random() * 28;
-      clouds.push({ x: 25 + Math.random() * (width - 50), y: -22, speed, radius: thunder ? 17 : 14, thunder });
+      const lateralRange = score > 100 ? 22 + Math.min((score - 100) * 0.08, 14) : 0;
+      const spawnMargin = lateralRange ? 60 : 25;
+      const startX = spawnMargin + Math.random() * (width - spawnMargin * 2);
+      clouds.push({ x: startX, startX, y: -22, speed, radius: thunder ? 17 : 14, thunder, lateralRange, phase: Math.random() * Math.PI * 2, age: 0 });
     }
     if (keys.left) player.x -= player.speed * delta;
     if (keys.right) player.x += player.speed * delta;
     player.x = Math.max(20, Math.min(width - 20, player.x));
-    clouds.forEach((cloud) => { cloud.y += cloud.speed * delta; });
+    clouds.forEach((cloud) => {
+      cloud.y += cloud.speed * delta;
+      if (cloud.lateralRange) {
+        cloud.age += delta;
+        cloud.x = cloud.startX + Math.sin(cloud.age * 2.1 + cloud.phase) * cloud.lateralRange;
+      }
+    });
     const remaining = [];
     for (const cloud of clouds) {
       const hitCloud = Math.hypot(player.x - cloud.x, player.y - cloud.y) < player.radius + cloud.radius - 4;

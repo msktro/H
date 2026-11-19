@@ -5,6 +5,11 @@
   const list = document.getElementById("group-chat-messages");
   const form = document.getElementById("group-chat-form");
   const input = document.getElementById("group-chat-input");
+  const imageInput = document.getElementById("group-chat-image");
+  const attachmentPreview = document.getElementById("group-chat-attachment");
+  const attachmentImage = document.getElementById("group-chat-attachment-preview");
+  const attachmentName = document.getElementById("group-chat-attachment-name");
+  const attachmentRemove = document.getElementById("group-chat-attachment-remove");
   const sendButton = document.getElementById("group-chat-send");
   const status = document.getElementById("group-chat-status");
   const stampToggle = document.getElementById("chat-stamp-toggle");
@@ -19,6 +24,17 @@
   let polling = false;
   let markingRead = false;
   const readMarked = new Set();
+  let attachmentObjectUrl = "";
+
+  function clearSelectedImage() {
+    if (attachmentObjectUrl) URL.revokeObjectURL(attachmentObjectUrl);
+    attachmentObjectUrl = "";
+    if (imageInput) imageInput.value = "";
+    if (attachmentImage) attachmentImage.removeAttribute("src");
+    if (attachmentName) attachmentName.textContent = "";
+    if (attachmentPreview) attachmentPreview.hidden = true;
+    status.textContent = "";
+  }
 
   function chatIsActive() {
     const panel = document.querySelector('[data-group-panel="chat"]');
@@ -72,6 +88,14 @@
     if (!message.is_deleted) content.dataset.noTranslate = "";
     content.textContent = message.is_deleted ? "このメッセージは送信取り消しされました。" : (message.content || "");
     article.append(meta, content);
+    if (message.image_url && !message.is_deleted) {
+      const image = document.createElement("img");
+      image.className = "chat-message-image";
+      image.src = message.image_url;
+      image.alt = "チャットに送信された画像";
+      image.loading = "lazy";
+      article.appendChild(image);
+    }
     const reactions = document.createElement("div");
     reactions.className = "chat-reactions";
     reactions.dataset.reactionsFor = String(id);
@@ -528,7 +552,7 @@
       if (document.visibilityState !== "visible" && !chatIsActive() && "Notification" in window && notificationsAreEnabled() && Notification.permission === "granted") {
         incoming.forEach((message) => {
           const notification = new Notification(`${root.dataset.groupName}: ${message.username}`, {
-            body: message.content,
+            body: message.content || "画像が届きました",
             tag: `group-${root.dataset.groupId}-${message.id}`,
           });
           notification.onclick = () => window.focus();
@@ -552,7 +576,8 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const content = input.value.trim();
-    if (!content || sending) return;
+    const image = imageInput?.files?.[0];
+    if ((!content && !image) || sending) return;
     sending = true;
     sendButton.disabled = true;
     input.disabled = true;
@@ -561,17 +586,16 @@
       const response = await fetch(root.dataset.messagesUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "X-CSRFToken": root.dataset.csrf,
           Accept: "application/json",
         },
-        body: JSON.stringify({ content }),
+        body: (() => { const body = new FormData(); body.set("content", content); if (image) body.set("image", image); return body; })(),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "送信できませんでした。");
       addMessage(data.message);
       input.value = "";
-      status.textContent = "";
+      clearSelectedImage();
     } catch (error) {
       status.textContent = error.message || "送信できませんでした。通信状態を確認してください。";
     } finally {
@@ -581,6 +605,27 @@
       input.focus();
     }
   });
+
+  imageInput?.addEventListener("change", () => {
+    const image = imageInput.files?.[0];
+    if (image && image.size > 5 * 1024 * 1024) {
+      clearSelectedImage();
+      status.textContent = "画像は5MB以内のファイルを選んでください。";
+      return;
+    }
+    if (!image) {
+      clearSelectedImage();
+      return;
+    }
+    if (attachmentObjectUrl) URL.revokeObjectURL(attachmentObjectUrl);
+    attachmentObjectUrl = URL.createObjectURL(image);
+    if (attachmentImage) attachmentImage.src = attachmentObjectUrl;
+    if (attachmentName) attachmentName.textContent = image.name;
+    if (attachmentPreview) attachmentPreview.hidden = false;
+    status.textContent = "";
+  });
+
+  attachmentRemove?.addEventListener("click", clearSelectedImage);
 
   window.setInterval(pollMessages, 3000);
 })();

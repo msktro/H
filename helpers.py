@@ -489,6 +489,7 @@ def _serialize_group_message(message, viewer_id):
         "avatar_image_url": url_for("user_avatar", user_id=message.user.id, v=message.user.updated_at.timestamp() if message.user.updated_at else 0) if message.user.avatar_image else "",
         "read_count": len(message.read_receipts),
         "content": message.content,
+        "image_url": url_for("group_message_image", group_id=message.group_id, message_id=message.id) if message.image_filename and not message.is_deleted else "",
         "is_deleted": message.is_deleted,
         "created_at": created_at.isoformat(),
         "is_stamp": message.content.strip() in CHAT_STAMPS,

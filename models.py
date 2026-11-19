@@ -151,6 +151,7 @@ class GroupMessage(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey("trip_groups.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_auth.user_id", ondelete="CASCADE"), nullable=False, index=True)
     content = db.Column(db.String(1000), nullable=False)
+    image_filename = db.Column(db.String(80), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
     is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     group = db.relationship("TripGroup", back_populates="messages")

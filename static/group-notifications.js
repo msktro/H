@@ -102,7 +102,7 @@
     const body = document.createElement("span");
     body.className = "group-notification-toast-body";
     if (message.content) body.dataset.noTranslate = "";
-    body.textContent = message.content || "新しいメッセージが届きました。";
+    body.textContent = message.content || (message.image_url ? "画像が届きました" : "新しいメッセージが届きました。");
     toast.append(heading, body);
     toastContainer.appendChild(toast);
 

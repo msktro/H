@@ -173,6 +173,7 @@ def delete_group(group_id):
 
     shutil.rmtree(Path(current_app.instance_path) / "group_icons" / str(group_id), ignore_errors=True)
     shutil.rmtree(Path(current_app.instance_path) / "group_album" / str(group_id), ignore_errors=True)
+    shutil.rmtree(Path(current_app.instance_path) / "group_chat" / str(group_id), ignore_errors=True)
     flash(f"「{group_name}」を削除しました。", "success")
     return redirect(url_for("groups"))
 
@@ -645,14 +646,57 @@ def group_messages(group_id):
                        deleted_messages=[_serialize_group_message(message, current_user.id) for message in deleted_messages],
                        read_status=read_status, reaction_status=reaction_status)
 
-    data = request.get_json(silent=True)
-    content = data.get("content", "").strip() if isinstance(data, dict) and isinstance(data.get("content"), str) else ""
-    if not content or len(content) > 1000:
-        return jsonify(error="メッセージを1〜1,000文字で入力してください。"), 400
-    message = GroupMessage(group_id=group.id, user_id=current_user.id, content=content)
+    content = request.form.get("content", "").strip() if request.mimetype == "multipart/form-data" else ""
+    if request.is_json:
+        data = request.get_json(silent=True)
+        content = data.get("content", "").strip() if isinstance(data, dict) and isinstance(data.get("content"), str) else ""
+    image = request.files.get("image")
+    if len(content) > 1000:
+        return jsonify(error="メッセージは1,000文字以内で入力してください。"), 400
+    if not content and not (image and image.filename):
+        return jsonify(error="画像またはメッセージを選択してください。"), 400
+    filename = None
+    if image and image.filename:
+        extension = Path(image.filename).suffix.lower()
+        image_type = ALBUM_IMAGE_TYPES.get(extension)
+        image.stream.seek(0, os.SEEK_END)
+        size = image.stream.tell()
+        image.stream.seek(0)
+        header = image.stream.read(12)
+        image.stream.seek(0)
+        valid_signature = (
+            (image_type == "jpeg" and header.startswith(b"\xff\xd8\xff"))
+            or (image_type == "png" and header.startswith(b"\x89PNG\r\n\x1a\n"))
+            or (image_type == "gif" and header[:6] in (b"GIF87a", b"GIF89a"))
+            or (image_type == "webp" and header[:4] == b"RIFF" and header[8:12] == b"WEBP")
+        )
+        if not image_type or not valid_signature or size <= 0 or size > ALBUM_MAX_IMAGE_BYTES:
+            return jsonify(error="JPG、PNG、GIF、WebP形式で、5MB以内の画像を選んでください。"), 400
+        filename = f"{secrets.token_hex(16)}{extension}"
+        image_dir = Path(current_app.instance_path) / "group_chat" / str(group.id)
+        image_dir.mkdir(parents=True, exist_ok=True)
+        image.save(image_dir / filename)
+    message = GroupMessage(group_id=group.id, user_id=current_user.id, content=content, image_filename=filename)
     db.session.add(message)
     db.session.commit()
     return jsonify(message=_serialize_group_message(message, current_user.id)), 201
+
+@groups_bp.get("/groups/<int:group_id>/messages/<int:message_id>/image")
+@login_required
+def group_message_image(group_id, message_id):
+    group = _member_group(group_id)
+    message = GroupMessage.query.filter_by(id=message_id, group_id=group.id, is_deleted=False).first_or_404()
+    if not message.image_filename:
+        abort(404)
+    response = send_from_directory(
+        Path(current_app.instance_path) / "group_chat" / str(group.id),
+        message.image_filename,
+        as_attachment=False,
+        conditional=True,
+    )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Cache-Control"] = "private, max-age=3600"
+    return response
 
 @groups_bp.post("/groups/<int:group_id>/messages/<int:message_id>/unsend")
 @login_required
@@ -666,8 +710,12 @@ def unsend_group_message(group_id, message_id):
         return jsonify(error="このメッセージはすでに取り消されています。"), 409
     message.content = ""
     message.is_deleted = True
+    image_path = (Path(current_app.instance_path) / "group_chat" / str(group.id) / message.image_filename) if message.image_filename else None
+    message.image_filename = None
     GroupMessageReaction.query.filter_by(message_id=message.id).delete(synchronize_session=False)
     db.session.commit()
+    if image_path:
+        image_path.unlink(missing_ok=True)
     return jsonify(message=_serialize_group_message(message, current_user.id))
 
 @groups_bp.post("/groups/<int:group_id>/messages/<int:message_id>/edit")

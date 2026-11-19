@@ -2,7 +2,7 @@
   const plane = document.querySelector("[data-home-idle-plane]");
   if (!plane || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const idleDelay = 10_000;
+  const idleDelay = 60_000;
   const crashDuration = 1_100;
   const returnDelay = 2_000;
   let idleTimer = 0;
