@@ -15,14 +15,27 @@
   let previousTime = 0;
   let spawnElapsed = 0;
   let frame = 0;
+  let thunderNoticeShown = false;
 
   function drawCloud(cloud) {
-    context.fillStyle = "#ffffff";
+    context.fillStyle = cloud.thunder ? "#465452" : "#ffffff";
     context.beginPath();
-    context.arc(cloud.x - 9, cloud.y + 2, 8, 0, Math.PI * 2);
-    context.arc(cloud.x, cloud.y - 3, 11, 0, Math.PI * 2);
-    context.arc(cloud.x + 10, cloud.y + 2, 8, 0, Math.PI * 2);
+    context.arc(cloud.x - 9, cloud.y + 2, cloud.thunder ? 9 : 8, 0, Math.PI * 2);
+    context.arc(cloud.x, cloud.y - 3, cloud.thunder ? 12 : 11, 0, Math.PI * 2);
+    context.arc(cloud.x + 10, cloud.y + 2, cloud.thunder ? 9 : 8, 0, Math.PI * 2);
     context.fill();
+    if (cloud.thunder) {
+      context.fillStyle = "#f2c64b";
+      context.beginPath();
+      context.moveTo(cloud.x + 2, cloud.y + 9);
+      context.lineTo(cloud.x - 5, cloud.y + 27);
+      context.lineTo(cloud.x + 1, cloud.y + 27);
+      context.lineTo(cloud.x - 3, cloud.y + 45);
+      context.lineTo(cloud.x + 9, cloud.y + 22);
+      context.lineTo(cloud.x + 3, cloud.y + 22);
+      context.closePath();
+      context.fill();
+    }
   }
 
   function draw() {
@@ -63,9 +76,13 @@
     const delta = Math.min((time - previousTime) / 1000 || 0, 0.04);
     previousTime = time;
     spawnElapsed += delta;
-    if (spawnElapsed >= 0.85) {
+    const spawnInterval = Math.max(0.32, 0.88 - score * 0.0056);
+    if (spawnElapsed >= spawnInterval) {
       spawnElapsed = 0;
-      clouds.push({ x: 25 + Math.random() * (width - 50), y: -20, speed: 100 + Math.min(score * 3, 100), radius: 14 });
+      const thunderChance = score < 60 ? 0 : Math.min(0.4, 0.22 + (score - 60) * 0.002);
+      const thunder = Math.random() < thunderChance;
+      const speed = 115 + Math.min(score * 2.25, 270) + Math.random() * 28;
+      clouds.push({ x: 25 + Math.random() * (width - 50), y: -22, speed, radius: thunder ? 17 : 14, thunder });
     }
     if (keys.left) player.x -= player.speed * delta;
     if (keys.right) player.x += player.speed * delta;
@@ -73,7 +90,9 @@
     clouds.forEach((cloud) => { cloud.y += cloud.speed * delta; });
     const remaining = [];
     for (const cloud of clouds) {
-      if (Math.hypot(player.x - cloud.x, player.y - cloud.y) < player.radius + cloud.radius - 4) {
+      const hitCloud = Math.hypot(player.x - cloud.x, player.y - cloud.y) < player.radius + cloud.radius - 4;
+      const hitLightning = cloud.thunder && Math.abs(player.x - cloud.x) < 10 && player.y >= cloud.y + 12 && player.y <= cloud.y + 48;
+      if (hitCloud || hitLightning) {
         endGame();
         return;
       }
@@ -81,6 +100,10 @@
       else remaining.push(cloud);
     }
     clouds = remaining;
+    if (score >= 60 && !thunderNoticeShown) {
+      thunderNoticeShown = true;
+      statusNode.textContent = "雷雲が出現！真下の雷に注意";
+    }
     scoreNode.value = score;
     scoreNode.textContent = String(score);
     draw();
@@ -93,6 +116,7 @@
     score = 0;
     spawnElapsed = 0;
     previousTime = 0;
+    thunderNoticeShown = false;
     player.x = width / 2;
     keys.left = false;
     keys.right = false;
