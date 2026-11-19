@@ -3,30 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex"><link rel="icon" type="image/svg+xml" href="{{ url_for('static',filename='favicon.svg',v='20261113-1') }}">
-  <script defer src="{{ url_for('static',filename='i18n.js',v='20261117-2') }}"></script>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static',filename='favicon.svg',v='20261113-1') }}">
+  <script defer src="{{ url_for('static',filename='i18n.js',v='20261119-19') }}"></script>
+  {% if error_code == 404 %}<link rel="stylesheet" href="{{ url_for('static',filename='404-mini-game.css',v='20261119-1') }}"><script defer src="{{ url_for('static',filename='404-mini-game.js',v='20261119-1') }}"></script>{% endif %}
   <title>{{ error_title }} | Tabidea</title>
   <style>
-    :root{font-family:"Yu Gothic UI",Meiryo,system-ui,sans-serif;color:#18352f;background:#f5f7f3}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto}
-    header,footer{background:#fff;padding:18px max(24px,calc((100% - 1120px)/2));border-bottom:1px solid #e4eae5}
-    footer{border-top:1px solid #e4eae5;border-bottom:0;color:#6e807b;font-size:.9rem}
-    .brand{color:#087866;font-size:1.35rem;font-weight:800;text-decoration:none}
-    main{display:grid;place-items:center;padding:36px 20px}.card{width:min(100%,620px);padding:clamp(28px,6vw,56px);border:1px solid #e4eae5;border-radius:24px;background:#fff;box-shadow:0 18px 45px #18352f12;text-align:center}
-    .icon{display:grid;place-items:center;width:68px;height:68px;margin:0 auto 20px;border-radius:22px;background:#e7f2ec;color:#087866;font-size:2rem}
-    .code{color:#78908a;font-size:.82rem;font-weight:700;letter-spacing:.12em}.card h1{margin:10px 0 14px;font-size:clamp(1.5rem,4vw,2rem)}.card p{color:#637a74;line-height:1.9}
-    .actions{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:28px}.actions a,.actions button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:0;border-radius:12px;background:#126c5b;color:#fff;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}.actions .secondary{background:#e7f2ec;color:#126c5b}
+    :root{font-family:"Yu Gothic UI",Meiryo,system-ui,sans-serif;color:#18352f;background:#f0f8f6;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(ellipse at 100% 10%,#d8f1eb 0,transparent 42%),#f2f8f6}
+    header,footer{background:rgba(255,255,255,.94);padding:17px max(24px,calc((100% - 1160px)/2));border-bottom:1px solid #dfebe6}
+    footer{border-top:1px solid #dfebe6;border-bottom:0;color:#738780;font-size:.88rem;text-align:center}
+    .brand{display:inline-flex;align-items:center;gap:9px;color:#087866;font-size:1.45rem;font-weight:800;text-decoration:none;letter-spacing:-.04em}.brand-mark{font-size:1.4rem;line-height:1}
+    main{display:grid;place-items:center;padding:44px 20px}.card{position:relative;overflow:hidden;width:min(100%,700px);padding:clamp(30px,6vw,62px);border:1px solid #dcebe4;border-radius:26px;background:rgba(255,255,255,.96);box-shadow:0 22px 55px rgba(21,86,70,.10);text-align:center}
+    .card:before{content:"";position:absolute;inset:0 0 auto;height:7px;background:linear-gradient(90deg,#087866,#6cb99d)}
+    .icon{display:grid;place-items:center;width:82px;height:82px;margin:0 auto 19px;border:1px solid #d7eee4;border-radius:26px;background:#e9f6f0;color:#087866;font-size:2.2rem;font-weight:700}
+    .code{display:inline-flex;align-items:center;min-height:28px;padding:4px 11px;border-radius:999px;background:#e6f5ee;color:#087866;font-size:.78rem;font-weight:800;letter-spacing:.1em}
+    .card h1{margin:15px 0 12px;font-size:clamp(1.55rem,4vw,2.2rem);letter-spacing:-.03em}.card p{max-width:520px;margin:0 auto;color:#607770;line-height:1.9}
+    .hint{margin-top:20px!important;padding:12px 15px;border-radius:13px;background:#f3f8f5;color:#71847e!important;font-size:.88rem}
+    .actions{display:flex;justify-content:center;flex-wrap:wrap;gap:11px;margin-top:27px}.actions a,.actions button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 19px;border:1px solid #cfe5da;border-radius:13px;background:#eaf5ef;color:#087866;font:inherit;font-weight:700;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s}.actions a:hover,.actions button:hover{background:#def0e7;border-color:#acd4c1}.actions .primary{background:#087866;color:#fff;border-color:#087866}.actions .primary:hover{background:#066654}
+    @media(max-width:520px){header{padding:15px 18px}main{padding:26px 14px}.card{border-radius:21px}.actions{flex-direction:column}.actions a,.actions button{width:100%}}
   </style>
 </head>
 <body>
-  <header><a class="brand" href="/">✈ Tabidea</a></header>
-  <main><section class="card" role="alert">
-    <div class="icon" aria-hidden="true">☁</div>
+  <header><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">✈</span><span>Tabidea</span></a></header>
+  <main><section class="card" role="alert" aria-labelledby="error-title">
+    <div class="icon" aria-hidden="true">{{ error_icon|default('☁') }}</div>
     <div class="code">ERROR {{ error_code }}</div>
-    <h1>{{ error_title }}</h1>
+    <h1 id="error-title">{{ error_title }}</h1>
     <p>{{ error_message }}</p>
-    <div class="actions"><button type="button" onclick="location.reload()">もう一度読み込む</button><a class="secondary" href="/">ホームへ戻る</a></div>
+    <p class="hint">サーバーに接続できない状態では、この画面を表示できません。接続が戻ってから再読み込みしてください。</p>
+    <div class="actions"><button class="primary" type="button" onclick="location.reload()">もう一度読み込む</button><button type="button" onclick="if(history.length>1){history.back()}else{location.href='/'}">前の画面へ戻る</button><a href="/">ホームへ戻る</a></div>
+    {% if error_code == 404 %}
+    <section class="mini-game" aria-labelledby="mini-game-title">
+      <div class="mini-game-heading"><h2 id="mini-game-title">雲をよけて飛ぼう</h2><p><span>スコア</span> <output id="mini-game-score" data-no-translate>0</output></p></div>
+      <canvas id="mini-game-canvas" width="640" height="190" tabindex="0" role="img" aria-label="飛行機で雲をよけるゲーム"></canvas>
+      <p class="mini-game-help">矢印キーまたは左右ボタンで飛行機を動かし、雲をよけてください。</p>
+      <div class="mini-game-controls"><button id="mini-game-left" type="button" aria-label="飛行機を左へ">←</button><button id="mini-game-start" class="mini-game-start" type="button">スタート</button><button id="mini-game-right" type="button" aria-label="飛行機を右へ">→</button></div>
+      <p id="mini-game-status" class="mini-game-status" aria-live="polite">スタートを押してゲーム開始</p>
+    </section>
+    {% endif %}
   </section></main>
-  <footer>Tabidea · 時間をおいても解決しない場合は、お問い合わせください。</footer>
+  <footer>Tabidea · 問題が続く場合は、時間をおいてから再度お試しください。</footer>
 </body>
 </html>

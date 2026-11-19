@@ -793,8 +793,8 @@ def profile():
 
             if current_user.user_type == "traveler":
 
-                p.budget_per_trip = budget_per_trip
 
+                p.budget_per_trip = budget_per_trip
                 p.birth_date = birth_date
 
                 current_user.profile = p

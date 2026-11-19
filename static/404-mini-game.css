@@ -1,0 +1,10 @@
+.mini-game{margin-top:28px;padding:18px;border-radius:17px;background:#f3f8f5;text-align:left}
+.mini-game-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+.mini-game-heading h2{margin:0;color:#183f39;font-size:1.05rem}.mini-game-heading p{margin:0;color:#087866;font-weight:800;font-variant-numeric:tabular-nums}.mini-game-heading output{font-size:1.1rem}
+#mini-game-canvas{display:block;width:100%;height:auto;aspect-ratio:640/190;border:1px solid #dcebe4;border-radius:12px;background:#dff2ec;touch-action:none;outline-offset:3px}
+.mini-game-help{margin:10px 0 12px!important;color:#607770!important;font-size:.82rem;line-height:1.65!important}
+.mini-game-controls{display:grid;grid-template-columns:48px minmax(100px,1fr) 48px;gap:9px;align-items:center}
+.mini-game-controls button{min-height:42px;border:1px solid #cfe5da;border-radius:11px;background:#eaf5ef;color:#087866;font:inherit;font-size:1.15rem;font-weight:800;cursor:pointer;touch-action:none}
+.mini-game-controls button:hover{background:#def0e7}.mini-game-controls .mini-game-start{background:#087866;border-color:#087866;color:#fff;font-size:.92rem}
+.mini-game-status{min-height:1.5em;margin:10px 0 0!important;color:#607770!important;font-size:.82rem;line-height:1.5!important;text-align:center}
+@media(max-width:520px){.mini-game{padding:13px}.mini-game-controls{grid-template-columns:50px minmax(90px,1fr) 50px}.mini-game-heading h2{font-size:1rem}}

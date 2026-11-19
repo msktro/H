@@ -52,7 +52,7 @@ def new_plan():
     profile = current_user.profile
     profile_ready = _profile_is_configured(profile)
     default_budget = (profile.budget_per_trip or "") if profile and profile.budget_per_trip is not None else ""
-    values = {"destination": "未定", "start_date": "", "end_date": "", "days": 1, "people": 2, "budget": default_budget, "theme": "", "preferences": "", "companions": "", "use_profile": profile_ready, "manual_themes": [], "manual_pace": "", "manual_transport": "", "manual_food": "", "manual_age_group": "", "inspiration_story_id": "", "inspiration_story_title": ""}
+    values = {"destination": "未定", "origin": "", "start_date": "", "end_date": "", "days": 1, "people": 2, "budget": default_budget, "theme": "", "preferences": "", "companions": "", "use_profile": profile_ready, "manual_themes": [], "manual_pace": "", "manual_transport": "", "manual_food": "", "manual_age_group": "", "inspiration_story_id": "", "inspiration_story_title": ""}
     inspiration_story = None
     if request.method == "GET":
         requested_destination = request.args.get("destination", "").strip()
@@ -65,8 +65,6 @@ def new_plan():
             source_plan = candidate.plan
             values.update({
                 "destination": source_plan.destination,
-                "start_date": source_plan.start_date.isoformat() if source_plan.start_date else "",
-                "end_date": source_plan.end_date.isoformat() if source_plan.end_date else "",
                 "days": source_plan.days,
                 "people": source_plan.num_people, "budget": source_plan.budget,
                 "theme": source_plan.theme or "",
@@ -75,7 +73,7 @@ def new_plan():
                 "inspiration_story_id": str(candidate.id), "inspiration_story_title": source_plan.title,
             })
     if request.method == "POST":
-        values.update({k: request.form.get(k, "").strip() for k in ("destination", "start_date", "end_date", "people", "budget", "theme", "preferences", "companions", "manual_pace", "manual_transport", "manual_food", "manual_age_group")})
+        values.update({k: request.form.get(k, "").strip() for k in ("destination", "origin", "start_date", "end_date", "people", "budget", "theme", "preferences", "companions", "manual_pace", "manual_transport", "manual_food", "manual_age_group")})
         # 参考にする旅行記は、公開中か自分の投稿だけを読み込みます。
         raw_story_id = request.form.get("inspiration_story_id", "").strip()
         if raw_story_id.isdigit():
@@ -104,6 +102,9 @@ def new_plan():
         values["days"] = days_count
         values["start_date"] = start_date.isoformat()
         values["end_date"] = end_date.isoformat()
+        if not values["origin"] or len(values["origin"]) > 120:
+            flash("出発地点を120文字以内で入力してください。", "error")
+            return page("new_plan", values=values, profile=profile, profile_ready=profile_ready)
         values["people"] = _bounded_int(values["people"], 1, 30, 1)
         values["budget"] = _bounded_int(values["budget"], 0, 100000000, 0)
         destination_tokens = [part.strip() for part in re.split(r"[、,，/・]", values["destination"]) if part.strip()]
@@ -149,6 +150,7 @@ def new_plan():
                 "food": values["manual_food"], "age_group": values["manual_age_group"],
             }
         prompt_values = dict(values)
+        prompt_values["origin"] = values["origin"]
         if values["companions"]:
             prompt_values["preferences"] = f"{values['preferences']}\n年代・同行者など: {values['companions']}".strip()
         if inspiration_story:
@@ -167,7 +169,7 @@ def new_plan():
             user_id=current_user.id, title=f"{values['destination']}の旅行プラン",
             destination=values["destination"][:100], start_date=start_date, end_date=end_date, days=values["days"],
             num_people=values["people"], budget=values["budget"] or 0,
-            theme=values["theme"][:200], preferences=prompt_values["preferences"][:4000], ai_response=answer,
+            theme=values["theme"][:200], preferences=f"出発地点: {values['origin']}\n{prompt_values['preferences']}"[:4000], ai_response=answer,
         )
         # AIの回答を旅行プランとして保存し、詳細画面へ移動します。
         db.session.add(plan)

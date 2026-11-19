@@ -19,3 +19,15 @@
 .topbar .nav .logout-button{box-sizing:border-box;display:flex;min-height:44px;align-items:center;justify-content:flex-start;padding:10px 12px;text-align:left}
 @media(max-width:800px){.topbar{height:72px;min-height:72px;align-items:center;flex-direction:row;padding:0 16px}.top-actions{margin-left:auto}.topbar .nav{width:min(288px,calc(100vw - 24px))}}
 @media(max-width:560px){.topbar{height:62px;min-height:62px;padding:0 12px}.top-actions{gap:7px}.menu-toggle{padding:9px 10px}.menu-toggle-text{display:none}.nav{top:calc(100% + 9px);max-height:calc(100vh - 78px)}}
+
+body[class*="app-page-admin"] .menu-toggle {
+  border-color: #d6e9df;
+  background: #e7f2ec;
+  color: #176b5a;
+}
+body[class*="app-page-admin"] .menu-toggle:hover,
+body[class*="app-page-admin"] .site-menu[open] > .menu-toggle {
+  border-color: #c5dfd1;
+  background: #dcefe5;
+  color: #176b5a;
+}

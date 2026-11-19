@@ -4,6 +4,7 @@
     const toggle = document.getElementById("use-profile");
     const panel = document.getElementById("manual-preferences");
     const budget = document.getElementById("budget");
+    const savedProfileBudget = form.dataset.profileBudget || "";
     const people = document.getElementById("people");
     const companionsField = document.getElementById("companions-field");
     if (!form || !toggle || !panel) return;
@@ -27,6 +28,8 @@
       if (budget) {
         budget.required = true;
         if (manual && toggle.dataset.wasChecked === "true") budget.value = "";
+        if (!manual && toggle.dataset.wasChecked === "false" && savedProfileBudget) budget.value = savedProfileBudget;
+        if (!manual && toggle.dataset.wasChecked === undefined && !budget.value && savedProfileBudget) budget.value = savedProfileBudget;
       }
       toggle.dataset.wasChecked = String(toggle.checked);
     }
