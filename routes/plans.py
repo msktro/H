@@ -183,15 +183,18 @@ def new_plan():
 def manual_plan():
     """AIを使わず、旅行記向けの旅行プランを自分で作成します。"""
     _traveler_only()
-    draft = {"title": "", "destination": "", "start_date": "", "days": 1, "people": 1, "budget": "", "introduction": "", "day_titles": [], "stops": []}
+    draft = {"title": "", "destination": "", "start_date": "", "end_date": "", "days": 1, "people": 1, "budget": "", "introduction": "", "day_titles": [], "stops": []}
     if request.method == "POST":
-        draft.update({"title": request.form.get("title", "").strip(), "destination": request.form.get("destination", "").strip(), "start_date": request.form.get("start_date", "").strip(), "days": request.form.get("days", "1").strip(), "people": request.form.get("people", "1").strip(), "budget": request.form.get("budget", "").strip(), "introduction": request.form.get("introduction", "").strip(), "day_titles": request.form.getlist("day_title")})
+        draft.update({"title": request.form.get("title", "").strip(), "destination": request.form.get("destination", "").strip(), "start_date": request.form.get("start_date", "").strip(), "end_date": request.form.get("end_date", "").strip(), "people": request.form.get("people", "1").strip(), "budget": request.form.get("budget", "").strip(), "introduction": request.form.get("introduction", "").strip(), "day_titles": request.form.getlist("day_title")})
         try:
-            days, people, budget = int(draft["days"]), int(draft["people"]), int(draft["budget"])
+            people, budget = int(draft["people"]), int(draft["budget"])
             start_date = date.fromisoformat(draft["start_date"])
+            end_date = date.fromisoformat(draft["end_date"])
+            days = (end_date - start_date).days + 1
         except (TypeError, ValueError):
             days = people = budget = 0
-            start_date = None
+            start_date = end_date = None
+        draft["days"] = days if 1 <= days <= 30 else max(1, min(30, len(draft["day_titles"]) or 1))
         stop_days = request.form.getlist("stop_day")
         stop_times = request.form.getlist("stop_time")
         stop_names = request.form.getlist("stop_name")
@@ -207,10 +210,11 @@ def manual_plan():
             return invalid("出発日は今日以降の日付を選択してください。")
         if not draft["title"] or len(draft["title"]) > 100:
             return invalid("プラン名を1〜100文字で入力してください。")
-        if not draft["destination"] or len(draft["destination"]) > 100:
-            return invalid("行き先を1〜100文字で入力してください。")
-        if not start_date or not 1 <= days <= 30 or len(draft["day_titles"]) != days:
-            return invalid("出発日と、日数に合った日ごとの予定を確認してください。")
+        destinations = draft["destination"].split("、") if draft["destination"] else []
+        if not destinations or len(destinations) > 8 or any(destination not in PREFECTURES for destination in destinations) or len(set(destinations)) != len(destinations):
+            return invalid("行き先の都道府県を1〜8県選択してください。")
+        if not start_date or not end_date or end_date < start_date or not 1 <= days <= 30 or len(draft["day_titles"]) != days:
+            return invalid("出発日・帰着日と、日数に合った日ごとの予定を確認してください。")
         if not 1 <= people <= 30 or not 0 <= budget <= 100000000:
             return invalid("人数は1〜30人、予算は0〜100,000,000円で入力してください。")
         if len(draft["introduction"]) > 1200 or len(set(map(len, lists))) != 1:
@@ -254,7 +258,7 @@ def manual_plan():
                     content.append(f"種類：{item['category']}")
                     if item["description"]:
                         content.extend(item["description"].splitlines())
-        plan = TravelPlan(user_id=current_user.id, title=draft["title"], destination=draft["destination"], start_date=start_date, end_date=start_date + timedelta(days=days - 1), days=days, num_people=people, budget=budget, theme="自分で作成", preferences="手入力で作成した旅行プラン", ai_response="\n".join(content))
+        plan = TravelPlan(user_id=current_user.id, title=draft["title"], destination=draft["destination"], start_date=start_date, end_date=end_date, days=days, num_people=people, budget=budget, theme="自分で作成", preferences="手入力で作成した旅行プラン", ai_response="\n".join(content))
         db.session.add(plan)
         db.session.commit()
         flash("手作りの旅行プランを保存しました。旅行記として公開できます。", "success")

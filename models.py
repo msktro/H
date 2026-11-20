@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     username = db.Column("user_name", db.String(50), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
+    recovery_password_hash = db.Column(db.String(255), nullable=True)
     user_type = db.Column(db.String(20), nullable=False)
     avatar = db.Column(db.String(16), nullable=False, default="👤", server_default="👤")
     avatar_image = db.Column(db.String(255), nullable=True)

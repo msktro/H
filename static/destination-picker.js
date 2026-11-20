@@ -4,6 +4,9 @@
   const summary = document.getElementById('prefecture-summary');
   if (!picker || !hidden || !summary) return;
   const checks = [...picker.querySelectorAll('[data-prefecture]')];
+  const emptyLabel = picker.dataset.emptyLabel || '未定（都道府県を選択）';
+  const emptyValue = picker.dataset.emptyValue ?? '未定';
+  const destinationError = picker.closest('form')?.querySelector('[data-destination-error]');
   document.addEventListener('click', event => {
     if (picker.open && !picker.contains(event.target)) picker.open = false;
   });
@@ -17,8 +20,9 @@
   const search = document.getElementById('prefecture-search');
   const update = () => {
     const chosen = checks.filter(box => box.checked).map(box => box.value);
-    hidden.value = chosen.length ? chosen.join('、') : '未定';
-    summary.textContent = chosen.length ? chosen.join('、') : '未定（都道府県を選択）';
+    hidden.value = chosen.length ? chosen.join('、') : emptyValue;
+    summary.textContent = chosen.length ? chosen.join('、') : emptyLabel;
+    if (destinationError && chosen.length) { destinationError.hidden = true; summary.removeAttribute('aria-invalid'); }
     checks.forEach(box => { box.disabled = !box.checked && chosen.length >= 8; });
     regions.forEach(region => {
       const items = [...region.querySelectorAll('[data-prefecture]')];
@@ -30,6 +34,17 @@
   document.getElementById('prefecture-clear')?.addEventListener('click', () => {
     checks.forEach(box => { box.checked = false; }); update(); picker.open = false;
   });
+  if (picker.dataset.required === 'true') {
+    picker.closest('form')?.addEventListener('submit', event => {
+      const hasDestination = checks.some(box => box.checked);
+      if (hasDestination) return;
+      event.preventDefault();
+      if (destinationError) destinationError.hidden = false;
+      summary.setAttribute('aria-invalid', 'true');
+      summary.focus();
+      picker.open = true;
+    });
+  }
   search?.addEventListener('input', () => {
     const query = search.value.trim().toLocaleLowerCase();
     regions.forEach(region => {

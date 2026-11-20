@@ -3,6 +3,8 @@
   if (!root) return;
 
   const list = document.getElementById("group-chat-messages");
+  const latestControl = document.getElementById("group-chat-latest");
+  const latestButton = document.getElementById("group-chat-latest-button");
   const form = document.getElementById("group-chat-form");
   const input = document.getElementById("group-chat-input");
   const imageInput = document.getElementById("group-chat-image");
@@ -39,6 +41,11 @@
   function chatIsActive() {
     const panel = document.querySelector('[data-group-panel="chat"]');
     return document.visibilityState === "visible" && panel && !panel.hidden;
+  }
+
+  function updateLatestControl() {
+    if (!latestControl || !list) return;
+    latestControl.hidden = list.scrollHeight - list.scrollTop - list.clientHeight <= 120;
   }
 
   function formatTime(value) {
@@ -522,9 +529,15 @@
     }
   });
   list.scrollTop = list.scrollHeight;
+  updateLatestControl();
+  list.addEventListener("scroll", updateLatestControl, { passive: true });
+  latestButton?.addEventListener("click", () => {
+    list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+  });
   document.addEventListener("group:tab-shown", (event) => {
     if (event.detail === "chat") {
       list.scrollTop = list.scrollHeight;
+      updateLatestControl();
       pollMessages();
     }
   });
@@ -573,6 +586,12 @@
     if (chatIsActive()) pollMessages();
   });
 
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    if (!sending) form.requestSubmit();
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const content = input.value.trim();
@@ -594,6 +613,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "送信できませんでした。");
       addMessage(data.message);
+      list.scrollTop = list.scrollHeight;
       input.value = "";
       clearSelectedImage();
     } catch (error) {

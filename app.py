@@ -364,6 +364,11 @@ def create_app():
             with db.engine.begin() as connection:
                 connection.execute(text("ALTER TABLE group_messages ADD COLUMN image_filename VARCHAR(80)"))
 
+        user_columns = {column["name"] for column in inspect(db.engine).get_columns("user_auth")}
+        if "recovery_password_hash" not in user_columns:
+            with db.engine.begin() as connection:
+                connection.execute(text("ALTER TABLE user_auth ADD COLUMN recovery_password_hash VARCHAR(255)"))
+
 
 
     @app.context_processor

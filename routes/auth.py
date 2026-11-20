@@ -123,6 +123,14 @@ def auth(mode):
 
                 flash("パスワードが一致しません。", "error")
 
+            elif len(request.form.get("recovery_password", "")) < 8:
+
+                flash("復旧コードは8文字以上で設定してください。", "error")
+
+            elif request.form.get("recovery_password", "") != request.form.get("recovery_password_confirm", ""):
+
+                flash("復旧コードが一致しません。", "error")
+
             elif role not in ("traveler", "business"):
 
                 flash("アカウント種別を選択してください。", "error")
@@ -135,7 +143,7 @@ def auth(mode):
 
                 # DBにはパスワードそのものではなく、照合用ハッシュを保存します。
 
-                user = User(username=name, email=email, password_hash=generate_password_hash(password), user_type=role)
+                user = User(username=name, email=email, password_hash=generate_password_hash(password), recovery_password_hash=generate_password_hash(request.form.get("recovery_password", "")), user_type=role)
 
                 if role == "traveler":
 
@@ -151,7 +159,9 @@ def auth(mode):
 
                 login_user(user)
 
-                return redirect(complete_pending_group_invite(user) or url_for("index"))
+                next_url = complete_pending_group_invite(user) or url_for("index")
+                separator = "&" if "?" in next_url else "?"
+                return redirect(f"{next_url}{separator}recovery_code_saved=1")
 
     return page("auth", mode=mode, form_values=form_values)
 
@@ -460,99 +470,39 @@ def login_page():
 
 
 @auth_bp.route("/password-reset", methods=["GET", "POST"])
-
 def password_reset_request():
-
-    mail_sender = current_app.config["MAIL_DEFAULT_SENDER"] or current_app.config["MAIL_USERNAME"]
-
-    mail_configured = bool(current_app.config["MAIL_SERVER"] and mail_sender)
-
-    dev_mode = current_app.config["PASSWORD_RESET_DEV_MODE"]
-
     if current_user.is_authenticated:
-
         return redirect(url_for("index"))
 
     if request.method == "POST":
-
         email = request.form.get("email", "").strip().lower()
-
-        # 同じメールアドレスへの再発行は1時間に3回までに抑えます。メールは保存せずHMAC値だけ残します。
-
-        allowed = _allow_rate_limited_action("password-reset", email or "empty", 3, 3600)
+        recovery_password = request.form.get("recovery_password", "")
+        remote_key = f"{email or 'empty'}|{request.remote_addr or 'unknown'}"
+        allowed = _allow_rate_limited_action("password-reset-code", remote_key, 5, 900)
+        if not allowed:
+            flash("入力回数が上限に達しました。15分ほど待ってからもう一度お試しください。", "error")
+            return redirect(url_for("password_reset_request"))
 
         user = User.query.filter_by(email=email).first() if email else None
-
-        if user and allowed:
-
+        if user and user.recovery_password_hash and check_password_hash(user.recovery_password_hash, recovery_password):
             raw_token = secrets.token_urlsafe(32)
-
             now = datetime.now(timezone.utc)
-
-            # 新しいリンクを発行したら以前の未使用リンクを無効にします。
-
             PasswordResetToken.query.filter_by(user_id=user.id, used_at=None).update(
-
                 {PasswordResetToken.used_at: now}, synchronize_session=False
-
             )
-
-            reset_token = PasswordResetToken(
-
+            db.session.add(PasswordResetToken(
                 user_id=user.id,
-
                 token_hash=hashlib.sha256(raw_token.encode("utf-8")).hexdigest(),
-
                 created_at=now,
-
                 expires_at=now + timedelta(minutes=30),
-
-            )
-
-            db.session.add(reset_token)
-
+            ))
             db.session.commit()
+            return redirect(url_for("password_reset", token=raw_token))
 
-            reset_path = url_for("password_reset", token=raw_token)
-
-            public_base = current_app.config["PUBLIC_BASE_URL"]
-
-            if public_base:
-
-                parsed_base = urlparse(public_base)
-
-                if parsed_base.scheme in {"https", "http"} and parsed_base.netloc and (dev_mode or parsed_base.scheme == "https"):
-
-                    reset_url = urljoin(public_base.rstrip("/") + "/", reset_path.lstrip("/"))
-
-                else:
-
-                    reset_url = ""
-
-            elif dev_mode:
-
-                # 開発環境だけ現在のローカルURLを使います。本番では固定URLを.envに設定します。
-
-                reset_url = url_for("password_reset", token=raw_token, _external=True)
-
-            else:
-
-                reset_url = ""
-
-            if reset_url:
-
-                _send_password_reset_link(user.email, reset_url)
-
-            else:
-
-                current_app.logger.error("Password reset email skipped: set HTTPS PUBLIC_BASE_URL.")
-
-        flash("登録済みのメールアドレスの場合、パスワード再設定用リンクを送信しました。画面の案内をご確認ください。", "success")
-
+        flash("メールアドレスまたは復旧コードが違います。", "error")
         return redirect(url_for("password_reset_request"))
 
-    return render_template("password_reset_request.html", dev_mode=dev_mode, mail_configured=mail_configured)
-
+    return render_template("password_reset_request.html")
 
 
 @auth_bp.route("/password-reset/<token>", methods=["GET", "POST"])
@@ -747,6 +697,14 @@ def profile():
 
                 error_message = "旅行予算または生年月日を確認してください。"
 
+        recovery_password = request.form.get("recovery_password", "")
+        recovery_password_confirm = request.form.get("recovery_password_confirm", "")
+        if not error_message and (recovery_password or recovery_password_confirm):
+            if len(recovery_password) < 8:
+                error_message = "復旧コードは8文字以上で設定してください。"
+            elif recovery_password != recovery_password_confirm:
+                error_message = "復旧コードが一致しません。"
+
 
 
         if error_message:
@@ -758,6 +716,8 @@ def profile():
             # 画像の保存に成功してからDB情報を更新し、古い画像は保存後に片付けます。
 
             current_user.username = profile_username
+            if recovery_password:
+                current_user.recovery_password_hash = generate_password_hash(recovery_password)
 
             old_avatar_path = None
 
@@ -807,7 +767,7 @@ def profile():
 
             flash("プロフィールを保存しました。" + ("次のAI生成に反映します。" if current_user.user_type == "traveler" else ""), "success")
 
-            return redirect(url_for("profile"))
+            return redirect(url_for("profile", recovery_code_saved="1") if recovery_password else url_for("profile"))
 
     return page("profile", profile=p, profile_username=profile_username, selected_avatar=selected_avatar)
 

@@ -77,7 +77,7 @@ label:has(>.required-mark){display:inline-flex!important;align-items:center;gap:
 
 label:has(>.required-mark){display:flex!important;flex-direction:column;align-items:flex-start;gap:2px}.required-mark{align-self:flex-start}
 
-#ai-plan-form>.form-grid>.field>label{min-height:30px}
+#ai-plan-form>.form-grid>.field>label,.manual-plan-form-card .field>label{min-height:30px}
 
 
 .app-page-auth .form-actions{justify-content:center}.app-page-auth #auth-submit{margin-inline:auto}

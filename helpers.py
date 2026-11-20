@@ -87,7 +87,6 @@ __all__ = [
 ]
 
 
-
 def _normalize_business_phone(value):
     raw = (value or "").strip()
     digits = re.sub(r"\D", "", raw)
