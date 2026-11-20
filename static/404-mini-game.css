@@ -8,3 +8,12 @@
 .mini-game-controls button:hover{background:#def0e7}.mini-game-controls .mini-game-start{background:#087866;border-color:#087866;color:#fff;font-size:.92rem}
 .mini-game-status{min-height:1.5em;margin:10px 0 0!important;color:#607770!important;font-size:.82rem;line-height:1.5!important;text-align:center}
 @media(max-width:520px){.mini-game{padding:13px}.mini-game-controls{grid-template-columns:50px minmax(90px,1fr) 50px}.mini-game-heading h2{font-size:1rem}}
+
+.mini-game-heading-actions{display:flex;align-items:center;gap:10px}
+#mini-game-fullscreen{min-height:34px;padding:6px 11px;border:1px solid #cfe5da;border-radius:10px;background:#eaf5ef;color:#087866;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+#mini-game-fullscreen:hover{background:#def0e7}
+.mini-game:fullscreen,.mini-game:-webkit-full-screen{width:100vw;height:100vh;max-width:none;margin:0;padding:clamp(16px,4vw,40px);border:0;border-radius:0;background:#f3f8f5;display:flex;flex-direction:column;justify-content:center}
+.mini-game:fullscreen #mini-game-canvas,.mini-game:-webkit-full-screen #mini-game-canvas{width:min(100%,140vh);max-height:70vh;margin-inline:auto}
+@media(max-width:520px){.mini-game-heading-actions{gap:7px}#mini-game-fullscreen{padding:5px 8px}}
+
+#mini-game-lives{color:#d65b75}
