@@ -12,7 +12,72 @@
   const game = document.querySelector(".mini-game");
   const faceMode = new URLSearchParams(window.location.search).get("mode") === "sugano";
   const faceSpriteSheet = new Image();
+  const bossSpriteImage = new Image();
+  let bossSpriteCanvas = null;
+  const summonedFaceImage = new Image();
+  let summonedFaceCanvas = null;
+  const thunderJumpscareImage = new Image();
+  let thunderJumpscareCanvas = null;
   if (faceMode) faceSpriteSheet.src = "/static/404-face-hazards.png?v=20261124-2";
+  if (faceMode) {
+    bossSpriteImage.onload = () => {
+      const sprite = document.createElement("canvas");
+      sprite.width = 84;
+      sprite.height = 84;
+      const spriteContext = sprite.getContext("2d", { willReadFrequently: true });
+      spriteContext.drawImage(bossSpriteImage, 4, 18, 84, 84, 0, 0, 84, 84);
+      const pixels = spriteContext.getImageData(0, 0, sprite.width, sprite.height);
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        const red = pixels.data[index];
+        const green = pixels.data[index + 1];
+        const blue = pixels.data[index + 2];
+        if (red > 224 && green > 224 && blue > 224 && Math.max(red, green, blue) - Math.min(red, green, blue) < 22) {
+          pixels.data[index + 3] = 0;
+        }
+      }
+      spriteContext.putImageData(pixels, 0, 0);
+      bossSpriteCanvas = sprite;
+    };
+    bossSpriteImage.src = "/static/404-sugano-boss-source.png?v=20261124-1";
+    summonedFaceImage.onload = () => {
+      const sprite = document.createElement("canvas");
+      sprite.width = summonedFaceImage.naturalWidth;
+      sprite.height = summonedFaceImage.naturalHeight;
+      const spriteContext = sprite.getContext("2d", { willReadFrequently: true });
+      spriteContext.drawImage(summonedFaceImage, 0, 0);
+      const pixels = spriteContext.getImageData(0, 0, sprite.width, sprite.height);
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        const red = pixels.data[index];
+        const green = pixels.data[index + 1];
+        const blue = pixels.data[index + 2];
+        if (red > 224 && green > 224 && blue > 224 && Math.max(red, green, blue) - Math.min(red, green, blue) < 22) {
+          pixels.data[index + 3] = 0;
+        }
+      }
+      spriteContext.putImageData(pixels, 0, 0);
+      summonedFaceCanvas = sprite;
+    };
+    summonedFaceImage.src = "/static/404-sugano-summoned-face.png?v=20261124-1";
+    thunderJumpscareImage.onload = () => {
+      const sprite = document.createElement("canvas");
+      sprite.width = thunderJumpscareImage.naturalWidth;
+      sprite.height = thunderJumpscareImage.naturalHeight;
+      const spriteContext = sprite.getContext("2d", { willReadFrequently: true });
+      spriteContext.drawImage(thunderJumpscareImage, 0, 0);
+      const pixels = spriteContext.getImageData(0, 0, sprite.width, sprite.height);
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        const red = pixels.data[index];
+        const green = pixels.data[index + 1];
+        const blue = pixels.data[index + 2];
+        if (red > 238 && green > 238 && blue > 238 && Math.max(red, green, blue) - Math.min(red, green, blue) < 18) {
+          pixels.data[index + 3] = 0;
+        }
+      }
+      spriteContext.putImageData(pixels, 0, 0);
+      thunderJumpscareCanvas = sprite;
+    };
+    thunderJumpscareImage.src = "/static/404-sugano-thunder.png?v=20261124-1";
+  }
   if (faceMode) {
     canvas.height = 420;
     canvas.classList.add("sugano-shooter");
@@ -22,6 +87,8 @@
   const height = canvas.height;
   const player = { x: width / 2, y: height - 28, radius: 13, speed: 300 };
   let clouds = [];
+  let boss = null;
+  let bossAppeared = false;
   let hearts = [];
   let playerShots = [];
   let enemyShots = [];
@@ -50,6 +117,10 @@
   let thunderNoticeShown = false;
   let showFaceJumpscare = false;
   let jumpscareFaceIndex = 0;
+  let jumpscareIsBoss = false;
+  let wasKilledByThunder = false;
+  let jumpscareIsThunder = false;
+  let bossKeySequence = "";
 
   if (faceMode) {
     if (titleNode) titleNode.textContent = "suganoシューティング";
@@ -57,7 +128,10 @@
   }
 
   function drawCloud(cloud) {
-    if (faceMode && faceSpriteSheet.complete && faceSpriteSheet.naturalWidth > 0) {
+    if (cloud.bossMinion && summonedFaceCanvas) {
+      const spriteSize = cloud.radius * 2 + 4;
+      context.drawImage(summonedFaceCanvas, cloud.x - spriteSize / 2, cloud.y - spriteSize / 2, spriteSize, spriteSize);
+    } else if (faceMode && faceSpriteSheet.complete && faceSpriteSheet.naturalWidth > 0) {
       const sourceWidth = faceSpriteSheet.naturalWidth / 5;
       const sourceTop = faceSpriteSheet.naturalHeight * 0.18;
       const sourceHeight = faceSpriteSheet.naturalHeight * 0.65;
@@ -87,6 +161,38 @@
       context.closePath();
       context.fill();
     }
+  }
+
+  function drawBoss() {
+    if (!boss) return;
+    if (bossSpriteCanvas) {
+      context.drawImage(bossSpriteCanvas, boss.x - 75, boss.y - 35, 150, 150);
+    } else if (faceSpriteSheet.complete && faceSpriteSheet.naturalWidth > 0) {
+      const sourceWidth = faceSpriteSheet.naturalWidth / 5;
+      const sourceTop = faceSpriteSheet.naturalHeight * 0.18;
+      const sourceHeight = faceSpriteSheet.naturalHeight * 0.65;
+      [1, 3, 4].forEach((index, position) => {
+        const offset = position === 0 ? 0 : position === 1 ? -46 : 46;
+        const yOffset = position === 0 ? -16 : 13;
+        const size = position === 0 ? 76 : 66;
+        context.drawImage(faceSpriteSheet, index * sourceWidth, sourceTop, sourceWidth, sourceHeight,
+          boss.x + offset - size / 2, boss.y + yOffset - size / 2, size, size);
+      });
+    }
+    const barWidth = 190;
+    const barX = boss.x - barWidth / 2;
+    const barY = boss.y + 76;
+    context.fillStyle = "rgba(255,255,255,.85)";
+    context.fillRect(barX, barY, barWidth, 10);
+    context.fillStyle = "#ff4e88";
+    context.fillRect(barX, barY, barWidth * Math.max(0, boss.hp) / 100, 10);
+    context.strokeStyle = "rgba(255,255,255,.9)";
+    context.strokeRect(barX, barY, barWidth, 10);
+    context.fillStyle = "#fff";
+    context.font = "bold 13px system-ui, sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "bottom";
+    context.fillText(`BOSS ${boss.hp}/100`, boss.x, barY - 3);
   }
 
   function drawHeart(heart) {
@@ -168,6 +274,7 @@
       context.setLineDash([]);
     }
     clouds.forEach(drawCloud);
+    drawBoss();
     hearts.forEach(drawHeart);
     drawShots();
     drawEdgeStrike();
@@ -185,7 +292,17 @@
       context.save();
       context.fillStyle = "rgba(8, 5, 13, .92)";
       context.fillRect(0, 0, width, height);
-      if (faceSpriteSheet.complete && faceSpriteSheet.naturalWidth > 0) {
+      if (jumpscareIsThunder && thunderJumpscareCanvas) {
+        const scale = Math.min(width / thunderJumpscareCanvas.width, height / thunderJumpscareCanvas.height) * 1.18;
+        const faceWidth = thunderJumpscareCanvas.width * scale;
+        const faceHeight = thunderJumpscareCanvas.height * scale;
+        context.drawImage(thunderJumpscareCanvas, (width - faceWidth) / 2, (height - faceHeight) / 2, faceWidth, faceHeight);
+      } else if (jumpscareIsBoss && bossSpriteCanvas) {
+        const scale = Math.max(width / bossSpriteCanvas.width, height / bossSpriteCanvas.height) * 1.18;
+        const faceWidth = bossSpriteCanvas.width * scale;
+        const faceHeight = bossSpriteCanvas.height * scale;
+        context.drawImage(bossSpriteCanvas, (width - faceWidth) / 2, (height - faceHeight) / 2, faceWidth, faceHeight);
+      } else if (faceSpriteSheet.complete && faceSpriteSheet.naturalWidth > 0) {
         const sourceWidth = faceSpriteSheet.naturalWidth / 5;
         const sourceTop = faceSpriteSheet.naturalHeight * 0.18;
         const sourceHeight = faceSpriteSheet.naturalHeight * 0.65;
@@ -203,9 +320,10 @@
       context.font = "bold 30px system-ui, sans-serif";
       context.lineWidth = 5;
       context.strokeStyle = "rgba(20, 0, 0, .85)";
-      context.strokeText("すがのに殺された", width / 2, height - 34);
+      const gameOverCaption = jumpscareIsThunder ? "俺より馬鹿やんｗｗ" : jumpscareIsBoss ? "学校いけよ" : "すがのに殺された";
+      context.strokeText(gameOverCaption, width / 2, height - 34);
       context.fillStyle = "#fff";
-      context.fillText("すがのに殺された", width / 2, height - 34);
+      context.fillText(gameOverCaption, width / 2, height - 34);
       context.restore();
     }
   }
@@ -213,6 +331,8 @@
   function endGame() {
     running = false;
     showFaceJumpscare = faceMode;
+    jumpscareIsThunder = faceMode && wasKilledByThunder;
+    jumpscareIsBoss = faceMode && Boolean(boss) && !jumpscareIsThunder;
     if (faceMode) {
       jumpscareFaceIndex = clouds.find((cloud) => cloud.dive)?.faceIndex ?? Math.floor(Math.random() * 5);
       canvas.classList.remove("sugano-jumpscare");
@@ -224,6 +344,19 @@
     statusNode.textContent = faceMode ? "ゲームオーバー！顔の敵や敵弾に注意。" : "雲にぶつかった！";
     canvas.setAttribute("aria-label", `ゲーム終了。スコア ${score}。もう一度飛ぶボタンで再開できます。`);
     draw();
+  }
+
+  function startBossFight() {
+    if (!faceMode || bossAppeared) return;
+    bossAppeared = true;
+    boss = { x: width / 2, y: 82, age: 0, hp: 100, summonElapsed: 0 };
+    spawnElapsed = 0;
+    clouds = [];
+    enemyShots = [];
+    score = Math.max(score, 150);
+    scoreNode.value = score;
+    scoreNode.textContent = String(score);
+    statusNode.textContent = "ボス出現！3つの顔を攻撃して、召喚された顔を避けよう！";
   }
 
   function tick(time) {
@@ -247,6 +380,7 @@
       }
     }
     spawnElapsed += delta;
+    if (faceMode && !bossAppeared && score > 150) startBossFight();
     heartSpawnElapsed += delta;
     if (heartSpawnElapsed >= heartSpawnInterval) {
       heartSpawnElapsed = 0;
@@ -254,20 +388,27 @@
       if (!hearts.length) hearts.push({ x: 24 + Math.random() * (width - 48), y: -14, speed: 105 + Math.min(score * 0.35, 55), radius: 10 });
     }
     const spawnInterval = faceMode ? Math.max(1.1, 2.3 - score * 0.008) : Math.max(0.32, 0.88 - score * 0.0056);
-    if (spawnElapsed >= spawnInterval) {
+    if ((!faceMode || !boss) && spawnElapsed >= spawnInterval) {
       spawnElapsed = 0;
       const thunderChance = score >= 60 && score <= 100 ? Math.min(0.4, 0.22 + (score - 60) * 0.002) : 0;
       const thunder = Math.random() < thunderChance;
       const speed = faceMode ? 82 + Math.min(score * 1.5, 150) + Math.random() * 20 : 115 + Math.min(score * 2.25, 270) + Math.random() * 28;
       const lateralRange = score >= 80 ? 8 + Math.min((score - 80) * 0.05, 10) : 0;
       if (faceMode) {
-        const formationSize = Math.min(5, 3 + Math.floor(score / 20));
-        const spacing = 62;
-        const formationWidth = (formationSize - 1) * spacing;
-        const startX = 54 + Math.random() * (width - formationWidth - 108);
-        for (let index = 0; index < formationSize; index += 1) {
-          const enemyX = startX + index * spacing;
-          clouds.push({ x: enemyX, startX: enemyX, y: -24 - (index % 2) * 16, speed, radius: 20, thunder: Math.random() < thunderChance, faceIndex: Math.floor(Math.random() * 5), lateralRange, phase: Math.random() * Math.PI * 2, age: 0 });
+        const maxEnemies = score > 100 ? 6 : Math.min(5, 3 + Math.floor(score / 20));
+        const enemyCount = 2 + Math.floor(Math.random() * (maxEnemies - 1));
+        const usedX = [];
+        for (let index = 0; index < enemyCount; index += 1) {
+          let enemyX = 0;
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            enemyX = 30 + Math.random() * (width - 60);
+            if (usedX.every((x) => Math.abs(x - enemyX) > 42)) break;
+          }
+          usedX.push(enemyX);
+          const enemyY = -24 - Math.random() * 132;
+          const enemySpeed = speed * (0.72 + Math.random() * 0.62);
+          const enemySway = score >= 80 ? lateralRange * (0.45 + Math.random() * 1.1) : 0;
+          clouds.push({ x: enemyX, startX: enemyX, y: enemyY, speed: enemySpeed, radius: 20, thunder: Math.random() < thunderChance, faceIndex: Math.floor(Math.random() * 5), lateralRange: enemySway, phase: Math.random() * Math.PI * 2, age: 0 });
         }
       } else {
         const spawnMargin = lateralRange ? 42 : 25;
@@ -307,6 +448,7 @@
         edgeHoldElapsed = 0;
         edgeStrikeTimer = 0.32;
         edgeStrikeX = player.x;
+        wasKilledByThunder = lives <= 1;
         lives = Math.max(0, lives - 1);
         updateLives();
         hitCooldown = 1.1;
@@ -320,6 +462,11 @@
       edgeHoldElapsed = 0;
     }
     clouds.forEach((cloud) => {
+      if (cloud.charge) {
+        cloud.x += cloud.vx * delta;
+        cloud.y += cloud.vy * delta;
+        return;
+      }
       cloud.y += cloud.speed * delta;
       if (!cloud.lateralRange && score >= 80) {
         cloud.startX = cloud.x;
@@ -333,11 +480,38 @@
         cloud.x = cloud.startX + Math.sin(cloud.phase) * cloud.lateralRange;
       }
     });
+    if (boss) {
+      boss.age += delta;
+      boss.x = width / 2 + Math.sin(boss.age * 0.82) * Math.min(150, width * 0.23);
+      boss.y = 76 + Math.sin(boss.age * 1.25) * 12;
+      boss.summonElapsed += delta;
+      if (boss.summonElapsed >= 2.2) {
+        boss.summonElapsed = 0;
+        const summonCount = boss.hp < 50 ? 2 : 1;
+        for (let index = 0; index < summonCount; index += 1) {
+          const laneOffset = summonCount === 2 ? (index === 0 ? -34 : 34) : (Math.random() - 0.5) * 90;
+          const startX = boss.x + (index - (summonCount - 1) / 2) * 26;
+          const startY = boss.y + 46;
+          const targetX = Math.max(24, Math.min(width - 24, player.x + laneOffset));
+          const deltaX = targetX - startX;
+          const deltaY = player.y - startY;
+          const distance = Math.hypot(deltaX, deltaY) || 1;
+          const chargeSpeed = 440;
+          clouds.push({
+            x: startX, y: startY, startX, speed: 0,
+            vx: deltaX / distance * chargeSpeed, vy: deltaY / distance * chargeSpeed,
+            radius: 29, thunder: false, faceIndex: 0, lateralRange: 0, phase: 0, age: 0,
+            dive: true, bossMinion: true, charge: true
+          });
+        }
+        statusNode.textContent = summonCount === 2 ? "ボスが顔を2体召喚！突進を避けて！" : "ボスが顔を召喚！突進を避けて！";
+      }
+    }
     if (faceMode) {
       enemyShotElapsed += delta;
       if (enemyShotElapsed >= Math.max(0.55, 1.35 - score * 0.004)) {
         enemyShotElapsed = 0;
-        const shooters = clouds.filter((cloud) => cloud.y > 24 && cloud.y < player.y - 80);
+        const shooters = clouds.filter((cloud) => !cloud.bossMinion && cloud.y > 24 && cloud.y < player.y - 80);
         if (shooters.length) {
           const shooter = shooters[Math.floor(Math.random() * shooters.length)];
           const speed = 280 + Math.min(score * 1.2, 180);
@@ -355,6 +529,15 @@
       const remainingPlayerShots = [];
       for (const shot of playerShots) {
         shot.y -= shot.speed * delta;
+        if (boss && Math.abs(shot.x - boss.x) < 82 && Math.abs(shot.y - (boss.y + 25)) < 60) {
+          boss.hp -= 1;
+          if (boss.hp <= 0) {
+            boss = null;
+            score += 25;
+            statusNode.textContent = "ボス撃破！ボーナス25点！";
+          }
+          continue;
+        }
         const targetIndex = clouds.findIndex((cloud) => !cloud.dive && Math.hypot(shot.x - cloud.x, shot.y - cloud.y) < cloud.radius + shot.radius);
         if (targetIndex >= 0) {
           clouds.splice(targetIndex, 1);
@@ -369,6 +552,7 @@
         shot.y += shot.speed * delta;
         if (Math.hypot(player.x - shot.x, player.y - shot.y) < player.radius + shot.radius) {
           if (hitCooldown <= 0) {
+            wasKilledByThunder = false;
             lives = Math.max(0, lives - 1);
             updateLives();
             hitCooldown = 1.1;
@@ -403,6 +587,7 @@
       if (hitCloud || hitLightning) {
         if (hitCooldown <= 0) {
           const damage = cloud.thunder ? 2 : 1;
+          wasKilledByThunder = cloud.thunder && lives <= damage;
           lives = Math.max(0, lives - damage);
           updateLives();
           if (lives <= 0) {
@@ -420,7 +605,7 @@
       else remaining.push(cloud);
     }
     clouds = remaining;
-    if (score >= 60 && !thunderNoticeShown) {
+    if (score >= 60 && score <= 100 && !thunderNoticeShown) {
       thunderNoticeShown = true;
       statusNode.textContent = "60〜100点では雷雲が出現！当たると残機を2つ失います。";
     }
@@ -437,6 +622,9 @@
     playerShots = [];
     enemyShots = [];
     score = 0;
+    boss = null;
+    bossAppeared = false;
+    bossKeySequence = "";
     lives = 2;
     hitCooldown = 0;
     edgeHoldElapsed = 0;
@@ -452,15 +640,18 @@
     previousTime = 0;
     thunderNoticeShown = false;
     showFaceJumpscare = false;
+    jumpscareIsBoss = false;
+    wasKilledByThunder = false;
+    jumpscareIsThunder = false;
     canvas.classList.remove("sugano-jumpscare");
     player.x = width / 2;
     keys.left = false;
     keys.right = false;
     running = true;
-    scoreNode.value = 0;
-    scoreNode.textContent = "0";
+    scoreNode.value = score;
+    scoreNode.textContent = String(score);
     updateLives();
-    statusNode.textContent = faceMode ? "suganoシューティング！自動ショットで敵を撃とう！" : "雲をよけて飛ぼう！";
+    statusNode.textContent = faceMode ? "suganoゲーム開始！プレイ中に boss と入力するとボス戦！" : "雲をよけて飛ぼう！";
     startButton.disabled = true;
     startButton.textContent = "飛行中…";
     canvas.setAttribute("aria-label", faceMode ? "ゲーム中。左右の矢印キーまたは左右ボタンで移動し、自動ショットで顔の敵を攻撃します。敵の弾と落雷をよけてください。" : "ゲーム中。左右の矢印キーまたは左右ボタンで雲をよけます。画面の端に3秒いると落雷します。");
@@ -484,6 +675,13 @@
   window.addEventListener("keydown", (event) => {
     if (!running) return;
     const key = event.key.toLowerCase();
+    if (faceMode && !event.repeat && /^[a-z]$/.test(key)) {
+      bossKeySequence = (bossKeySequence + key).slice(-4);
+      if (bossKeySequence === "boss") {
+        startBossFight();
+        bossKeySequence = "";
+      }
+    }
     if (["arrowleft", "arrowright", "a", "d"].includes(key)) event.preventDefault();
     if (key === "arrowleft" || key === "a") keys.left = true;
     if (key === "arrowright" || key === "d") keys.right = true;
