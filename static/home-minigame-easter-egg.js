@@ -7,7 +7,7 @@
     if (active?.matches("input, textarea, select, [contenteditable='true']")) return;
     if (!/^[a-z]$/i.test(event.key)) { typed = ""; return; }
     typed = (typed + event.key.toLowerCase()).slice(-6);
-    if (typed !== "masaki") return;
+    if (typed !== "masaki" && typed !== "sugano") return;
     opened = true;
     const welcome = document.createElement("div");
     welcome.className = "home-minigame-welcome";
@@ -15,6 +15,7 @@
     welcome.setAttribute("aria-live", "assertive");
     welcome.innerHTML = '<span class="home-minigame-welcome-plane" aria-hidden="true">✈</span><span>ミニゲームへようこそ</span>';
     document.body.append(welcome);
-    window.setTimeout(() => window.location.assign("/__tabidea_minigame__"), 1300);
+    const destination = typed === "sugano" ? "/__tabidea_minigame__?mode=sugano" : "/__tabidea_minigame__";
+    window.setTimeout(() => window.location.assign(destination), 1300);
   });
 })();

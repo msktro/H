@@ -17,3 +17,7 @@
 @media(max-width:520px){.mini-game-heading-actions{gap:7px}#mini-game-fullscreen{padding:5px 8px}}
 
 #mini-game-lives{color:#d65b75}
+#mini-game-canvas.sugano-shooter{aspect-ratio:640/420;background:#08152d}
+#mini-game-canvas.sugano-jumpscare{animation:sugano-jumpscare-shake .62s cubic-bezier(.18,.78,.3,1) both}
+@keyframes sugano-jumpscare-shake{0%{transform:scale(.82);filter:brightness(2.4)}18%{transform:scale(1.08) translateX(-7px);filter:brightness(1.35)}34%{transform:scale(1.04) translateX(6px);filter:brightness(1)}52%{transform:scale(1.06) translateX(-4px)}72%{transform:scale(1.04) translateX(3px)}100%{transform:scale(1);filter:none}}
+@media(prefers-reduced-motion:reduce){#mini-game-canvas.sugano-jumpscare{animation:none}}
