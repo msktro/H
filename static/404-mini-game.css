@@ -17,6 +17,9 @@
 @media(max-width:520px){.mini-game-heading-actions{gap:7px}#mini-game-fullscreen{padding:5px 8px}}
 
 #mini-game-lives{color:#d65b75}
+.mini-game-stage{position:relative;width:100%;line-height:0}
+.mini-game-stage .mini-game-kill-comment{position:absolute;z-index:2;right:0;bottom:5%;left:0;width:100%;max-width:none!important;margin:0!important;color:#fff!important;font-size:clamp(18px,3.5vw,30px);font-weight:900;line-height:1.25!important;text-align:center!important;text-shadow:0 2px 3px #160710,2px 0 2px #160710,-2px 0 2px #160710,0 -2px 2px #160710;pointer-events:none}
+.mini-game-kill-comment[hidden]{display:none}
 #mini-game-canvas.sugano-shooter{aspect-ratio:640/420;background:#08152d}
 #mini-game-canvas.sugano-jumpscare{animation:sugano-jumpscare-shake .62s cubic-bezier(.18,.78,.3,1) both}
 @keyframes sugano-jumpscare-shake{0%{transform:scale(.82);filter:brightness(2.4)}18%{transform:scale(1.08) translateX(-7px);filter:brightness(1.35)}34%{transform:scale(1.04) translateX(6px);filter:brightness(1)}52%{transform:scale(1.06) translateX(-4px)}72%{transform:scale(1.04) translateX(3px)}100%{transform:scale(1);filter:none}}
